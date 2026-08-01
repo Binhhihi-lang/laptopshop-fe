@@ -1,0 +1,15 @@
+:host {
+  display: block;
+  max-width: 400px;
+  width: 100%;
+}
+
+.mat-dialog-content {
+  margin: 24px 0;
+ 0px 24px 0;
+  text-align: center;
+}
+
+.mat-dialog-actions {
+  padding: 0 24px 24px 24px;
+}

@@ -1,0 +1,88 @@
+.dashboard-container {
+  padding: 24px;
+}
+
+.stats-card {
+  text-align: center;
+  padding: 16px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  border-radius: 4px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stats-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.mat-card-avatar {
+  width: 48px;
+  height: 48px;
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  margin: 0 auto 16px auto;
+}
+
+.users-icon {
+  background-color: #e3f2fd;
+  color: #1976d2;
+}
+
+.products-icon {
+  background-color: #e8f5e9;
+  color: #388e3c;
+}
+
+.categories-icon {
+  background-color: #fff3e0;
+  color: #f57c00;
+}
+
+.coupons-icon {
+  background-color: #f3e5f5;
+  color: #7b1fa2;
+}
+
+.stat-number {
+  font-size: 32px;
+  font-weight: bold;
+  color: rgba(0, 0, 0, 0.87);
+  margin: 8px 0;
+}
+
+.loading-overlay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+}
+
+.loading-overlay p {
+  margin-top: 16px;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.error-message {
+  padding: 16px;
+  background-color: #ffebee;
+  color: #c62828;
+  border-radius: 4px;
+  margin: 16px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+  mat-grid-list {
+    cols: 2;
+  }
+}
+
+@media (max-width: 600px) {
+  mat-grid-list {
+    cols: 1;
+  }
+}
