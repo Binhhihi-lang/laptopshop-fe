@@ -1,76 +1,77 @@
-<script src="dashboard.component.ts"></script>
 <mat-grid-list cols="4" rowHeight="150px" gutterSize="16px">
-  <mat-grid-tile *ngIf="!loading; else loadingTemplate">
-    <mat-card class="stat-card users-card">
-      <mat-card-header>
-        <div mat-card-avatar class="users-icon">
-          <mat-icon>people</mat-icon>
-        </div>
-        <mat-card-title>Users</mat-card-title>
-      </mat-card-header>
-      <mat-card-content>
-        <div class="stat-number">{{ userCount }}</div>
-        <div>Total Users</div>
-      </mat-card-content>
-    </mat-card>
-  </mat-grid-tile>
+  @if (!loading) {
+    <mat-grid-tile>
+      <mat-card class="stat-card users-card">
+        <mat-card-header>
+          <div class="mat-card-avatar users-icon">
+            <mat-icon>people</mat-icon>
+          </div>
+          <mat-card-title>Users</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="stat-number">{{ userCount }}</div>
+          <div>Total Users</div>
+        </mat-card-content>
+      </mat-card>
+    </mat-grid-tile>
 
-  <mat-grid-tile *ngIf="!loading; else loadingTemplate">
-    <mat-card class="stat-card products-card">
-      <mat-card-header>
-        <div mat-card-avatar class="products-icon">
-          <mat-icon>inventory_2</mat-icon>
-        </div>
-        <mat-card-title>Products</mat-card-title>
-      </mat-card-header>
-      <mat-card-content>
-        <div class="stat-number">{{ productCount }}</div>
-        <div>Total Products</div>
-      </mat-card-content>
-    </mat-card>
-  </mat-grid-tile>
+    <mat-grid-tile>
+      <mat-card class="stat-card products-card">
+        <mat-card-header>
+          <div class="mat-card-avatar products-icon">
+            <mat-icon>inventory_2</mat-icon>
+          </div>
+          <mat-card-title>Products</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="stat-number">{{ productCount }}</div>
+          <div>Total Products</div>
+        </mat-card-content>
+      </mat-card>
+    </mat-grid-tile>
 
-  <mat-grid-tile *ngIf="!loading; else loadingTemplate">
-    <mat-card class="stat-card categories-card">
-      <mat-card-header>
-        <div mat-card-avatar class="categories-icon">
-          <mat-icon>category</mat-icon>
-        </div>
-        <mat-card-title>Categories</mat-card-title>
-      </mat-card-header>
-      <mat-card-content>
-        <div class="stat-number">{{ categoryCount }}</div>
-        <div>Total Categories</div>
-      </mat-card-content>
-    </mat-card>
-  </mat-grid-tile>
+    <mat-grid-tile>
+      <mat-card class="stat-card categories-card">
+        <mat-card-header>
+          <div class="mat-card-avatar categories-icon">
+            <mat-icon>category</mat-icon>
+          </div>
+          <mat-card-title>Categories</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="stat-number">{{ categoryCount }}</div>
+          <div>Total Categories</div>
+        </mat-card-content>
+      </mat-card>
+    </mat-grid-tile>
 
-  <mat-grid-tile *ngIf="!loading; else loadingTemplate">
-    <mat-card class="stat-card coupons-card">
-      <mat-card-header>
-        <div mat-card-avatar class="coupons-icon">
-          <mat-icon>local_offer</mat-icon>
-        </div>
-        <mat-card-title>Coupons</mat-card-title>
-      </mat-card-header>
-      <mat-card-content>
-        <div class="stat-number">{{ couponCount }}</div>
-        <div>Total Coupons</div>
-      </mat-card-content>
-    </mat-card>
-  </mat-grid-tile>
+    <mat-grid-tile>
+      <mat-card class="stat-card coupons-card">
+        <mat-card-header>
+          <div class="mat-card-avatar coupons-icon">
+            <mat-icon>local_offer</mat-icon>
+          </div>
+          <mat-card-title>Coupons</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="stat-number">{{ couponCount }}</div>
+          <div>Total Coupons</div>
+        </mat-card-content>
+      </mat-card>
+    </mat-grid-tile>
+  } @else {
+    <mat-grid-tile colspan="4">
+      <div class="loading-overlay">
+        <mat-spinner diameter="48"></mat-spinner>
+        <p>Loading dashboard statistics...</p>
+      </div>
+    </mat-grid-tile>
+  }
 </mat-grid-list>
 
-<ng-template #loadingTemplate>
-  <mat-grid-tile colspan="4">
-    <div class="loading-overlay">
-      <mat-spinner diameter="48"></mat-spinner>
-      <p>Loading dashboard statistics...</p>
-    </div>
-  </mat-grid-tile>
-</ng-template>
-
-<div *ngIf="errorMessage && !loading" class="error-message">
-  {{ errorMessage }}
-  <button mat-button color="primary" (click)="loadStatistics()">Retry</button>
-</div>
+@if (errorMessage && !loading) {
+  <div class="error-message">
+    {{ errorMessage }}
+    <button mat-button color="primary" (click)="loadStatistics()">Retry</button>
+  </div>
+}

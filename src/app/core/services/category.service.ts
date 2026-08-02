@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
 import { ApiService } from './api.service';
-import { API_ENDPOINTS } from '../utils/constants';
+import { API_ENDPOINTS } from '@core/utils/constants';
 import { Observable } from 'rxjs';
-import { Category, CategoryCreationRequest, CategoryDetail } from '../models/category.model';
+import { Category, CategoryCreationRequest, CategoryDetail } from '@core/models/category.model';
 
 
 @Injectable({

@@ -1,12 +1,9 @@
-import { Component, OnInit } from '@angular/core';
-import { MatGridListModule } from '@angular/material/grid-list';
-import { MatCardModule } from '@angular/material/card';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatDialogModule } from '@angular/material/dialog';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { forkJoin } from 'rxjs';
+import { HttpErrorResponse } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
+import { MaterialModule } from '@shared/material.module';
+
 import { UserService } from '@core/services/user.service';
 import { ProductService } from '@core/services/product.service';
 import { CategoryService } from '@core/services/category.service';
@@ -15,15 +12,7 @@ import { CouponService } from '@core/services/coupon.service';
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [
-    CommonModule,
-    MatGridListModule,
-    MatCardModule,
-    MatProgressSpinnerModule,
-    MatDialogModule,
-    MatButtonModule,
-    MatIconModule,
-  ],
+  imports: [CommonModule, MaterialModule],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css',
 })
@@ -41,6 +30,7 @@ export class DashboardComponent implements OnInit {
     private productService: ProductService,
     private categoryService: CategoryService,
     private couponService: CouponService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -48,68 +38,30 @@ export class DashboardComponent implements OnInit {
   }
 
   loadStatistics(): void {
-    // Fetch user count
-    this.userService.getUsers().subscribe({
-      next: (users) => {
+    this.loading = true;
+    this.errorMessage = '';
+
+    forkJoin({
+      users: this.userService.getUsers(),
+      products: this.productService.getProducts(),
+      categories: this.categoryService.getCategories(),
+      coupons: this.couponService.getCoupons(),
+    }).subscribe({
+      next: ({ users, products, categories, coupons }) => {
         this.userCount = users.length;
-        this.checkIfAllLoaded();
-      },
-      error: (error) => {
-        this.errorMessage = 'Failed to load user statistics';
-        this.loading = false;
-      },
-    });
-
-    // Fetch product count
-    this.productService.getProducts().subscribe({
-      next: (products) => {
         this.productCount = products.length;
-        this.checkIfAllLoaded();
-      },
-      error: (error) => {
-        this.errorMessage = 'Failed to load product statistics';
-        this.loading = false;
-      },
-    });
-
-    // Fetch category count
-    this.categoryService.getCategories().subscribe({
-      next: (categories) => {
         this.categoryCount = categories.length;
-        this.checkIfAllLoaded();
-      },
-      error: (error) => {
-        this.errorMessage = 'Failed to load category statistics';
-        this.loading = false;
-      },
-    });
-
-    // Fetch coupon count
-    this.couponService.getCoupons().subscribe({
-      next: (coupons) => {
         this.couponCount = coupons.length;
-        this.checkIfAllLoaded();
-      },
-      error: (error) => {
-        this.errorMessage = 'Failed to load coupon statistics';
         this.loading = false;
+        console.log('loading đã set false:', this.loading);
+        this.cdr.detectChanges();
+      },
+      error: (error: HttpErrorResponse) => {
+        console.log('forkJoin error:', error);
+        this.errorMessage = 'Không thể tải thống kê dashboard' + error;
+        this.loading = false;
+        this.cdr.detectChanges();
       },
     });
-  }
-
-  private checkIfAllLoaded(): void {
-    // Check if all four requests have completed
-    if (
-      this.userCount !== 0 ||
-      this.productCount !== 0 ||
-      this.categoryCount !== 0 ||
-      this.couponCount !== 0
-    ) {
-      // We don't have a perfect way to track all requests, so we'll use a timeout approach
-      // In a real app, we'd use forkJoin or similar
-      setTimeout(() => {
-        this.loading = false;
-      }, 500);
-    }
   }
 }

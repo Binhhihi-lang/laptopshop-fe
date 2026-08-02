@@ -13,65 +13,95 @@
     <mat-form-field appearance="fill" class="full-width">
       <mat-label>Tên đăng nhập</mat-label>
       <input matInput formControlName="username" placeholder="Nhập tên đăng nhập">
-      <mat-error *ngIf="f['username'].hasError('required')">
-        Tên đăng nhập là bắt buộc
-      </mat-error>
-      <mat-error *ngIf="f['username'].hasError('minlength')">
-        Tên đăng nhập phải có ít nhất 3 ký tự
-      </mat-error>
-      <mat-error *ngIf="f['username'].hasError('maxlength')">
-        Tên đăng nhập không được vượt quá 50 ký tự
-      </mat-error>
+      @if (f['username'].hasError('required')) {
+        <mat-error>
+          Tên đăng nhập là bắt buộc
+        </mat-error>
+      }
+      @if (f['username'].hasError('minlength')) {
+        <mat-error>
+          Tên đăng nhập phải có ít nhất 3 ký tự
+        </mat-error>
+      }
+      @if (f['username'].hasError('maxlength')) {
+        <mat-error>
+          Tên đăng nhập không được vượt quá 50 ký tự
+        </mat-error>
+      }
     </mat-form-field>
 
     <mat-form-field appearance="fill" class="full-width">
       <mat-label>Email</mat-label>
       <input matInput formControlName="email" type="email" placeholder="Nhập email">
-      <mat-error *ngIf="f['email'].hasError('required')">
-        Email là bắt buộc
-      </mat-error>
-      <mat-error *ngIf="f['email'].hasError('email')">
-        Vui lòng nhập email hợp lệ
-      </mat-error>
+      @if (f['email'].hasError('required')) {
+        <mat-error>
+          Email là bắt buộc
+        </mat-error>
+      }
+      @if (f['email'].hasError('email')) {
+        <mat-error>
+          Vui lòng nhập email hợp lệ
+        </mat-error>
+      }
     </mat-form-field>
 
     <mat-form-field appearance="fill" class="full-width">
       <mat-label>Họ và tên</mat-label>
       <input matInput formControlName="fullName" placeholder="Nhập họ và tên">
-      <mat-error *ngIf="f['fullName'].hasError('required')">
-        Họ và tên là bắt buộc
-      </mat-error>
-      <mat-error *ngIf="f['fullName'].hasError('maxlength')">
-        Họ và tên không được vượt quá 100 ký tự
-      </mat-error>
+      @if (f['fullName'].hasError('required')) {
+        <mat-error>
+          Họ và tên là bắt buộc
+        </mat-error>
+      }
+      @if (f['fullName'].hasError('maxlength')) {
+        <mat-error>
+          Họ và tên không được vượt quá 100 ký tự
+        </mat-error>
+      }
     </mat-form-field>
 
     <mat-form-field appearance="fill" class="full-width">
       <mat-label>Mật khẩu</mat-label>
       <input matInput formControlName="password" type="password" placeholder="Nhập mật khẩu">
-      <mat-hint *ngIf="!isEditMode">Mật khẩu tối thiểu 6 ký tự</mat-hint>
-      <mat-hint *ngIf="isEditMode">Để trống nếu không muốn thay đổi mật khẩu</mat-hint>
-      <mat-error *ngIf="f['password'].hasError('minlength') && !isEditMode">
-        Mật khẩu cần có ít nhất 6 ký tự
-      </mat-error>
+      @if (!isEditMode) {
+        <mat-hint>
+          Mật khẩu tối thiểu 6 ký tự
+        </mat-hint>
+      }
+      @if (isEditMode) {
+        <mat-hint>
+          Để trống nếu không muốn thay đổi mật khẩu
+        </mat-hint>
+      }
+      @if (f['password'].hasError('minlength') && !isEditMode) {
+        <mat-error>
+          Mật khẩu cần có ít nhất 6 ký tự
+        </mat-error>
+      }
     </mat-form-field>
 
     <mat-form-field appearance="fill" class="full-width">
       <mat-label>Vai trò</mat-label>
       <mat-select formControlName="roleNames" multiple>
-        <mat-option *ngFor="let role of roles" [value]="role">
-          {{ role }}
-        </mat-option>
+        @for (role of roles; track role) {
+          <mat-option [value]="role">
+            {{ role }}
+          </mat-option>
+        }
       </mat-select>
-      <mat-error *ngIf="f['roleNames'].hasError('required')">
-        Vui lòng chọn ít nhất một vai trò
-      </mat-error>
+      @if (f['roleNames'].hasError('required')) {
+        <mat-error>
+          Vui lòng chọn ít nhất một vai trò
+        </mat-error>
+      }
     </mat-form-field>
 
     <div class="avatar-field">
       <label class="avatar-label">Ảnh đại diện</label>
       <input type="file" accept="image/*" (change)="onFileSelected($event)">
-      <img *ngIf="avatarPreview" [src]="avatarPreview" class="avatar-preview" alt="preview">
+      @if (avatarPreview) {
+        <img [src]="avatarPreview" class="avatar-preview" alt="preview">
+      }
     </div>
 
     <div class="form-actions">

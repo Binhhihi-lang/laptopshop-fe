@@ -9,32 +9,42 @@
         <mat-form-field appearance="fill">
           <mat-label>Email</mat-label>
           <input matInput type="email" [(ngModel)]="email" name="email" required email>
-          <mat-error *ngIf="loginForm.controls['email']?.hasError('required') && loginForm.controls['email']?.touched">
-            Email is required
-          </mat-error>
-          <mat-error *ngIf="loginForm.controls['email']?.hasError('email') && loginForm.controls['email']?.touched">
-            Please enter a valid email
-          </mat-error>
+          @if (loginForm.controls['email']?.hasError('required') && loginForm.controls['email']?.touched) {
+            <mat-error>
+              Email is required
+            </mat-error>
+          }
+          @if (loginForm.controls['email']?.hasError('email') && loginForm.controls['email']?.touched) {
+            <mat-error>
+              Please enter a valid email
+            </mat-error>
+          }
         </mat-form-field>
 
         <mat-form-field appearance="fill">
           <mat-label>Password</mat-label>
           <input matInput type="password" [(ngModel)]="password" name="password" required>
-          <mat-error *ngIf="loginForm.controls['password']?.hasError('required') && loginForm.controls['password']?.touched">
-            Password is required
-          </mat-error>
+          @if (loginForm.controls['password']?.hasError('required') && loginForm.controls['password']?.touched) {
+            <mat-error>
+              Password is required
+            </mat-error>
+          }
         </mat-form-field>
 
         <div class="button-row">
           <button mat-flat-button color="primary" type="submit" [disabled]="loading">
-            <span *ngIf="loading" class="spinner mat-progress-spinner mat-progress-spinner-sm"></span>
+            @if (loading) {
+              <span class="spinner mat-progress-spinner mat-progress-spinner-sm"></span>
+            }
             Sign In
           </button>
         </div>
 
-        <div class="error-message" *ngIf="errorMessage">
-          {{ errorMessage }}
-        </div>
+        @if (errorMessage) {
+          <div class="error-message">
+            {{ errorMessage }}
+          </div>
+        }
       </form>
     </mat-card-content>
   </mat-card>

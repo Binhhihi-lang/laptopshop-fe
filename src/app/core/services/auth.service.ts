@@ -2,18 +2,10 @@ import { Injectable } from '@angular/core';
 import { ApiService } from './api.service';
 import { Router } from '@angular/router';
 import { BehaviorSubject, Observable, tap, throwError } from 'rxjs';
-import { JwtHelper } from '../utils/jwt.helper';
-import { API_ENDPOINTS, STORAGE_KEYS } from '../utils/constants';
+import { JwtHelper } from '@core/utils/jwt.helper';
+import { API_ENDPOINTS, STORAGE_KEYS } from '@core/utils/constants';
+import { IntrospectResponse, LoginResponse } from '@core/models/auth.model';
 
-export interface LoginResponse {
-  authenticated: boolean;
-  token: string;
-  refreshToken: string;
-}
-
-export interface IntrospectResponse {
-  authenticated: boolean;
-}
 
 @Injectable({
   providedIn: 'root'

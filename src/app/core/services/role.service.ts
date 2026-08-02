@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
 import { ApiService } from './api.service';
-import { API_ENDPOINTS } from '../utils/constants';
+import { API_ENDPOINTS } from '@core/utils/constants';
 import { Observable } from 'rxjs';
-import { Role, RoleCreationRequest } from '../models/role.model';
+import { Role, RoleCreationRequest } from '@core/models/role.model';
 
 @Injectable({
   providedIn: 'root'

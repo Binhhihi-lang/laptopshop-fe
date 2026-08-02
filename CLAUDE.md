@@ -1,4 +1,4 @@
 # Instructions for Claude / Free Claude Code
 
-- **Language Constraint:** ALWAYS respond, explain, and write diagnostic reports in Vietnamese.
+- **Language Constraint:** You MUST communicate, explain, write logs, and summarize in **Pure Vietnamese (Tiếng Việt)**.
 - **Code Standards:** Maintain standard TypeScript / Angular best practices.

@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
 import { ApiService } from './api.service';
-import { API_ENDPOINTS } from '../utils/constants';
+import { API_ENDPOINTS } from '@core/utils/constants';
 import { Observable } from 'rxjs';
-import { Product, ProductCreationRequest } from '../models/product.model';
+import { Product, ProductCreationRequest } from '@core/models/product.model';
 
 
 @Injectable({

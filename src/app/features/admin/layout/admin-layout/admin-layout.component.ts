@@ -1,27 +1,19 @@
 import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { MatSidenavModule } from '@angular/material/sidenav';
-import { MatToolbarModule } from '@angular/material/toolbar';
-import { MatIconModule } from '@angular/material/icon';
-import { MatButtonModule } from '@angular/material/button';
-import { MatListModule } from '@angular/material/list';
-import { MatMenuModule } from '@angular/material/menu';
+import { MaterialModule } from '@shared/material.module';
 import { RouterModule } from '@angular/router';
-import { AuthService } from '../../../../core/services/auth.service';
+import { AuthService } from '@core/services/auth.service';
 import { Router } from '@angular/router';
+import { Header } from '@features/admin/layout/header/header';
+import { Sidebar } from '@features/admin/layout/sidebar/sidebar';
 
 @Component({
   selector: 'app-admin-layout',
   standalone: true,
   imports: [
-    CommonModule,
-    MatSidenavModule,
-    MatToolbarModule,
-    MatIconModule,
-    MatButtonModule,
-    MatListModule,
-    MatMenuModule,
-    RouterModule
+    MaterialModule,
+    RouterModule,
+    Header,
+    Sidebar
   ],
   templateUrl: './admin-layout.html',
   styleUrl: './admin-layout.css',

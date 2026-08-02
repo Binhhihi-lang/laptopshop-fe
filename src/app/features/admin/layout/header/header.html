@@ -1,1 +1,33 @@
-<p>header works!</p>
+<mat-toolbar color="primary" class="header">
+  <button
+    type="button"
+    aria-label="Toggle sidebar"
+    mat-icon-button
+    (click)="onToggleSidebar()">
+    <mat-icon>menu</mat-icon>
+  </button>
+  <span>LaptopShop Admin Dashboard</span>
+  <span class="spacer"></span>
+  <!-- User info and logout button -->
+  @if (userInfo) {
+    <div class="user-info">
+      @if (userInfo.avatar) {
+        <img [src]="userInfo.avatar"
+          alt="User avatar"
+          class="user-avatar">
+      } @else {
+        <mat-icon class="user-avatar-icon">account_circle</mat-icon>
+      }
+      <span class="user-fullname">{{ userInfo.fullName }}</span>
+      <button mat-icon-button [matMenuTriggerFor]="userMenu">
+        <mat-icon>more_vert</mat-icon>
+      </button>
+    </div>
+  }
+  <mat-menu #userMenu="matMenu">
+    <button menu-item (click)="onLogout()">
+      <mat-icon>logout</mat-icon>
+      <span>Logout</span>
+    </button>
+  </mat-menu>
+</mat-toolbar>

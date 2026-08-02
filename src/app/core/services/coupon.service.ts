@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
 import { ApiService } from './api.service';
-import { API_ENDPOINTS } from '../utils/constants';
+import { API_ENDPOINTS } from '@core/utils/constants';
 import { Observable } from 'rxjs';
-import { Coupon, CouponCreationRequest } from '../models/coupon.model';
+import { Coupon, CouponCreationRequest } from '@core/models/coupon.model';
 
 @Injectable({
   providedIn: 'root'

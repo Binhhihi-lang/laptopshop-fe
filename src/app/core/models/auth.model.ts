@@ -15,6 +15,12 @@ interface AuthResponse {
   refreshToken: string;
 }
 
-interface IntrospectResponse {
+export interface LoginResponse {
+  authenticated: boolean;
+  token: string;
+  refreshToken: string;
+}
+
+export interface IntrospectResponse {
   authenticated: boolean;
 }

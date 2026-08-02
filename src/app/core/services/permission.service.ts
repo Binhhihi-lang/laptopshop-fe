@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
 import { ApiService } from './api.service';
-import { API_ENDPOINTS } from '../utils/constants';
+import { API_ENDPOINTS } from '@core/utils/constants';
 import { Observable } from 'rxjs';
-import { Permission, PermissionCreationRequest } from '../models/permission.model';
+import { Permission, PermissionCreationRequest } from '@core/models/permission.model';
 
 @Injectable({
   providedIn: 'root'

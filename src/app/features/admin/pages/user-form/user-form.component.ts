@@ -2,13 +2,9 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatButtonModule } from '@angular/material/button';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { UserService } from '../../../../core/services/user.service';
-import { UserCreationRequest, UserUpdateRequest } from '../../../../core/models/user.model';
+import { MaterialModule } from '@shared/material.module';
+import { UserService } from '@core/services/user.service';
+import { UserCreationRequest, UserUpdateRequest } from '@core/models/user.model';
 
 @Component({
   selector: 'app-user-form',
@@ -17,11 +13,7 @@ import { UserCreationRequest, UserUpdateRequest } from '../../../../core/models/
     CommonModule,
     RouterModule,
     ReactiveFormsModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatButtonModule,
-    MatProgressSpinnerModule,
+    MaterialModule,
   ],
   templateUrl: './user-form.component.html',
   styleUrl: './user-form.component.css',
