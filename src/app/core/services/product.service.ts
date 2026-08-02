@@ -2,27 +2,8 @@ import { Injectable } from '@angular/core';
 import { ApiService } from './api.service';
 import { API_ENDPOINTS } from '../utils/constants';
 import { Observable } from 'rxjs';
+import { Product, ProductCreationRequest } from '../models/product.model';
 
-export interface Product {
-  id: number;
-  name: string;
-  price: number;
-  quantity: number;
-  description: string;
-  image: string;        // Cloudinary URL string
-  sold: number;
-  categoryId: number;
-  categoryName: string;
-}
-
-export interface ProductCreationRequest {
-  name: string;
-  price: number;
-  quantity: number;
-  description: string;
-  image?: File | null;
-  categoryId: number;
-}
 
 @Injectable({
   providedIn: 'root'

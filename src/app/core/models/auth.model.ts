@@ -8,3 +8,13 @@ export interface AuthenticationResponse {
   token: string;
   refreshToken: string;
 }
+
+interface AuthResponse {
+  authenticated: boolean;
+  token: string;
+  refreshToken: string;
+}
+
+interface IntrospectResponse {
+  authenticated: boolean;
+}

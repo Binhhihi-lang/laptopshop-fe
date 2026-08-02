@@ -3,19 +3,9 @@ import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, throwError } from 'rxjs';
 import { catchError, map, tap } from 'rxjs/operators';
-import { environment } from '../../environments/environment';
 import { JwtHelper } from '../utils/jwt.helper';
 import { STORAGE_KEYS, API_ENDPOINTS } from '../utils/constants';
-
-interface AuthResponse {
-  authenticated: boolean;
-  token: string;
-  refreshToken: string;
-}
-
-interface IntrospectResponse {
-  authenticated: boolean;
-}
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'

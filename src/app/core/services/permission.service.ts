@@ -2,17 +2,7 @@ import { Injectable } from '@angular/core';
 import { ApiService } from './api.service';
 import { API_ENDPOINTS } from '../utils/constants';
 import { Observable } from 'rxjs';
-
-export interface Permission {
-  id: number;
-  name: string;
-  description: string;
-}
-
-export interface PermissionCreationRequest {
-  name: string;
-  description: string;
-}
+import { Permission, PermissionCreationRequest } from '../models/permission.model';
 
 @Injectable({
   providedIn: 'root'

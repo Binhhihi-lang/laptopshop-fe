@@ -2,30 +2,7 @@ import { Injectable } from '@angular/core';
 import { ApiService } from './api.service';
 import { API_ENDPOINTS } from '../utils/constants';
 import { Observable } from 'rxjs';
-
-export interface UserResponse {
-  id: number;
-  username: string;
-  email: string;
-  fullName: string;
-  roleNames: string[];
-  deletedAt: string | null;
-}
-
-export interface UserCreationRequest {
-  username: string;
-  email: string;
-  password: string;
-  fullName: string;
-  roleNames: string[];
-  avatar?: File | null;
-}
-
-export interface UserUpdateRequest extends Omit<UserCreationRequest, 'password'> {
-  id: number;
-  password?: string;
-}
-
+import { UserCreationRequest, UserResponse, UserUpdateRequest } from '../models/user.model';
 @Injectable({
   providedIn: 'root'
 })

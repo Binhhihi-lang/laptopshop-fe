@@ -1,0 +1,1078 @@
+[33m❯[39m Building...
+[32m✔[39m Building...
+Application bundle generation failed. [1.600 seconds] - 2026-08-01T07:53:55.684Z
+[1m[33m[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8103: NG8103: The `*ngIf` directive was used in the template, but neither the `NgIf` directive nor the `CommonModule` was imported. Use Angular's built-in control flow @if or make sure that either the `NgIf` directive or the `CommonModule` is included in the `@Component.imports` array of this component. Find more at https://v22.angular.dev/extended-diagnostics/NG8103[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/layout/admin-layout/admin-layout.html:58:9:
+[37m      58 │         *[32mngIf[37m="isSidebarOpen">
+         ╵          [32m~~~~[0m
+  Warning occurs in the template of component AdminLayout.
+    src/app/features/admin/layout/admin-layout/admin-layout.ts:24:15:
+[37m      24 │   templateUrl: [32m'./admin-layout.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~[0m
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8103: NG8103: The `*ngIf` directive was used in the template, but neither the `NgIf` directive nor the `CommonModule` was imported. Use Angular's built-in control flow @if or make sure that either the `NgIf` directive or the `CommonModule` is included in the `@Component.imports` array of this component. Find more at https://v22.angular.dev/extended-diagnostics/NG8103[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/layout/admin-layout/admin-layout.html:64:30:
+[37m      64 │       <div class="user-info" *[32mngIf[37m="userInfo">
+         ╵                               [32m~~~~[0m
+  Warning occurs in the template of component AdminLayout.
+    src/app/features/admin/layout/admin-layout/admin-layout.ts:24:15:
+[37m      24 │   templateUrl: [32m'./admin-layout.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~[0m
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8103: NG8103: The `*ngIf` directive was used in the template, but neither the `NgIf` directive nor the `CommonModule` was imported. Use Angular's built-in control flow @if or make sure that either the `NgIf` directive or the `CommonModule` is included in the `@Component.imports` array of this component. Find more at https://v22.angular.dev/extended-diagnostics/NG8103[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/layout/admin-layout/admin-layout.html:65:14:
+[37m      65 │         <img *[32mngIf[37m="userInfo.avatar; else noAvatar"
+         ╵               [32m~~~~[0m
+  Warning occurs in the template of component AdminLayout.
+    src/app/features/admin/layout/admin-layout/admin-layout.ts:24:15:
+[37m      24 │   templateUrl: [32m'./admin-layout.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~[0m
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8103: NG8103: The `*ngIf` directive was used in the template, but neither the `NgIf` directive nor the `CommonModule` was imported. Use Angular's built-in control flow @if or make sure that either the `NgIf` directive or the `CommonModule` is included in the `@Component.imports` array of this component. Find more at https://v22.angular.dev/extended-diagnostics/NG8103[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/dashboard/dashboard.html:2:18:
+[37m      2 │   <mat-grid-tile *[32mngIf[37m="!loading; else loadingTemplate">
+        ╵                   [32m~~~~[0m
+  Warning occurs in the template of component DashboardComponent.
+    src/app/features/admin/pages/dashboard/dashboard.ts:18:15:
+[37m      18 │   templateUrl: [32m'./dashboard.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~[0m
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8103: NG8103: The `*ngIf` directive was used in the template, but neither the `NgIf` directive nor the `CommonModule` was imported. Use Angular's built-in control flow @if or make sure that either the `NgIf` directive or the `CommonModule` is included in the `@Component.imports` array of this component. Find more at https://v22.angular.dev/extended-diagnostics/NG8103[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/dashboard/dashboard.html:17:18:
+[37m      17 │   <mat-grid-tile *[32mngIf[37m="!loading; else loadingTemplate">
+         ╵                   [32m~~~~[0m
+  Warning occurs in the template of component DashboardComponent.
+    src/app/features/admin/pages/dashboard/dashboard.ts:18:15:
+[37m      18 │   templateUrl: [32m'./dashboard.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~[0m
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8103: NG8103: The `*ngIf` directive was used in the template, but neither the `NgIf` directive nor the `CommonModule` was imported. Use Angular's built-in control flow @if or make sure that either the `NgIf` directive or the `CommonModule` is included in the `@Component.imports` array of this component. Find more at https://v22.angular.dev/extended-diagnostics/NG8103[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/dashboard/dashboard.html:32:18:
+[37m      32 │   <mat-grid-tile *[32mngIf[37m="!loading; else loadingTemplate">
+         ╵                   [32m~~~~[0m
+  Warning occurs in the template of component DashboardComponent.
+    src/app/features/admin/pages/dashboard/dashboard.ts:18:15:
+[37m      18 │   templateUrl: [32m'./dashboard.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~[0m
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8103: NG8103: The `*ngIf` directive was used in the template, but neither the `NgIf` directive nor the `CommonModule` was imported. Use Angular's built-in control flow @if or make sure that either the `NgIf` directive or the `CommonModule` is included in the `@Component.imports` array of this component. Find more at https://v22.angular.dev/extended-diagnostics/NG8103[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/dashboard/dashboard.html:47:18:
+[37m      47 │   <mat-grid-tile *[32mngIf[37m="!loading; else loadingTemplate">
+         ╵                   [32m~~~~[0m
+  Warning occurs in the template of component DashboardComponent.
+    src/app/features/admin/pages/dashboard/dashboard.ts:18:15:
+[37m      18 │   templateUrl: [32m'./dashboard.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~[0m
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8103: NG8103: The `*ngIf` directive was used in the template, but neither the `NgIf` directive nor the `CommonModule` was imported. Use Angular's built-in control flow @if or make sure that either the `NgIf` directive or the `CommonModule` is included in the `@Component.imports` array of this component. Find more at https://v22.angular.dev/extended-diagnostics/NG8103[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/dashboard/dashboard.html:72:6:
+[37m      72 │ <div *[32mngIf[37m="errorMessage && !loading" class="error-message">
+         ╵       [32m~~~~[0m
+  Warning occurs in the template of component DashboardComponent.
+    src/app/features/admin/pages/dashboard/dashboard.ts:18:15:
+[37m      18 │   templateUrl: [32m'./dashboard.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~[0m
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8103: NG8103: The `*ngIf` directive was used in the template, but neither the `NgIf` directive nor the `CommonModule` was imported. Use Angular's built-in control flow @if or make sure that either the `NgIf` directive or the `CommonModule` is included in the `@Component.imports` array of this component. Find more at https://v22.angular.dev/extended-diagnostics/NG8103[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/login/login.html:12:22:
+[37m      12 │           <mat-error *[32mngIf[37m="loginForm.controls['email']?.hasError(...
+         ╵                       [32m~~~~[0m
+  Warning occurs in the template of component Login.
+    src/app/features/admin/pages/login/login.component.ts:12:15:
+[37m      12 │   templateUrl: [32m'./login.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~[0m
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8103: NG8103: The `*ngIf` directive was used in the template, but neither the `NgIf` directive nor the `CommonModule` was imported. Use Angular's built-in control flow @if or make sure that either the `NgIf` directive or the `CommonModule` is included in the `@Component.imports` array of this component. Find more at https://v22.angular.dev/extended-diagnostics/NG8103[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/login/login.html:15:22:
+[37m      15 │           <mat-error *[32mngIf[37m="loginForm.controls['email']?.hasError(...
+         ╵                       [32m~~~~[0m
+  Warning occurs in the template of component Login.
+    src/app/features/admin/pages/login/login.component.ts:12:15:
+[37m      12 │   templateUrl: [32m'./login.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~[0m
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8103: NG8103: The `*ngIf` directive was used in the template, but neither the `NgIf` directive nor the `CommonModule` was imported. Use Angular's built-in control flow @if or make sure that either the `NgIf` directive or the `CommonModule` is included in the `@Component.imports` array of this component. Find more at https://v22.angular.dev/extended-diagnostics/NG8103[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/login/login.html:23:22:
+[37m      23 │           <mat-error *[32mngIf[37m="loginForm.controls['password']?.hasErr...
+         ╵                       [32m~~~~[0m
+  Warning occurs in the template of component Login.
+    src/app/features/admin/pages/login/login.component.ts:12:15:
+[37m      12 │   templateUrl: [32m'./login.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~[0m
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8103: NG8103: The `*ngIf` directive was used in the template, but neither the `NgIf` directive nor the `CommonModule` was imported. Use Angular's built-in control flow @if or make sure that either the `NgIf` directive or the `CommonModule` is included in the `@Component.imports` array of this component. Find more at https://v22.angular.dev/extended-diagnostics/NG8103[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/login/login.html:30:19:
+[37m      30 │             <span *[32mngIf[37m="loading" class="spinner mat-progress-spin...
+         ╵                    [32m~~~~[0m
+  Warning occurs in the template of component Login.
+    src/app/features/admin/pages/login/login.component.ts:12:15:
+[37m      12 │   templateUrl: [32m'./login.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~[0m
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8103: NG8103: The `*ngIf` directive was used in the template, but neither the `NgIf` directive nor the `CommonModule` was imported. Use Angular's built-in control flow @if or make sure that either the `NgIf` directive or the `CommonModule` is included in the `@Component.imports` array of this component. Find more at https://v22.angular.dev/extended-diagnostics/NG8103[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/login/login.html:35:36:
+[37m      35 │         <div class="error-message" *[32mngIf[37m="errorMessage">
+         ╵                                     [32m~~~~[0m
+  Warning occurs in the template of component Login.
+    src/app/features/admin/pages/login/login.component.ts:12:15:
+[37m      12 │   templateUrl: [32m'./login.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~[0m
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8103: NG8103: The `*ngIf` directive was used in the template, but neither the `NgIf` directive nor the `CommonModule` was imported. Use Angular's built-in control flow @if or make sure that either the `NgIf` directive or the `CommonModule` is included in the `@Component.imports` array of this component. Find more at https://v22.angular.dev/extended-diagnostics/NG8103[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/users/user-form/user-form.component.html:8:18:
+[37m      8 │       <mat-error *[32mngIf[37m="f['username'].hasError('required')">
+        ╵                   [32m~~~~[0m
+  Warning occurs in the template of component UserFormComponent.
+    src/app/features/admin/pages/users/user-form/user-form.component.ts:8:15:
+[37m      8 │   templateUrl: [32m'./user-form.component.html'[37m,
+        ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8103: NG8103: The `*ngIf` directive was used in the template, but neither the `NgIf` directive nor the `CommonModule` was imported. Use Angular's built-in control flow @if or make sure that either the `NgIf` directive or the `CommonModule` is included in the `@Component.imports` array of this component. Find more at https://v22.angular.dev/extended-diagnostics/NG8103[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/users/user-form/user-form.component.html:11:18:
+[37m      11 │       <mat-error *[32mngIf[37m="f['username'].hasError('minlength')">
+         ╵                   [32m~~~~[0m
+  Warning occurs in the template of component UserFormComponent.
+    src/app/features/admin/pages/users/user-form/user-form.component.ts:8:15:
+[37m      8 │   templateUrl: [32m'./user-form.component.html'[37m,
+        ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8103: NG8103: The `*ngIf` directive was used in the template, but neither the `NgIf` directive nor the `CommonModule` was imported. Use Angular's built-in control flow @if or make sure that either the `NgIf` directive or the `CommonModule` is included in the `@Component.imports` array of this component. Find more at https://v22.angular.dev/extended-diagnostics/NG8103[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/users/user-form/user-form.component.html:14:18:
+[37m      14 │       <mat-error *[32mngIf[37m="f['username'].hasError('maxlength')">
+         ╵                   [32m~~~~[0m
+  Warning occurs in the template of component UserFormComponent.
+    src/app/features/admin/pages/users/user-form/user-form.component.ts:8:15:
+[37m      8 │   templateUrl: [32m'./user-form.component.html'[37m,
+        ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8103: NG8103: The `*ngIf` directive was used in the template, but neither the `NgIf` directive nor the `CommonModule` was imported. Use Angular's built-in control flow @if or make sure that either the `NgIf` directive or the `CommonModule` is included in the `@Component.imports` array of this component. Find more at https://v22.angular.dev/extended-diagnostics/NG8103[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/users/user-form/user-form.component.html:22:18:
+[37m      22 │       <mat-error *[32mngIf[37m="f['email'].hasError('required')">
+         ╵                   [32m~~~~[0m
+  Warning occurs in the template of component UserFormComponent.
+    src/app/features/admin/pages/users/user-form/user-form.component.ts:8:15:
+[37m      8 │   templateUrl: [32m'./user-form.component.html'[37m,
+        ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8103: NG8103: The `*ngIf` directive was used in the template, but neither the `NgIf` directive nor the `CommonModule` was imported. Use Angular's built-in control flow @if or make sure that either the `NgIf` directive or the `CommonModule` is included in the `@Component.imports` array of this component. Find more at https://v22.angular.dev/extended-diagnostics/NG8103[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/users/user-form/user-form.component.html:25:18:
+[37m      25 │       <mat-error *[32mngIf[37m="f['email'].hasError('email')">
+         ╵                   [32m~~~~[0m
+  Warning occurs in the template of component UserFormComponent.
+    src/app/features/admin/pages/users/user-form/user-form.component.ts:8:15:
+[37m      8 │   templateUrl: [32m'./user-form.component.html'[37m,
+        ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8103: NG8103: The `*ngIf` directive was used in the template, but neither the `NgIf` directive nor the `CommonModule` was imported. Use Angular's built-in control flow @if or make sure that either the `NgIf` directive or the `CommonModule` is included in the `@Component.imports` array of this component. Find more at https://v22.angular.dev/extended-diagnostics/NG8103[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/users/user-form/user-form.component.html:33:18:
+[37m      33 │       <mat-error *[32mngIf[37m="f['fullName'].hasError('required')">
+         ╵                   [32m~~~~[0m
+  Warning occurs in the template of component UserFormComponent.
+    src/app/features/admin/pages/users/user-form/user-form.component.ts:8:15:
+[37m      8 │   templateUrl: [32m'./user-form.component.html'[37m,
+        ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8103: NG8103: The `*ngIf` directive was used in the template, but neither the `NgIf` directive nor the `CommonModule` was imported. Use Angular's built-in control flow @if or make sure that either the `NgIf` directive or the `CommonModule` is included in the `@Component.imports` array of this component. Find more at https://v22.angular.dev/extended-diagnostics/NG8103[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/users/user-form/user-form.component.html:36:18:
+[37m      36 │       <mat-error *[32mngIf[37m="f['fullName'].hasError('maxlength')">
+         ╵                   [32m~~~~[0m
+  Warning occurs in the template of component UserFormComponent.
+    src/app/features/admin/pages/users/user-form/user-form.component.ts:8:15:
+[37m      8 │   templateUrl: [32m'./user-form.component.html'[37m,
+        ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8103: NG8103: The `*ngIf` directive was used in the template, but neither the `NgIf` directive nor the `CommonModule` was imported. Use Angular's built-in control flow @if or make sure that either the `NgIf` directive or the `CommonModule` is included in the `@Component.imports` array of this component. Find more at https://v22.angular.dev/extended-diagnostics/NG8103[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/users/user-form/user-form.component.html:44:17:
+[37m      44 │       <mat-hint *[32mngIf[37m="!data.user">Mật khẩu tối thiểu 6 k�...
+         ╵                  [32m~~~~[0m
+  Warning occurs in the template of component UserFormComponent.
+    src/app/features/admin/pages/users/user-form/user-form.component.ts:8:15:
+[37m      8 │   templateUrl: [32m'./user-form.component.html'[37m,
+        ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8103: NG8103: The `*ngIf` directive was used in the template, but neither the `NgIf` directive nor the `CommonModule` was imported. Use Angular's built-in control flow @if or make sure that either the `NgIf` directive or the `CommonModule` is included in the `@Component.imports` array of this component. Find more at https://v22.angular.dev/extended-diagnostics/NG8103[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/users/user-form/user-form.component.html:45:17:
+[37m      45 │       <mat-hint *[32mngIf[37m="data.user"> Để trống nếu không mu�...
+         ╵                  [32m~~~~[0m
+  Warning occurs in the template of component UserFormComponent.
+    src/app/features/admin/pages/users/user-form/user-form.component.ts:8:15:
+[37m      8 │   templateUrl: [32m'./user-form.component.html'[37m,
+        ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8103: NG8103: The `*ngIf` directive was used in the template, but neither the `NgIf` directive nor the `CommonModule` was imported. Use Angular's built-in control flow @if or make sure that either the `NgIf` directive or the `CommonModule` is included in the `@Component.imports` array of this component. Find more at https://v22.angular.dev/extended-diagnostics/NG8103[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/users/user-form/user-form.component.html:46:18:
+[37m      46 │       <mat-error *[32mngIf[37m="f['password'].hasError('minlength') && !da...
+         ╵                   [32m~~~~[0m
+  Warning occurs in the template of component UserFormComponent.
+    src/app/features/admin/pages/users/user-form/user-form.component.ts:8:15:
+[37m      8 │   templateUrl: [32m'./user-form.component.html'[37m,
+        ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8103: NG8103: The `*ngFor` directive was used in the template, but neither the `NgFor` directive nor the `CommonModule` was imported. Use Angular's built-in control flow @for or make sure that either the `NgFor` directive or the `CommonModule` is included in the `@Component.imports` array of this component. Find more at https://v22.angular.dev/extended-diagnostics/NG8103[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/users/user-form/user-form.component.html:54:21:
+[37m      54 │         <mat-option *[32mngFor[37m="let role of roles" [value]="role">
+         ╵                      [32m~~~~~[0m
+  Warning occurs in the template of component UserFormComponent.
+    src/app/features/admin/pages/users/user-form/user-form.component.ts:8:15:
+[37m      8 │   templateUrl: [32m'./user-form.component.html'[37m,
+        ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8103: NG8103: The `*ngIf` directive was used in the template, but neither the `NgIf` directive nor the `CommonModule` was imported. Use Angular's built-in control flow @if or make sure that either the `NgIf` directive or the `CommonModule` is included in the `@Component.imports` array of this component. Find more at https://v22.angular.dev/extended-diagnostics/NG8103[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/users/user-form/user-form.component.html:58:18:
+[37m      58 │       <mat-error *[32mngIf[37m="f['roleNames'].hasError('required')">
+         ╵                   [32m~~~~[0m
+  Warning occurs in the template of component UserFormComponent.
+    src/app/features/admin/pages/users/user-form/user-form.component.ts:8:15:
+[37m      8 │   templateUrl: [32m'./user-form.component.html'[37m,
+        ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8116: NG8116: A structural directive `matHeaderCellDef` was used in the template without a corresponding import in the component. Make sure that the directive is included in the `@Component.imports` array of this component. Find more at https://v22.angular.dev/extended-diagnostics/NG8116[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/users/users.html:34:33:
+[37m      34 │ ...   <th mat-header-cell *[32mmatHeaderCellDef[37m> Tên đăng nhập </th>
+         ╵                            [32m~~~~~~~~~~~~~~~~[0m
+  Warning occurs in the template of component UsersComponent.
+    src/app/features/admin/pages/users/users.ts:10:15:
+[37m      10 │   templateUrl: [32m'./users.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~[0m
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8116: NG8116: A structural directive `matCellDef` was used in the template without a corresponding import in the component. Make sure that the directive is included in the `@Component.imports` array of this component. Find more at https://v22.angular.dev/extended-diagnostics/NG8116[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/users/users.html:35:26:
+[37m      35 │             <td mat-cell *[32mmatCellDef[37m="let user"> {{user.username}}...
+         ╵                           [32m~~~~~~~~~~[0m
+  Warning occurs in the template of component UsersComponent.
+    src/app/features/admin/pages/users/users.ts:10:15:
+[37m      10 │   templateUrl: [32m'./users.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~[0m
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8116: NG8116: A structural directive `matHeaderCellDef` was used in the template without a corresponding import in the component. Make sure that the directive is included in the `@Component.imports` array of this component. Find more at https://v22.angular.dev/extended-diagnostics/NG8116[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/users/users.html:40:33:
+[37m      40 │             <th mat-header-cell *[32mmatHeaderCellDef[37m> Email </th>
+         ╵                                  [32m~~~~~~~~~~~~~~~~[0m
+  Warning occurs in the template of component UsersComponent.
+    src/app/features/admin/pages/users/users.ts:10:15:
+[37m      10 │   templateUrl: [32m'./users.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~[0m
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8116: NG8116: A structural directive `matCellDef` was used in the template without a corresponding import in the component. Make sure that the directive is included in the `@Component.imports` array of this component. Find more at https://v22.angular.dev/extended-diagnostics/NG8116[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/users/users.html:41:26:
+[37m      41 │             <td mat-cell *[32mmatCellDef[37m="let user"> {{user.email}} </td>
+         ╵                           [32m~~~~~~~~~~[0m
+  Warning occurs in the template of component UsersComponent.
+    src/app/features/admin/pages/users/users.ts:10:15:
+[37m      10 │   templateUrl: [32m'./users.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~[0m
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8116: NG8116: A structural directive `matHeaderCellDef` was used in the template without a corresponding import in the component. Make sure that the directive is included in the `@Component.imports` array of this component. Find more at https://v22.angular.dev/extended-diagnostics/NG8116[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/users/users.html:46:33:
+[37m      46 │ ...        <th mat-header-cell *[32mmatHeaderCellDef[37m> Họ và tên </th>
+         ╵                                 [32m~~~~~~~~~~~~~~~~[0m
+  Warning occurs in the template of component UsersComponent.
+    src/app/features/admin/pages/users/users.ts:10:15:
+[37m      10 │   templateUrl: [32m'./users.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~[0m
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8116: NG8116: A structural directive `matCellDef` was used in the template without a corresponding import in the component. Make sure that the directive is included in the `@Component.imports` array of this component. Find more at https://v22.angular.dev/extended-diagnostics/NG8116[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/users/users.html:47:26:
+[37m      47 │             <td mat-cell *[32mmatCellDef[37m="let user"> {{user.fullName}}...
+         ╵                           [32m~~~~~~~~~~[0m
+  Warning occurs in the template of component UsersComponent.
+    src/app/features/admin/pages/users/users.ts:10:15:
+[37m      10 │   templateUrl: [32m'./users.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~[0m
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8116: NG8116: A structural directive `matHeaderCellDef` was used in the template without a corresponding import in the component. Make sure that the directive is included in the `@Component.imports` array of this component. Find more at https://v22.angular.dev/extended-diagnostics/NG8116[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/users/users.html:52:33:
+[37m      52 │             <th mat-header-cell *[32mmatHeaderCellDef[37m> Vai trò </th>
+         ╵                                  [32m~~~~~~~~~~~~~~~~[0m
+  Warning occurs in the template of component UsersComponent.
+    src/app/features/admin/pages/users/users.ts:10:15:
+[37m      10 │   templateUrl: [32m'./users.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~[0m
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8116: NG8116: A structural directive `matCellDef` was used in the template without a corresponding import in the component. Make sure that the directive is included in the `@Component.imports` array of this component. Find more at https://v22.angular.dev/extended-diagnostics/NG8116[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/users/users.html:53:26:
+[37m      53 │             <td mat-cell *[32mmatCellDef[37m="let user">
+         ╵                           [32m~~~~~~~~~~[0m
+  Warning occurs in the template of component UsersComponent.
+    src/app/features/admin/pages/users/users.ts:10:15:
+[37m      10 │   templateUrl: [32m'./users.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~[0m
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8116: NG8116: A structural directive `matHeaderCellDef` was used in the template without a corresponding import in the component. Make sure that the directive is included in the `@Component.imports` array of this component. Find more at https://v22.angular.dev/extended-diagnostics/NG8116[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/users/users.html:66:33:
+[37m      66 │ ...        <th mat-header-cell *[32mmatHeaderCellDef[37m> Trạng thái </th>
+         ╵                                 [32m~~~~~~~~~~~~~~~~[0m
+  Warning occurs in the template of component UsersComponent.
+    src/app/features/admin/pages/users/users.ts:10:15:
+[37m      10 │   templateUrl: [32m'./users.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~[0m
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8116: NG8116: A structural directive `matCellDef` was used in the template without a corresponding import in the component. Make sure that the directive is included in the `@Component.imports` array of this component. Find more at https://v22.angular.dev/extended-diagnostics/NG8116[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/users/users.html:67:26:
+[37m      67 │             <td mat-cell *[32mmatCellDef[37m="let user">
+         ╵                           [32m~~~~~~~~~~[0m
+  Warning occurs in the template of component UsersComponent.
+    src/app/features/admin/pages/users/users.ts:10:15:
+[37m      10 │   templateUrl: [32m'./users.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~[0m
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8116: NG8116: A structural directive `matHeaderCellDef` was used in the template without a corresponding import in the component. Make sure that the directive is included in the `@Component.imports` array of this component. Find more at https://v22.angular.dev/extended-diagnostics/NG8116[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/users/users.html:82:33:
+[37m      82 │             <th mat-header-cell *[32mmatHeaderCellDef[37m> Thao tác </th>
+         ╵                                  [32m~~~~~~~~~~~~~~~~[0m
+  Warning occurs in the template of component UsersComponent.
+    src/app/features/admin/pages/users/users.ts:10:15:
+[37m      10 │   templateUrl: [32m'./users.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~[0m
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8116: NG8116: A structural directive `matCellDef` was used in the template without a corresponding import in the component. Make sure that the directive is included in the `@Component.imports` array of this component. Find more at https://v22.angular.dev/extended-diagnostics/NG8116[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/users/users.html:83:26:
+[37m      83 │             <td mat-cell *[32mmatCellDef[37m="let user">
+         ╵                           [32m~~~~~~~~~~[0m
+  Warning occurs in the template of component UsersComponent.
+    src/app/features/admin/pages/users/users.ts:10:15:
+[37m      10 │   templateUrl: [32m'./users.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~[0m
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8116: NG8116: A structural directive `matHeaderRowDef` was used in the template without a corresponding import in the component. Make sure that the directive is included in the `@Component.imports` array of this component. Find more at https://v22.angular.dev/extended-diagnostics/NG8116[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/users/users.html:98:30:
+[37m      98 │ ...      <tr mat-header-row *[32mmatHeaderRowDef[37m="displayedColumns"></tr>
+         ╵                              [32m~~~~~~~~~~~~~~~[0m
+  Warning occurs in the template of component UsersComponent.
+    src/app/features/admin/pages/users/users.ts:10:15:
+[37m      10 │   templateUrl: [32m'./users.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~[0m
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8116: NG8116: A structural directive `matRowDef` was used in the template without a corresponding import in the component. Make sure that the directive is included in the `@Component.imports` array of this component. Find more at https://v22.angular.dev/extended-diagnostics/NG8116[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/users/users.html:99:23:
+[37m      99 │           <tr mat-row *[32mmatRowDef[37m="let row; columns: displayedColum...
+         ╵                        [32m~~~~~~~~~[0m
+  Warning occurs in the template of component UsersComponent.
+    src/app/features/admin/pages/users/users.ts:10:15:
+[37m      10 │   templateUrl: [32m'./users.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~[0m
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mExpected identifier but found "0px"[0m [1m[35m[plugin angular-compiler][0m [css-syntax-error]
+    src/app/shared/confirm-dialog/confirm-dialog.component.css:9:1:
+[37m      9 │  [32m0px[37m 24px 0;
+        ╵  [32m~~~[0m
+[39m[22m
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2307: Cannot find module './features/admin/layout/admin-layout/admin-layout.component' or its corresponding type declarations.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/app.routes.ts:6:37:
+[37m      6 │ ...ent } from [32m'./features/admin/layout/admin-layout/admin-layout.co[37m...
+        ╵               [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2307: Cannot find module './features/admin/pages/login/login.component' or its corresponding type declarations.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/app.routes.ts:7:31:
+[37m      7 │ ...ginComponent } from [32m'./features/admin/pages/login/login.component'[37m;
+        ╵                        [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2307: Cannot find module './features/admin/pages/dashboard/dashboard.component' or its corresponding type declarations.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/app.routes.ts:8:35:
+[37m      8 │ ...nent } from [32m'./features/admin/pages/dashboard/dashboard.component'[37m;
+        ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2307: Cannot find module './features/admin/pages/users/users.component' or its corresponding type declarations.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/app.routes.ts:9:31:
+[37m      9 │ ...ersComponent } from [32m'./features/admin/pages/users/users.component'[37m;
+        ╵                        [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2305: Module '"./features/admin/pages/users/user-form/user-form.component"' has no exported member 'UserCreateComponent'.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/app.routes.ts:10:9:
+[37m      10 │ import { [32mUserCreateComponent[37m } from './features/admin/pages/users/...
+         ╵          [32m~~~~~~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2305: Module '"./features/admin/pages/users/user-form/user-form.component"' has no exported member 'UserEditComponent'.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/app.routes.ts:11:9:
+[37m      11 │ import { [32mUserEditComponent[37m } from './features/admin/pages/users/us...
+         ╵          [32m~~~~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2307: Cannot find module './features/admin/pages/users/users.component' or its corresponding type declarations.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/app.routes.ts:12:36:
+[37m      12 │ ...ilComponent } from [32m'./features/admin/pages/users/users.component'[37m;
+         ╵                       [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2307: Cannot find module './features/admin/pages/products/products.component' or its corresponding type declarations.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/app.routes.ts:13:34:
+[37m      13 │ ...onent } from [32m'./features/admin/pages/products/products.component'[37m;
+         ╵                 [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2307: Cannot find module './features/admin/pages/products/product-form/product-form.component' or its corresponding type declarations.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/app.routes.ts:14:39:
+[37m      14 │ ...nt } from [32m'./features/admin/pages/products/product-form/product[37m...
+         ╵              [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2307: Cannot find module './features/admin/pages/products/product-form/product-form.component' or its corresponding type declarations.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/app.routes.ts:15:37:
+[37m      15 │ ...nt } from [32m'./features/admin/pages/products/product-form/product[37m...
+         ╵              [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2307: Cannot find module './features/admin/pages/categories/categories.component' or its corresponding type declarations.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/app.routes.ts:16:36:
+[37m      16 │ ...nt } from [32m'./features/admin/pages/categories/categories.compone[37m...
+         ╵              [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2307: Cannot find module './features/admin/pages/categories/category-form/category-form.component' or its corresponding type declarations.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/app.routes.ts:17:40:
+[37m      17 │ ...nt } from [32m'./features/admin/pages/categories/category-form/cate[37m...
+         ╵              [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2307: Cannot find module './features/admin/pages/categories/category-form/category-form.component' or its corresponding type declarations.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/app.routes.ts:18:38:
+[37m      18 │ ...nt } from [32m'./features/admin/pages/categories/category-form/cate[37m...
+         ╵              [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2307: Cannot find module './features/admin/pages/categories/category-detail/category-detail.component' or its corresponding type declarations.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/app.routes.ts:19:40:
+[37m      19 │ ...nt } from [32m'./features/admin/pages/categories/category-detail/ca[37m...
+         ╵              [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2307: Cannot find module './features/admin/pages/coupons/coupons.component' or its corresponding type declarations.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/app.routes.ts:20:33:
+[37m      20 │ ...mponent } from [32m'./features/admin/pages/coupons/coupons.component'[37m;
+         ╵                   [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2307: Cannot find module './features/admin/pages/coupons/coupon-form/coupon-form.component' or its corresponding type declarations.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/app.routes.ts:21:38:
+[37m      21 │ ...nt } from [32m'./features/admin/pages/coupons/coupon-form/coupon-fo[37m...
+         ╵              [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2307: Cannot find module './features/admin/pages/coupons/coupon-form/coupon-form.component' or its corresponding type declarations.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/app.routes.ts:22:36:
+[37m      22 │ ...nt } from [32m'./features/admin/pages/coupons/coupon-form/coupon-fo[37m...
+         ╵              [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2307: Cannot find module './features/admin/pages/coupons/coupon-detail/coupon-detail.component' or its corresponding type declarations.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/app.routes.ts:23:38:
+[37m      23 │ ...nt } from [32m'./features/admin/pages/coupons/coupon-detail/coupon-[37m...
+         ╵              [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2307: Cannot find module './features/admin/pages/roles/roles.component' or its corresponding type declarations.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/app.routes.ts:24:31:
+[37m      24 │ ...esComponent } from [32m'./features/admin/pages/roles/roles.component'[37m;
+         ╵                       [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2307: Cannot find module './features/admin/pages/roles/role-form/role-form.component' or its corresponding type declarations.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/app.routes.ts:25:36:
+[37m      25 │ ...nt } from [32m'./features/admin/pages/roles/role-form/role-form.com[37m...
+         ╵              [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2307: Cannot find module './features/admin/pages/roles/role-form/role-form.component' or its corresponding type declarations.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/app.routes.ts:26:34:
+[37m      26 │ ...nt } from [32m'./features/admin/pages/roles/role-form/role-form.com[37m...
+         ╵              [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2307: Cannot find module './features/admin/pages/permissions/permissions.component' or its corresponding type declarations.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/app.routes.ts:27:37:
+[37m      27 │ ...nt } from [32m'./features/admin/pages/permissions/permissions.compo[37m...
+         ╵              [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2307: Cannot find module './features/admin/pages/permissions/permission-form/permission-form.component' or its corresponding type declarations.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/app.routes.ts:28:42:
+[37m      28 │ ...nt } from [32m'./features/admin/pages/permissions/permission-form/p[37m...
+         ╵              [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2307: Cannot find module './features/admin/pages/permissions/permission-form/permission-form.component' or its corresponding type declarations.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/app.routes.ts:29:40:
+[37m      29 │ ...nt } from [32m'./features/admin/pages/permissions/permission-form/p[37m...
+         ╵              [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2307: Cannot find module './features/client/pages/home/home.component' or its corresponding type declarations.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/app.routes.ts:30:30:
+[37m      30 │ ...omeComponent } from [32m'./features/client/pages/home/home.component'[37m;
+         ╵                        [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2307: Cannot find module './features/client/pages/product-detail/product-detail.component' or its corresponding type declarations.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/app.routes.ts:31:39:
+[37m      31 │ ...nt } from [32m'./features/client/pages/product-detail/product-detai[37m...
+         ╵              [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2307: Cannot find module './features/client/pages/cart/cart.component' or its corresponding type declarations.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/app.routes.ts:32:30:
+[37m      32 │ ...artComponent } from [32m'./features/client/pages/cart/cart.component'[37m;
+         ╵                        [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2307: Cannot find module '../../environments/environment' or its corresponding type declarations.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/core/services/auth.ts:6:28:
+[37m      6 │ import { environment } from [32m'../../environments/environment'[37m;
+        ╵                             [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG8001: 'mat-icon' is not a known element:
+1. If 'mat-icon' is an Angular component, then verify that it is included in the '@Component.imports' of this component.
+2. If 'mat-icon' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/dashboard/dashboard.html:6:10:
+[37m      6 │           [32m<mat-icon>[37mpeople</mat-icon>
+        ╵           [32m~~~~~~~~~~[0m
+  Error occurs in the template of component DashboardComponent.
+    src/app/features/admin/pages/dashboard/dashboard.ts:18:15:
+[37m      18 │   templateUrl: [32m'./dashboard.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG8001: 'mat-icon' is not a known element:
+1. If 'mat-icon' is an Angular component, then verify that it is included in the '@Component.imports' of this component.
+2. If 'mat-icon' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/dashboard/dashboard.html:21:10:
+[37m      21 │           [32m<mat-icon>[37minventory_2</mat-icon>
+         ╵           [32m~~~~~~~~~~[0m
+  Error occurs in the template of component DashboardComponent.
+    src/app/features/admin/pages/dashboard/dashboard.ts:18:15:
+[37m      18 │   templateUrl: [32m'./dashboard.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG8001: 'mat-icon' is not a known element:
+1. If 'mat-icon' is an Angular component, then verify that it is included in the '@Component.imports' of this component.
+2. If 'mat-icon' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/dashboard/dashboard.html:36:10:
+[37m      36 │           [32m<mat-icon>[37mcategory</mat-icon>
+         ╵           [32m~~~~~~~~~~[0m
+  Error occurs in the template of component DashboardComponent.
+    src/app/features/admin/pages/dashboard/dashboard.ts:18:15:
+[37m      18 │   templateUrl: [32m'./dashboard.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG8001: 'mat-icon' is not a known element:
+1. If 'mat-icon' is an Angular component, then verify that it is included in the '@Component.imports' of this component.
+2. If 'mat-icon' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/dashboard/dashboard.html:51:10:
+[37m      51 │           [32m<mat-icon>[37mlocal_offer</mat-icon>
+         ╵           [32m~~~~~~~~~~[0m
+  Error occurs in the template of component DashboardComponent.
+    src/app/features/admin/pages/dashboard/dashboard.ts:18:15:
+[37m      18 │   templateUrl: [32m'./dashboard.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'getAll' does not exist on type 'UserService'.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/dashboard/dashboard.ts:43:21:
+[37m      43 │     this.userService.[32mgetAll[37m().subscribe({
+         ╵                      [32m~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS7006: Parameter 'users' implicitly has an 'any' type.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/dashboard/dashboard.ts:44:13:
+[37m      44 │       next: ([32musers[37m) => {
+         ╵              [32m~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS7006: Parameter 'error' implicitly has an 'any' type.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/dashboard/dashboard.ts:48:14:
+[37m      48 │       error: ([32merror[37m) => {
+         ╵               [32m~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'getAll' does not exist on type 'ProductService'.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/dashboard/dashboard.ts:55:24:
+[37m      55 │     this.productService.[32mgetAll[37m().subscribe({
+         ╵                         [32m~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS7006: Parameter 'products' implicitly has an 'any' type.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/dashboard/dashboard.ts:56:13:
+[37m      56 │       next: ([32mproducts[37m) => {
+         ╵              [32m~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS7006: Parameter 'error' implicitly has an 'any' type.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/dashboard/dashboard.ts:60:14:
+[37m      60 │       error: ([32merror[37m) => {
+         ╵               [32m~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'getAll' does not exist on type 'CategoryService'.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/dashboard/dashboard.ts:67:25:
+[37m      67 │     this.categoryService.[32mgetAll[37m().subscribe({
+         ╵                          [32m~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS7006: Parameter 'categories' implicitly has an 'any' type.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/dashboard/dashboard.ts:68:13:
+[37m      68 │       next: ([32mcategories[37m) => {
+         ╵              [32m~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS7006: Parameter 'error' implicitly has an 'any' type.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/dashboard/dashboard.ts:72:14:
+[37m      72 │       error: ([32merror[37m) => {
+         ╵               [32m~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'getAll' does not exist on type 'CouponService'.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/dashboard/dashboard.ts:79:23:
+[37m      79 │     this.couponService.[32mgetAll[37m().subscribe({
+         ╵                        [32m~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS7006: Parameter 'coupons' implicitly has an 'any' type.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/dashboard/dashboard.ts:80:13:
+[37m      80 │       next: ([32mcoupons[37m) => {
+         ╵              [32m~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS7006: Parameter 'error' implicitly has an 'any' type.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/dashboard/dashboard.ts:84:14:
+[37m      84 │       error: ([32merror[37m) => {
+         ╵               [32m~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG8003: No directive found with exportAs 'ngForm'.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/login/login.html:8:24:
+[37m      8 │       <form #loginForm="[32mngForm[37m" (ngSubmit)="onSubmit()">
+        ╵                         [32m~~~~~~[0m
+  Error occurs in the template of component Login.
+    src/app/features/admin/pages/login/login.component.ts:12:15:
+[37m      12 │   templateUrl: [32m'./login.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG8002: Can't bind to 'ngModel' since it isn't a known property of 'input'.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/login/login.html:11:39:
+[37m      11 │ ...matInput type="email" [32m[(ngModel)]="email"[37m name="email" required...
+         ╵                          [32m~~~~~~~~~~~~~~~~~~~[0m
+  Error occurs in the template of component Login.
+    src/app/features/admin/pages/login/login.component.ts:12:15:
+[37m      12 │   templateUrl: [32m'./login.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG8002: Can't bind to 'ngModel' since it isn't a known property of 'input'.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/login/login.html:22:42:
+[37m      22 │ ...nput type="password" [32m[(ngModel)]="password"[37m name="password" req...
+         ╵                         [32m~~~~~~~~~~~~~~~~~~~~~~[0m
+  Error occurs in the template of component Login.
+    src/app/features/admin/pages/login/login.component.ts:12:15:
+[37m      12 │   templateUrl: [32m'./login.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG8002: Can't bind to 'formGroup' since it isn't a known property of 'form'.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/users/user-form/user-form.component.html:3:6:
+[37m      3 │ <form [32m[formGroup]="userForm"[37m (ngSubmit)="onSubmit()" class="form-co...
+        ╵       [32m~~~~~~~~~~~~~~~~~~~~~~[0m
+  Error occurs in the template of component UserFormComponent.
+    src/app/features/admin/pages/users/user-form/user-form.component.ts:8:15:
+[37m      8 │   templateUrl: [32m'./user-form.component.html'[37m,
+        ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG8001: 'mat-dialog-content' is not a known element:
+1. If 'mat-dialog-content' is an Angular component, then verify that it is included in the '@Component.imports' of this component.
+2. If 'mat-dialog-content' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/users/user-form/user-form.component.html:4:2:
+[37m      4 │   [32m<mat-dialog-content>[37m
+        ╵   [32m~~~~~~~~~~~~~~~~~~~~[0m
+  Error occurs in the template of component UserFormComponent.
+    src/app/features/admin/pages/users/user-form/user-form.component.ts:8:15:
+[37m      8 │   templateUrl: [32m'./user-form.component.html'[37m,
+        ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG8001: 'mat-form-field' is not a known element:
+1. If 'mat-form-field' is an Angular component, then verify that it is included in the '@Component.imports' of this component.
+2. If 'mat-form-field' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/users/user-form/user-form.component.html:5:4:
+[37m      5 │     [32m<mat-form-field appearance="fill" class="full-width">[37m
+        ╵     [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+  Error occurs in the template of component UserFormComponent.
+    src/app/features/admin/pages/users/user-form/user-form.component.ts:8:15:
+[37m      8 │   templateUrl: [32m'./user-form.component.html'[37m,
+        ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG8001: 'mat-label' is not a known element:
+1. If 'mat-label' is an Angular component, then verify that it is included in the '@Component.imports' of this component.
+2. If 'mat-label' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/users/user-form/user-form.component.html:6:6:
+[37m      6 │       [32m<mat-label>[37mTên đăng nhập</mat-label>
+        ╵       [32m~~~~~~~~~~~[0m
+  Error occurs in the template of component UserFormComponent.
+    src/app/features/admin/pages/users/user-form/user-form.component.ts:8:15:
+[37m      8 │   templateUrl: [32m'./user-form.component.html'[37m,
+        ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG8001: 'mat-error' is not a known element:
+1. If 'mat-error' is an Angular component, then verify that it is included in the '@Component.imports' of this component.
+2. If 'mat-error' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/users/user-form/user-form.component.html:8:6:
+[37m      8 │       [32m<mat-error *ngIf="f['username'].hasError('required')">[37m
+        ╵       [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+  Error occurs in the template of component UserFormComponent.
+    src/app/features/admin/pages/users/user-form/user-form.component.ts:8:15:
+[37m      8 │   templateUrl: [32m'./user-form.component.html'[37m,
+        ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG8001: 'mat-error' is not a known element:
+1. If 'mat-error' is an Angular component, then verify that it is included in the '@Component.imports' of this component.
+2. If 'mat-error' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/users/user-form/user-form.component.html:11:6:
+[37m      11 │       [32m<mat-error *ngIf="f['username'].hasError('minlength')">[37m
+         ╵       [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+  Error occurs in the template of component UserFormComponent.
+    src/app/features/admin/pages/users/user-form/user-form.component.ts:8:15:
+[37m      8 │   templateUrl: [32m'./user-form.component.html'[37m,
+        ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG8001: 'mat-error' is not a known element:
+1. If 'mat-error' is an Angular component, then verify that it is included in the '@Component.imports' of this component.
+2. If 'mat-error' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/users/user-form/user-form.component.html:14:6:
+[37m      14 │       [32m<mat-error *ngIf="f['username'].hasError('maxlength')">[37m
+         ╵       [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+  Error occurs in the template of component UserFormComponent.
+    src/app/features/admin/pages/users/user-form/user-form.component.ts:8:15:
+[37m      8 │   templateUrl: [32m'./user-form.component.html'[37m,
+        ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG8001: 'mat-form-field' is not a known element:
+1. If 'mat-form-field' is an Angular component, then verify that it is included in the '@Component.imports' of this component.
+2. If 'mat-form-field' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/users/user-form/user-form.component.html:19:4:
+[37m      19 │     [32m<mat-form-field appearance="fill" class="full-width">[37m
+         ╵     [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+  Error occurs in the template of component UserFormComponent.
+    src/app/features/admin/pages/users/user-form/user-form.component.ts:8:15:
+[37m      8 │   templateUrl: [32m'./user-form.component.html'[37m,
+        ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG8001: 'mat-label' is not a known element:
+1. If 'mat-label' is an Angular component, then verify that it is included in the '@Component.imports' of this component.
+2. If 'mat-label' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/users/user-form/user-form.component.html:20:6:
+[37m      20 │       [32m<mat-label>[37mEmail</mat-label>
+         ╵       [32m~~~~~~~~~~~[0m
+  Error occurs in the template of component UserFormComponent.
+    src/app/features/admin/pages/users/user-form/user-form.component.ts:8:15:
+[37m      8 │   templateUrl: [32m'./user-form.component.html'[37m,
+        ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG8001: 'mat-error' is not a known element:
+1. If 'mat-error' is an Angular component, then verify that it is included in the '@Component.imports' of this component.
+2. If 'mat-error' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/users/user-form/user-form.component.html:22:6:
+[37m      22 │       [32m<mat-error *ngIf="f['email'].hasError('required')">[37m
+         ╵       [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+  Error occurs in the template of component UserFormComponent.
+    src/app/features/admin/pages/users/user-form/user-form.component.ts:8:15:
+[37m      8 │   templateUrl: [32m'./user-form.component.html'[37m,
+        ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG8001: 'mat-error' is not a known element:
+1. If 'mat-error' is an Angular component, then verify that it is included in the '@Component.imports' of this component.
+2. If 'mat-error' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/users/user-form/user-form.component.html:25:6:
+[37m      25 │       [32m<mat-error *ngIf="f['email'].hasError('email')">[37m
+         ╵       [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+  Error occurs in the template of component UserFormComponent.
+    src/app/features/admin/pages/users/user-form/user-form.component.ts:8:15:
+[37m      8 │   templateUrl: [32m'./user-form.component.html'[37m,
+        ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG8001: 'mat-form-field' is not a known element:
+1. If 'mat-form-field' is an Angular component, then verify that it is included in the '@Component.imports' of this component.
+2. If 'mat-form-field' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/users/user-form/user-form.component.html:30:4:
+[37m      30 │     [32m<mat-form-field appearance="fill" class="full-width">[37m
+         ╵     [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+  Error occurs in the template of component UserFormComponent.
+    src/app/features/admin/pages/users/user-form/user-form.component.ts:8:15:
+[37m      8 │   templateUrl: [32m'./user-form.component.html'[37m,
+        ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG8001: 'mat-label' is not a known element:
+1. If 'mat-label' is an Angular component, then verify that it is included in the '@Component.imports' of this component.
+2. If 'mat-label' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/users/user-form/user-form.component.html:31:6:
+[37m      31 │       [32m<mat-label>[37mHọ và tên</mat-label>
+         ╵       [32m~~~~~~~~~~~[0m
+  Error occurs in the template of component UserFormComponent.
+    src/app/features/admin/pages/users/user-form/user-form.component.ts:8:15:
+[37m      8 │   templateUrl: [32m'./user-form.component.html'[37m,
+        ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG8001: 'mat-error' is not a known element:
+1. If 'mat-error' is an Angular component, then verify that it is included in the '@Component.imports' of this component.
+2. If 'mat-error' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/users/user-form/user-form.component.html:33:6:
+[37m      33 │       [32m<mat-error *ngIf="f['fullName'].hasError('required')">[37m
+         ╵       [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+  Error occurs in the template of component UserFormComponent.
+    src/app/features/admin/pages/users/user-form/user-form.component.ts:8:15:
+[37m      8 │   templateUrl: [32m'./user-form.component.html'[37m,
+        ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG8001: 'mat-error' is not a known element:
+1. If 'mat-error' is an Angular component, then verify that it is included in the '@Component.imports' of this component.
+2. If 'mat-error' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/users/user-form/user-form.component.html:36:6:
+[37m      36 │       [32m<mat-error *ngIf="f['fullName'].hasError('maxlength')">[37m
+         ╵       [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+  Error occurs in the template of component UserFormComponent.
+    src/app/features/admin/pages/users/user-form/user-form.component.ts:8:15:
+[37m      8 │   templateUrl: [32m'./user-form.component.html'[37m,
+        ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG8001: 'mat-form-field' is not a known element:
+1. If 'mat-form-field' is an Angular component, then verify that it is included in the '@Component.imports' of this component.
+2. If 'mat-form-field' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/users/user-form/user-form.component.html:41:4:
+[37m      41 │     [32m<mat-form-field appearance="fill" class="full-width">[37m
+         ╵     [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+  Error occurs in the template of component UserFormComponent.
+    src/app/features/admin/pages/users/user-form/user-form.component.ts:8:15:
+[37m      8 │   templateUrl: [32m'./user-form.component.html'[37m,
+        ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG8001: 'mat-label' is not a known element:
+1. If 'mat-label' is an Angular component, then verify that it is included in the '@Component.imports' of this component.
+2. If 'mat-label' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/users/user-form/user-form.component.html:42:6:
+[37m      42 │       [32m<mat-label>[37mMật khẩu</mat-label>
+         ╵       [32m~~~~~~~~~~~[0m
+  Error occurs in the template of component UserFormComponent.
+    src/app/features/admin/pages/users/user-form/user-form.component.ts:8:15:
+[37m      8 │   templateUrl: [32m'./user-form.component.html'[37m,
+        ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG8001: 'mat-hint' is not a known element:
+1. If 'mat-hint' is an Angular component, then verify that it is included in the '@Component.imports' of this component.
+2. If 'mat-hint' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/users/user-form/user-form.component.html:44:6:
+[37m      44 │       [32m<mat-hint *ngIf="!data.user">[37mMật khẩu tối thiểu 6 k�...
+         ╵       [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+  Error occurs in the template of component UserFormComponent.
+    src/app/features/admin/pages/users/user-form/user-form.component.ts:8:15:
+[37m      8 │   templateUrl: [32m'./user-form.component.html'[37m,
+        ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG8001: 'mat-hint' is not a known element:
+1. If 'mat-hint' is an Angular component, then verify that it is included in the '@Component.imports' of this component.
+2. If 'mat-hint' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/users/user-form/user-form.component.html:45:6:
+[37m      45 │       [32m<mat-hint *ngIf="data.user">[37m Để trống nếu không mu�...
+         ╵       [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+  Error occurs in the template of component UserFormComponent.
+    src/app/features/admin/pages/users/user-form/user-form.component.ts:8:15:
+[37m      8 │   templateUrl: [32m'./user-form.component.html'[37m,
+        ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG8001: 'mat-error' is not a known element:
+1. If 'mat-error' is an Angular component, then verify that it is included in the '@Component.imports' of this component.
+2. If 'mat-error' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/users/user-form/user-form.component.html:46:6:
+[37m      46 │       [32m<mat-error *ngIf="f['password'].hasError('minlength') && !da[37m...
+         ╵       [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+  Error occurs in the template of component UserFormComponent.
+    src/app/features/admin/pages/users/user-form/user-form.component.ts:8:15:
+[37m      8 │   templateUrl: [32m'./user-form.component.html'[37m,
+        ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG8001: 'mat-form-field' is not a known element:
+1. If 'mat-form-field' is an Angular component, then verify that it is included in the '@Component.imports' of this component.
+2. If 'mat-form-field' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/users/user-form/user-form.component.html:51:4:
+[37m      51 │     [32m<mat-form-field appearance="fill" class="full-width">[37m
+         ╵     [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+  Error occurs in the template of component UserFormComponent.
+    src/app/features/admin/pages/users/user-form/user-form.component.ts:8:15:
+[37m      8 │   templateUrl: [32m'./user-form.component.html'[37m,
+        ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG8001: 'mat-label' is not a known element:
+1. If 'mat-label' is an Angular component, then verify that it is included in the '@Component.imports' of this component.
+2. If 'mat-label' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/users/user-form/user-form.component.html:52:6:
+[37m      52 │       [32m<mat-label>[37mVai trò</mat-label>
+         ╵       [32m~~~~~~~~~~~[0m
+  Error occurs in the template of component UserFormComponent.
+    src/app/features/admin/pages/users/user-form/user-form.component.ts:8:15:
+[37m      8 │   templateUrl: [32m'./user-form.component.html'[37m,
+        ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG8001: 'mat-select' is not a known element:
+1. If 'mat-select' is an Angular component, then verify that it is included in the '@Component.imports' of this component.
+2. If 'mat-select' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/users/user-form/user-form.component.html:53:6:
+[37m      53 │       [32m<mat-select formControlName="roleNames" multiple>[37m
+         ╵       [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+  Error occurs in the template of component UserFormComponent.
+    src/app/features/admin/pages/users/user-form/user-form.component.ts:8:15:
+[37m      8 │   templateUrl: [32m'./user-form.component.html'[37m,
+        ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG8001: 'mat-option' is not a known element:
+1. If 'mat-option' is an Angular component, then verify that it is included in the '@Component.imports' of this component.
+2. If 'mat-option' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/users/user-form/user-form.component.html:54:8:
+[37m      54 │         [32m<mat-option *ngFor="let role of roles" [value]="role">[37m
+         ╵         [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+  Error occurs in the template of component UserFormComponent.
+    src/app/features/admin/pages/users/user-form/user-form.component.ts:8:15:
+[37m      8 │   templateUrl: [32m'./user-form.component.html'[37m,
+        ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG8002: Can't bind to 'value' since it isn't a known property of 'mat-option'.
+1. If 'mat-option' is an Angular component and it has 'value' input, then verify that it is included in the '@Component.imports' of this component.
+2. If 'mat-option' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.
+3. To allow any property add 'NO_ERRORS_SCHEMA' to the '@Component.schemas' of this component.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/users/user-form/user-form.component.html:54:47:
+[37m      54 │         <mat-option *ngFor="let role of roles" [32m[value]="role"[37m>
+         ╵                                                [32m~~~~~~~~~~~~~~[0m
+  Error occurs in the template of component UserFormComponent.
+    src/app/features/admin/pages/users/user-form/user-form.component.ts:8:15:
+[37m      8 │   templateUrl: [32m'./user-form.component.html'[37m,
+        ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG8001: 'mat-error' is not a known element:
+1. If 'mat-error' is an Angular component, then verify that it is included in the '@Component.imports' of this component.
+2. If 'mat-error' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/users/user-form/user-form.component.html:58:6:
+[37m      58 │       [32m<mat-error *ngIf="f['roleNames'].hasError('required')">[37m
+         ╵       [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+  Error occurs in the template of component UserFormComponent.
+    src/app/features/admin/pages/users/user-form/user-form.component.ts:8:15:
+[37m      8 │   templateUrl: [32m'./user-form.component.html'[37m,
+        ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG8001: 'mat-dialog-actions' is not a known element:
+1. If 'mat-dialog-actions' is an Angular component, then verify that it is included in the '@Component.imports' of this component.
+2. If 'mat-dialog-actions' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/users/user-form/user-form.component.html:64:2:
+[37m      64 │   [32m<mat-dialog-actions align="end">[37m
+         ╵   [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+  Error occurs in the template of component UserFormComponent.
+    src/app/features/admin/pages/users/user-form/user-form.component.ts:8:15:
+[37m      8 │   templateUrl: [32m'./user-form.component.html'[37m,
+        ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2304: Cannot find name 'roleNames'.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/users/user-form/user-form.component.ts:26:19:
+[37m      26 │       roleNames: [[[32mroleNames[37m: [[], [Validators.required]]
+         ╵                    [32m~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS1005: ',' expected.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/users/user-form/user-form.component.ts:26:28:
+[37m      26 │       roleNames: [[roleNames[32m:[37m [[], [Validators.required]]
+         ╵                             [32m^[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS1005: ',' expected.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/users/user-form/user-form.component.ts:27:4:
+[37m      27 │     [32m}[37m);
+         ╵     [32m^[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2304: Cannot find name 'UserUpdateRequest'.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/users/user-form/user-form.component.ts:55:44:
+[37m      55 │       const userData: UserCreationRequest | [32mUserUpdateRequest[37m = {
+         ╵                                             [32m~~~~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2304: Cannot find name 'UserUpdateRequest'.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/users/user-form/user-form.component.ts:65:21:
+[37m      65 │         (userData as [32mUserUpdateRequest[37m).id = this.data.user.id;
+         ╵                      [32m~~~~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2304: Cannot find name 'UserUpdateRequest'.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/users/user-form/user-form.component.ts:67:23:
+[37m      67 │           (userData as [32mUserUpdateRequest[37m).password = formValue.pas...
+         ╵                        [32m~~~~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG8001: 'mat-toolbar' is not a known element:
+1. If 'mat-toolbar' is an Angular component, then verify that it is included in the '@Component.imports' of this component.
+2. If 'mat-toolbar' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/users/users.html:2:2:
+[37m      2 │   [32m<mat-toolbar color="primary" class="toolbar">[37m
+        ╵   [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+  Error occurs in the template of component UsersComponent.
+    src/app/features/admin/pages/users/users.ts:10:15:
+[37m      10 │   templateUrl: [32m'./users.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG8001: 'mat-form-field' is not a known element:
+1. If 'mat-form-field' is an Angular component, then verify that it is included in the '@Component.imports' of this component.
+2. If 'mat-form-field' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/users/users.html:5:4:
+[37m      5 │     [32m<mat-form-field appearance="fill" class="search-box">[37m
+        ╵     [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+  Error occurs in the template of component UsersComponent.
+    src/app/features/admin/pages/users/users.ts:10:15:
+[37m      10 │   templateUrl: [32m'./users.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG8001: 'mat-label' is not a known element:
+1. If 'mat-label' is an Angular component, then verify that it is included in the '@Component.imports' of this component.
+2. If 'mat-label' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/users/users.html:6:6:
+[37m      6 │       [32m<mat-label>[37mTìm kiếm...</mat-label>
+        ╵       [32m~~~~~~~~~~~[0m
+  Error occurs in the template of component UsersComponent.
+    src/app/features/admin/pages/users/users.ts:10:15:
+[37m      10 │   templateUrl: [32m'./users.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG8002: Can't bind to 'ngModel' since it isn't a known property of 'input'.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/users/users.html:7:46:
+[37m      7 │ ...up)="applyFilter()" [32m[(ngModel)]="searchTerm"[37m placeholder="Tìm k...
+        ╵                        [32m~~~~~~~~~~~~~~~~~~~~~~~~[0m
+  Error occurs in the template of component UsersComponent.
+    src/app/features/admin/pages/users/users.ts:10:15:
+[37m      10 │   templateUrl: [32m'./users.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG8001: 'mat-icon' is not a known element:
+1. If 'mat-icon' is an Angular component, then verify that it is included in the '@Component.imports' of this component.
+2. If 'mat-icon' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/users/users.html:8:6:
+[37m      8 │       [32m<mat-icon matSuffix>[37msearch</mat-icon>
+        ╵       [32m~~~~~~~~~~~~~~~~~~~~[0m
+  Error occurs in the template of component UsersComponent.
+    src/app/features/admin/pages/users/users.ts:10:15:
+[37m      10 │   templateUrl: [32m'./users.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG8001: 'mat-icon' is not a known element:
+1. If 'mat-icon' is an Angular component, then verify that it is included in the '@Component.imports' of this component.
+2. If 'mat-icon' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/users/users.html:11:6:
+[37m      11 │       [32m<mat-icon>[37mperson_add</mat-icon>
+         ╵       [32m~~~~~~~~~~[0m
+  Error occurs in the template of component UsersComponent.
+    src/app/features/admin/pages/users/users.ts:10:15:
+[37m      10 │   templateUrl: [32m'./users.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG8001: 'mat-spinner' is not a known element:
+1. If 'mat-spinner' is an Angular component, then verify that it is included in the '@Component.imports' of this component.
+2. If 'mat-spinner' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/users/users.html:19:8:
+[37m      19 │         [32m<mat-spinner diameter="40">[37m</mat-spinner>
+         ╵         [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+  Error occurs in the template of component UsersComponent.
+    src/app/features/admin/pages/users/users.ts:10:15:
+[37m      10 │   templateUrl: [32m'./users.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG8001: 'mat-icon' is not a known element:
+1. If 'mat-icon' is an Angular component, then verify that it is included in the '@Component.imports' of this component.
+2. If 'mat-icon' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/users/users.html:24:8:
+[37m      24 │         [32m<mat-icon>[37mperson_off</mat-icon>
+         ╵         [32m~~~~~~~~~~[0m
+  Error occurs in the template of component UsersComponent.
+    src/app/features/admin/pages/users/users.ts:10:15:
+[37m      10 │   templateUrl: [32m'./users.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG8002: Can't bind to 'dataSource' since it isn't a known property of 'table'.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/users/users.html:30:25:
+[37m      30 │ ... <table mat-table [32m[dataSource]="filteredUsers"[37m class="mat-eleva...
+         ╵                      [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+  Error occurs in the template of component UsersComponent.
+    src/app/features/admin/pages/users/users.ts:10:15:
+[37m      10 │   templateUrl: [32m'./users.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG8001: 'mat-chip-listbox' is not a known element:
+1. If 'mat-chip-listbox' is an Angular component, then verify that it is included in the '@Component.imports' of this component.
+2. If 'mat-chip-listbox' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/users/users.html:54:14:
+[37m      54 │               [32m<mat-chip-listbox aria-label="Role selection">[37m
+         ╵               [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+  Error occurs in the template of component UsersComponent.
+    src/app/features/admin/pages/users/users.ts:10:15:
+[37m      10 │   templateUrl: [32m'./users.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG8001: 'mat-chip-option' is not a known element:
+1. If 'mat-chip-option' is an Angular component, then verify that it is included in the '@Component.imports' of this component.
+2. If 'mat-chip-option' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/users/users.html:56:18:
+[37m      56 │                   [32m<mat-chip-option color="primary" selected>[37m
+         ╵                   [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+  Error occurs in the template of component UsersComponent.
+    src/app/features/admin/pages/users/users.ts:10:15:
+[37m      10 │   templateUrl: [32m'./users.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG8001: 'mat-badge' is not a known element:
+1. If 'mat-badge' is an Angular component, then verify that it is included in the '@Component.imports' of this component.
+2. If 'mat-badge' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/users/users.html:69:16:
+[37m      69 │                 [32m<mat-badge color="warn" size="small" hidden="false">[37m
+         ╵                 [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+  Error occurs in the template of component UsersComponent.
+    src/app/features/admin/pages/users/users.ts:10:15:
+[37m      10 │   templateUrl: [32m'./users.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG8001: 'mat-badge' is not a known element:
+1. If 'mat-badge' is an Angular component, then verify that it is included in the '@Component.imports' of this component.
+2. If 'mat-badge' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/users/users.html:73:16:
+[37m      73 │ ...           [32m<mat-badge color="primary" size="small" hidden="false">[37m
+         ╵               [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+  Error occurs in the template of component UsersComponent.
+    src/app/features/admin/pages/users/users.ts:10:15:
+[37m      10 │   templateUrl: [32m'./users.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG8001: 'mat-icon' is not a known element:
+1. If 'mat-icon' is an Angular component, then verify that it is included in the '@Component.imports' of this component.
+2. If 'mat-icon' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/users/users.html:86:18:
+[37m      86 │                   [32m<mat-icon>[37mvisibility</mat-icon>
+         ╵                   [32m~~~~~~~~~~[0m
+  Error occurs in the template of component UsersComponent.
+    src/app/features/admin/pages/users/users.ts:10:15:
+[37m      10 │   templateUrl: [32m'./users.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG8001: 'mat-icon' is not a known element:
+1. If 'mat-icon' is an Angular component, then verify that it is included in the '@Component.imports' of this component.
+2. If 'mat-icon' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/users/users.html:89:18:
+[37m      89 │                   [32m<mat-icon>[37medit</mat-icon>
+         ╵                   [32m~~~~~~~~~~[0m
+  Error occurs in the template of component UsersComponent.
+    src/app/features/admin/pages/users/users.ts:10:15:
+[37m      10 │   templateUrl: [32m'./users.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG8001: 'mat-icon' is not a known element:
+1. If 'mat-icon' is an Angular component, then verify that it is included in the '@Component.imports' of this component.
+2. If 'mat-icon' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.[0m [1m[35m[plugin angular-compiler][0m
+    src/app/features/admin/pages/users/users.html:92:18:
+[37m      92 │                   [32m<mat-icon>[37mdelete</mat-icon>
+         ╵                   [32m~~~~~~~~~~[0m
+  Error occurs in the template of component UsersComponent.
+    src/app/features/admin/pages/users/users.ts:10:15:
+[37m      10 │   templateUrl: [32m'./users.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG6008: Component ConfirmDialogComponent is standalone, and cannot be declared in an NgModule. Did you mean to import it instead?[0m [1m[35m[plugin angular-compiler][0m
+    src/app/shared/shared.module.ts:9:4:
+[37m      9 │     [32mConfirmDialogComponent[37m
+        ╵     [32m~~~~~~~~~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG6004: Can't be exported from this NgModule, as it must be imported first[0m [1m[35m[plugin angular-compiler][0m
+    src/app/shared/shared.module.ts:17:4:
+[37m      17 │     [32mConfirmDialogComponent[37m
+         ╵     [32m~~~~~~~~~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "./features/admin/layout/admin-layout/admin-layout.component"[0m
+    src/app/app.routes.ts:6:37:
+[37m      6 │ ...ent } from [32m'./features/admin/layout/admin-layout/admin-layout.co[37m...
+        ╵               [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "./features/admin/pages/login/login.component"[0m
+    src/app/app.routes.ts:7:31:
+[37m      7 │ ...ginComponent } from [32m'./features/admin/pages/login/login.component'[37m;
+        ╵                        [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "./features/admin/pages/dashboard/dashboard.component"[0m
+    src/app/app.routes.ts:8:35:
+[37m      8 │ ...nent } from [32m'./features/admin/pages/dashboard/dashboard.component'[37m;
+        ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "./features/admin/pages/users/users.component"[0m
+    src/app/app.routes.ts:9:31:
+[37m      9 │ ...ersComponent } from [32m'./features/admin/pages/users/users.component'[37m;
+        ╵                        [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "./features/admin/pages/products/products.component"[0m
+    src/app/app.routes.ts:13:34:
+[37m      13 │ ...onent } from [32m'./features/admin/pages/products/products.component'[37m;
+         ╵                 [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "./features/admin/pages/products/product-form/product-form.component"[0m
+    src/app/app.routes.ts:14:39:
+[37m      14 │ ...nt } from [32m'./features/admin/pages/products/product-form/product[37m...
+         ╵              [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "./features/admin/pages/categories/categories.component"[0m
+    src/app/app.routes.ts:16:36:
+[37m      16 │ ...nt } from [32m'./features/admin/pages/categories/categories.compone[37m...
+         ╵              [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "./features/admin/pages/categories/category-form/category-form.component"[0m
+    src/app/app.routes.ts:17:40:
+[37m      17 │ ...nt } from [32m'./features/admin/pages/categories/category-form/cate[37m...
+         ╵              [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "./features/admin/pages/categories/category-detail/category-detail.component"[0m
+    src/app/app.routes.ts:19:40:
+[37m      19 │ ...nt } from [32m'./features/admin/pages/categories/category-detail/ca[37m...
+         ╵              [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "./features/admin/pages/coupons/coupons.component"[0m
+    src/app/app.routes.ts:20:33:
+[37m      20 │ ...mponent } from [32m'./features/admin/pages/coupons/coupons.component'[37m;
+         ╵                   [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "./features/admin/pages/coupons/coupon-form/coupon-form.component"[0m
+    src/app/app.routes.ts:21:38:
+[37m      21 │ ...nt } from [32m'./features/admin/pages/coupons/coupon-form/coupon-fo[37m...
+         ╵              [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "./features/admin/pages/coupons/coupon-detail/coupon-detail.component"[0m
+    src/app/app.routes.ts:23:38:
+[37m      23 │ ...nt } from [32m'./features/admin/pages/coupons/coupon-detail/coupon-[37m...
+         ╵              [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "./features/admin/pages/roles/roles.component"[0m
+    src/app/app.routes.ts:24:31:
+[37m      24 │ ...esComponent } from [32m'./features/admin/pages/roles/roles.component'[37m;
+         ╵                       [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "./features/admin/pages/roles/role-form/role-form.component"[0m
+    src/app/app.routes.ts:25:36:
+[37m      25 │ ...nt } from [32m'./features/admin/pages/roles/role-form/role-form.com[37m...
+         ╵              [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "./features/admin/pages/permissions/permissions.component"[0m
+    src/app/app.routes.ts:27:37:
+[37m      27 │ ...nt } from [32m'./features/admin/pages/permissions/permissions.compo[37m...
+         ╵              [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "./features/admin/pages/permissions/permission-form/permission-form.component"[0m
+    src/app/app.routes.ts:28:42:
+[37m      28 │ ...nt } from [32m'./features/admin/pages/permissions/permission-form/p[37m...
+         ╵              [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "./features/client/pages/home/home.component"[0m
+    src/app/app.routes.ts:30:30:
+[37m      30 │ ...omeComponent } from [32m'./features/client/pages/home/home.component'[37m;
+         ╵                        [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "./features/client/pages/product-detail/product-detail.component"[0m
+    src/app/app.routes.ts:31:39:
+[37m      31 │ ...nt } from [32m'./features/client/pages/product-detail/product-detai[37m...
+         ╵              [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "./features/client/pages/cart/cart.component"[0m
+    src/app/app.routes.ts:32:30:
+[37m      32 │ ...artComponent } from [32m'./features/client/pages/cart/cart.component'[37m;
+         ╵                        [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[39m[22m

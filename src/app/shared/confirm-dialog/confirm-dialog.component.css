@@ -6,7 +6,7 @@
 
 .mat-dialog-content {
   margin: 24px 0;
- 0px 24px 0;
+  padding: 0 24px;
   text-align: center;
 }
 

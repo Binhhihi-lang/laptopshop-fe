@@ -2,9 +2,8 @@ import { Injectable } from '@angular/core';
 import { ApiService } from './api.service';
 import { Router } from '@angular/router';
 import { BehaviorSubject, Observable, tap, throwError } from 'rxjs';
-import { ApiResponse } from './api.service';
-import { API_ENDPOINTS, STORAGE_KEYS } from '../utils/constants';
 import { JwtHelper } from '../utils/jwt.helper';
+import { API_ENDPOINTS, STORAGE_KEYS } from '../utils/constants';
 
 export interface LoginResponse {
   authenticated: boolean;

@@ -1,107 +1,107 @@
-<div class="users-container">
-  <mat-toolbar color="primary" class="toolbar">
-    <span>Quản lý người dùng</span>
-    <span class="spacer"></span>
-    <mat-form-field appearance="fill" class="search-box">
-      <mat-label>Tìm kiếm...</mat-label>
-      <input matInput (keyup)="applyFilter()" [(ngModel)]="searchTerm" placeholder="Tìm kiếm theo username, email, họ tên">
-      <mat-icon matSuffix>search</mat-icon>
-    </mat-form-field>
-    <button mat-flat-button color="primary" (click)="createUser()">
-      <mat-icon>person_add</mat-icon>
-      Thêm mới
-    </button>
-  </mat-toolbar>
+<!--<div class="users-container">-->
+<!--  <mat-toolbar color="primary" class="toolbar">-->
+<!--    <span>Quản lý người dùng</span>-->
+<!--    <span class="spacer"></span>-->
+<!--    <mat-form-field appearance="fill" class="search-box">-->
+<!--      <mat-label>Tìm kiếm...</mat-label>-->
+<!--      <input matInput (keyup)="applyFilter()" [(ngModel)]="searchTerm" placeholder="Tìm kiếm theo username, email, họ tên">-->
+<!--      <mat-icon matSuffix>search</mat-icon>-->
+<!--    </mat-form-field>-->
+<!--    <button mat-flat-button color="primary" (click)="createUser()">-->
+<!--      <mat-icon>person_add</mat-icon>-->
+<!--      Thêm mới-->
+<!--    </button>-->
+<!--  </mat-toolbar>-->
 
-  <div class="content">
-    @if (isLoading) {
-      <div class="loading-container">
-        <mat-spinner diameter="40"></mat-spinner>
-        <p>Đang tải dữ liệu...</p>
-      </div>
-    } @else if (filteredUsers.length === 0 && !isLoading) {
-      <div class="empty-state">
-        <mat-icon>person_off</mat-icon>
-        <h3>Không có người dùng nào</h3>
-        <p>Nhấn nút "Thêm mới" để thêm người dùng đầu tiên</p>
-      </div>
-    } @else {
-      <div class="table-responsive">
-        <table mat-table [dataSource]="filteredUsers" class="mat-elevation-z8">
+<!--  <div class="content">-->
+<!--    @if (isLoading) {-->
+<!--      <div class="loading-container">-->
+<!--        <mat-spinner diameter="40"></mat-spinner>-->
+<!--        <p>Đang tải dữ liệu...</p>-->
+<!--      </div>-->
+<!--    } @else if (filteredUsers.length === 0 && !isLoading) {-->
+<!--      <div class="empty-state">-->
+<!--        <mat-icon>person_off</mat-icon>-->
+<!--        <h3>Không có người dùng nào</h3>-->
+<!--        <p>Nhấn nút "Thêm mới" để thêm người dùng đầu tiên</p>-->
+<!--      </div>-->
+<!--    } @else {-->
+<!--      <div class="table-responsive">-->
+<!--        <table mat-table [dataSource]="filteredUsers" class="mat-elevation-z8">-->
 
-          <!-- Username Column -->
-          <ng-container matColumnDef="username">
-            <th mat-header-cell *matHeaderCellDef> Tên đăng nhập </th>
-            <td mat-cell *matCellDef="let user"> {{user.username}} </td>
-          </ng-container>
+<!--          &lt;!&ndash; Username Column &ndash;&gt;-->
+<!--          <ng-container matColumnDef="username">-->
+<!--            <th mat-header-cell *matHeaderCellDef> Tên đăng nhập </th>-->
+<!--            <td mat-cell *matCellDef="let user"> {{user.username}} </td>-->
+<!--          </ng-container>-->
 
-          <!-- Email Column -->
-          <ng-container matColumnDef="email">
-            <th mat-header-cell *matHeaderCellDef> Email </th>
-            <td mat-cell *matCellDef="let user"> {{user.email}} </td>
-          </ng-container>
+<!--          &lt;!&ndash; Email Column &ndash;&gt;-->
+<!--          <ng-container matColumnDef="email">-->
+<!--            <th mat-header-cell *matHeaderCellDef> Email </th>-->
+<!--            <td mat-cell *matCellDef="let user"> {{user.email}} </td>-->
+<!--          </ng-container>-->
 
-          <!-- Full Name Column -->
-          <ng-container matColumnDef="fullName">
-            <th mat-header-cell *matHeaderCellDef> Họ và tên </th>
-            <td mat-cell *matCellDef="let user"> {{user.fullName}} </td>
-          </ng-container>
+<!--          &lt;!&ndash; Full Name Column &ndash;&gt;-->
+<!--          <ng-container matColumnDef="fullName">-->
+<!--            <th mat-header-cell *matHeaderCellDef> Họ và tên </th>-->
+<!--            <td mat-cell *matCellDef="let user"> {{user.fullName}} </td>-->
+<!--          </ng-container>-->
 
-          <!-- Roles Column -->
-          <ng-container matColumnDef="roles">
-            <th mat-header-cell *matHeaderCellDef> Vai trò </th>
-            <td mat-cell *matCellDef="let user">
-              <mat-chip-listbox aria-label="Role selection">
-                @for (role of user.roleNames; track role) {
-                  <mat-chip-option color="primary" selected>
-                    {{role}}
-                  </mat-chip-option>
-                }
-              </mat-chip-listbox>
-            </td>
-          </ng-container>
+<!--          &lt;!&ndash; Roles Column &ndash;&gt;-->
+<!--          <ng-container matColumnDef="roles">-->
+<!--            <th mat-header-cell *matHeaderCellDef> Vai trò </th>-->
+<!--            <td mat-cell *matCellDef="let user">-->
+<!--              <mat-chip-listbox aria-label="Role selection">-->
+<!--                @for (role of user.roleNames; track role) {-->
+<!--                  <mat-chip-option color="primary" selected>-->
+<!--                    {{role}}-->
+<!--                  </mat-chip-option>-->
+<!--                }-->
+<!--              </mat-chip-listbox>-->
+<!--            </td>-->
+<!--          </ng-container>-->
 
-          <!-- Deleted At Column -->
-          <ng-container matColumnDef="deletedAt">
-            <th mat-header-cell *matHeaderCellDef> Trạng thái </th>
-            <td mat-cell *matCellDef="let user">
-              @if (user.deletedAt) {
-                <mat-badge color="warn" size="small" hidden="false">
-                  Đã xóa
-                </mat-badge>
-              } @else {
-                <mat-badge color="primary" size="small" hidden="false">
-                  Hoạt động
-                </mat-badge>
-              }
-            </td>
-          </ng-container>
+<!--          &lt;!&ndash; Deleted At Column &ndash;&gt;-->
+<!--          <ng-container matColumnDef="deletedAt">-->
+<!--            <th mat-header-cell *matHeaderCellDef> Trạng thái </th>-->
+<!--            <td mat-cell *matCellDef="let user">-->
+<!--              @if (user.deletedAt) {-->
+<!--                <mat-badge color="warn" size="small" hidden="false">-->
+<!--                  Đã xóa-->
+<!--                </mat-badge>-->
+<!--              } @else {-->
+<!--                <mat-badge color="primary" size="small" hidden="false">-->
+<!--                  Hoạt động-->
+<!--                </mat-badge>-->
+<!--              }-->
+<!--            </td>-->
+<!--          </ng-container>-->
 
-          <!-- Actions Column -->
-          <ng-container matColumnDef="actions">
-            <th mat-header-cell *matHeaderCellDef> Thao tác </th>
-            <td mat-cell *matCellDef="let user">
-              <div class="action-buttons">
-                <button mat-icon-button color="primary" (click)="viewUserDetail(user)" [disabled]="user.deletedAt !== null">
-                  <mat-icon>visibility</mat-icon>
-                </button>
-                <button mat-icon-button color="accent" (click)="editUser(user)" [disabled]="user.deletedAt !== null">
-                  <mat-icon>edit</mat-icon>
-                </button>
-                <button mat-icon-button color="warn" (click)="deleteUser(user)">
-                  <mat-icon>delete</mat-icon>
-                </button>
-              </div>
-            </td>
-          </ng-container>
+<!--          &lt;!&ndash; Actions Column &ndash;&gt;-->
+<!--          <ng-container matColumnDef="actions">-->
+<!--            <th mat-header-cell *matHeaderCellDef> Thao tác </th>-->
+<!--            <td mat-cell *matCellDef="let user">-->
+<!--              <div class="action-buttons">-->
+<!--                <button mat-icon-button color="primary" (click)="viewUserDetail(user)" [disabled]="user.deletedAt !== null">-->
+<!--                  <mat-icon>visibility</mat-icon>-->
+<!--                </button>-->
+<!--                <button mat-icon-button color="accent" (click)="editUser(user)" [disabled]="user.deletedAt !== null">-->
+<!--                  <mat-icon>edit</mat-icon>-->
+<!--                </button>-->
+<!--                <button mat-icon-button color="warn" (click)="deleteUser(user)">-->
+<!--                  <mat-icon>delete</mat-icon>-->
+<!--                </button>-->
+<!--              </div>-->
+<!--            </td>-->
+<!--          </ng-container>-->
 
-          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: displayedColumns;"
-              class="user-row"
-              [class.deleted]="row.deletedAt !== null">
-          </tr>
-        </table>
-      </div>
-    }
-  </div>
-</div>
+<!--          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>-->
+<!--          <tr mat-row *matRowDef="let row; columns: displayedColumns;"-->
+<!--              class="user-row"-->
+<!--              [class.deleted]="row.deletedAt !== null">-->
+<!--          </tr>-->
+<!--        </table>-->
+<!--      </div>-->
+<!--    }-->
+<!--  </div>-->
+<!--</div>-->

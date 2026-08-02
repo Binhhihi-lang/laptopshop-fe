@@ -2,17 +2,7 @@ import { Injectable } from '@angular/core';
 import { ApiService } from './api.service';
 import { API_ENDPOINTS } from '../utils/constants';
 import { Observable } from 'rxjs';
-
-export interface Role {
-  id: number;
-  name: string;
-  permissionNames: string[];
-}
-
-export interface RoleCreationRequest {
-  name: string;
-  permissionNames: string[];
-}
+import { Role, RoleCreationRequest } from '../models/role.model';
 
 @Injectable({
   providedIn: 'root'

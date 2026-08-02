@@ -2,22 +2,7 @@ import { Injectable } from '@angular/core';
 import { ApiService } from './api.service';
 import { API_ENDPOINTS } from '../utils/constants';
 import { Observable } from 'rxjs';
-
-export interface Coupon {
-  id: number;
-  code: string;
-  discountPercent: number | null;
-  discountAmount: number | null;
-  usageLimit: number;
-  usedCount: number;
-}
-
-export interface CouponCreationRequest {
-  code: string;
-  discountPercent: number | null;
-  discountAmount: number | null;
-  usageLimit: number;
-}
+import { Coupon, CouponCreationRequest } from '../models/coupon.model';
 
 @Injectable({
   providedIn: 'root'

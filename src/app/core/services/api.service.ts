@@ -3,12 +3,7 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { catchError, map } from 'rxjs/operators';
 import { throwError, Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-
-export interface ApiResponse<T> {
-  code: number;
-  message: string;
-  result: T;
-}
+import { ApiResponse } from '../models/api-response.model';
 
 @Injectable({
   providedIn: 'root'

@@ -9,7 +9,9 @@ export interface ProductResponse {
   categoryId: number;
   categoryName: string;
 }
+export interface Product{
 
+}
 export interface ProductCreationRequest {
   name: string;
   price: number;

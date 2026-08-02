@@ -2,21 +2,8 @@ import { Injectable } from '@angular/core';
 import { ApiService } from './api.service';
 import { API_ENDPOINTS } from '../utils/constants';
 import { Observable } from 'rxjs';
+import { Category, CategoryCreationRequest, CategoryDetail } from '../models/category.model';
 
-export interface Category {
-  id: number;
-  name: string;
-  description: string;
-}
-
-export interface CategoryDetail extends Category {
-  products: any[]; // Using any for ProductResponse to avoid circular dependency
-}
-
-export interface CategoryCreationRequest {
-  name: string;
-  description: string;
-}
 
 @Injectable({
   providedIn: 'root'

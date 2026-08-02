@@ -3,3 +3,14 @@ export interface PermissionResponse {
   name: string;
   description: string;
 }
+
+export interface Permission {
+  id: number;
+  name: string;
+  description: string;
+}
+
+export interface PermissionCreationRequest {
+  name: string;
+  description: string;
+}
