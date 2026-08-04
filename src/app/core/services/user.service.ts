@@ -3,8 +3,9 @@ import { ApiService } from './api.service';
 import { API_ENDPOINTS } from '@core/utils/constants';
 import { Observable } from 'rxjs';
 import { UserCreationRequest, UserResponse, UserUpdateRequest } from '@core/models/user.model';
+
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class UserService {
   private apiUrl = `${API_ENDPOINTS.USERS}`;
@@ -15,41 +16,44 @@ export class UserService {
     return this.api.get<UserResponse[]>(this.apiUrl);
   }
 
-  getUserById(id: number): Observable<UserResponse> {
+  getUserById(id: string): Observable<UserResponse> {
     return this.api.get<UserResponse>(`${this.apiUrl}/${id}`);
   }
 
-  createUser(data: UserCreationRequest): Observable<UserResponse> {
+  private buildFormData(data: UserCreationRequest | UserUpdateRequest, file?: File): FormData {
     const formData = new FormData();
-    formData.append('username', data.username);
-    formData.append('email', data.email);
-    formData.append('password', data.password);
-    formData.append('fullName', data.fullName);
-    data.roleNames.forEach(role => formData.append('roleNames', role));
-    if (data.avatar) {
-      formData.append('avatar', data.avatar);
-    }
-    return this.api.post<UserResponse, FormData>(this.apiUrl, formData);
-  }
 
-  updateUser(id: number, data: UserUpdateRequest): Observable<UserResponse> {
-    const formData = new FormData();
-    formData.append('username', data.username);
-    formData.append('email', data.email);
-    formData.append('fullName', data.fullName);
-    if (data.roleNames) {
-      data.roleNames.forEach(role => formData.append('roleNames', role));
+    if ('email' in data && data.email !== undefined) {
+      formData.append('email', data.email);
     }
-    if (data.password) {
+    if ('password' in data && data.password !== undefined) {
       formData.append('password', data.password);
     }
-    if (data.avatar) {
-      formData.append('avatar', data.avatar);
+    if (data.fullName !== undefined) formData.append('fullName', data.fullName);
+    if (data.phone !== undefined) formData.append('phone', data.phone);
+    if (data.address !== undefined) formData.append('address', data.address);
+    if (data.roleNames) {
+      data.roleNames.forEach((role) => formData.append('roleNames', role));
     }
-    return this.api.put<UserResponse, FormData>(`${this.apiUrl}/${id}`, formData);
+    if (file) {
+      formData.append('avatar', file);
+    }
+
+    return formData;
   }
 
-  deleteUser(id: number): Observable<void> {
+  createUser(data: UserCreationRequest, file?: File): Observable<UserResponse> {
+    return this.api.post<UserResponse, FormData>(this.apiUrl, this.buildFormData(data, file));
+  }
+
+  updateUser(id: string, data: UserUpdateRequest, file?: File): Observable<UserResponse> {
+    return this.api.put<UserResponse, FormData>(
+      `${this.apiUrl}/${id}`,
+      this.buildFormData(data, file),
+    );
+  }
+
+  deleteUser(id: string): Observable<void> {
     return this.api.delete<void>(`${this.apiUrl}/${id}`);
   }
 }

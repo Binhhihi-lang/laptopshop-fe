@@ -1,107 +1,180 @@
-<div class="users-container">
-  <mat-toolbar color="primary" class="toolbar">
-    <span>Quản lý người dùng</span>
-    <span class="spacer"></span>
-    <mat-form-field appearance="fill" class="search-box">
-      <mat-label>Tìm kiếm...</mat-label>
-      <input matInput (keyup)="applyFilter()" [(ngModel)]="searchTerm" placeholder="Tìm kiếm theo username, email, họ tên">
+<mat-toolbar color="primary" class="page-header">
+  <div class="header-content">
+    <h1>Người dùng</h1>
+    <p class="subtitle">{{ filteredUsers.length }} / {{ users.length }} người dùng</p>
+  </div>
+  <div class="header-actions">
+    <button
+      mat-flat-button
+      color="primary"
+      (click)="createUser()">
+      <mat-icon>person_add</mat-icon>
+      Thêm người dùng
+    </button>
+  </div>
+</mat-toolbar>
+
+<!-- Filters -->
+<div class="filters-container mat-elevation-z2">
+  <div class="filter-group">
+    <mat-form-field appearance="fill">
+      <mat-label>Tìm kiếm</mat-label>
+      <input matInput placeholder="Tên, email, điện thoại" [(ngModel)]="searchTerm" (ngModelChange)="onSearchChange()" />
       <mat-icon matSuffix>search</mat-icon>
     </mat-form-field>
-    <button mat-flat-button color="primary" (click)="createUser()">
-      <mat-icon>person_add</mat-icon>
-      Thêm mới
-    </button>
-  </mat-toolbar>
-
-  <div class="content">
-    @if (isLoading) {
-      <div class="loading-container">
-        <mat-spinner diameter="40"></mat-spinner>
-        <p>Đang tải dữ liệu...</p>
-      </div>
-    } @else if (filteredUsers.length === 0 && !isLoading) {
-      <div class="empty-state">
-        <mat-icon>person_off</mat-icon>
-        <h3>Không có người dùng nào</h3>
-        <p>Nhấn nút "Thêm mới" để thêm người dùng đầu tiên</p>
-      </div>
-    } @else {
-      <div class="table-responsive">
-        <table mat-table [dataSource]="filteredUsers" class="mat-elevation-z8">
-
-          <!-- Username Column -->
-          <ng-container matColumnDef="username">
-            <th mat-header-cell *matHeaderCellDef> Tên đăng nhập </th>
-            <td mat-cell *matCellDef="let user"> {{user.username}} </td>
-          </ng-container>
-
-          <!-- Email Column -->
-          <ng-container matColumnDef="email">
-            <th mat-header-cell *matHeaderCellDef> Email </th>
-            <td mat-cell *matCellDef="let user"> {{user.email}} </td>
-          </ng-container>
-
-          <!-- Full Name Column -->
-          <ng-container matColumnDef="fullName">
-            <th mat-header-cell *matHeaderCellDef> Họ và tên </th>
-            <td mat-cell *matCellDef="let user"> {{user.fullName}} </td>
-          </ng-container>
-
-          <!-- Roles Column -->
-          <ng-container matColumnDef="roles">
-            <th mat-header-cell *matHeaderCellDef> Vai trò </th>
-            <td mat-cell *matCellDef="let user">
-              <mat-chip-listbox aria-label="Role selection">
-                @for (role of user.roleNames; track role) {
-                  <mat-chip-option color="primary" selected>
-                    {{role}}
-                  </mat-chip-option>
-                }
-              </mat-chip-listbox>
-            </td>
-          </ng-container>
-
-          <!-- Deleted At Column -->
-          <ng-container matColumnDef="deletedAt">
-            <th mat-header-cell *matHeaderCellDef> Trạng thái </th>
-            <td mat-cell *matCellDef="let user">
-              @if (user.deletedAt) {
-                <mat-badge color="warn" size="small" hidden="false">
-                  Đã xóa
-                </mat-badge>
-              } @else {
-                <mat-badge color="primary" size="small" hidden="false">
-                  Hoạt động
-                </mat-badge>
-              }
-            </td>
-          </ng-container>
-
-          <!-- Actions Column -->
-          <ng-container matColumnDef="actions">
-            <th mat-header-cell *matHeaderCellDef> Thao tác </th>
-            <td mat-cell *matCellDef="let user">
-              <div class="action-buttons">
-                <button mat-icon-button color="primary" (click)="viewUserDetail(user)" [disabled]="user.deletedAt !== null">
-                  <mat-icon>visibility</mat-icon>
-                </button>
-                <button mat-icon-button color="accent" (click)="editUser(user)" [disabled]="user.deletedAt !== null">
-                  <mat-icon>edit</mat-icon>
-                </button>
-                <button mat-icon-button color="warn" (click)="deleteUser(user)">
-                  <mat-icon>delete</mat-icon>
-                </button>
-              </div>
-            </td>
-          </ng-container>
-
-          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: displayedColumns;"
-              class="user-row"
-              [class.deleted]="row.deletedAt !== null">
-          </tr>
-        </table>
-      </div>
-    }
   </div>
+
+  <div class="filter-group">
+    <mat-form-field appearance="fill">
+      <mat-label>Vai trò</mat-label>
+      <mat-select [formControl]="roleControl" multiple (selectionChange)="onRoleChange()" panelClass="custom-multiselect-panel">
+        <mat-option *ngFor="let role of roles" [value]="role.id">
+          {{ role.name }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+  </div>
+
+  <div class="filter-group status-filter">
+    <button
+      mat-button
+      [class.active]="statusFilter === 'all'"
+      (click)="setStatusFilter('all')"
+    >
+      Tất cả
+    </button>
+    <button
+      mat-button
+      [class.active]="statusFilter === 'active'"
+      (click)="setStatusFilter('active')"
+    >
+      Hoạt động
+    </button>
+    <button
+      mat-button
+      [class.active]="statusFilter === 'inactive'"
+      (click)="setStatusFilter('inactive')"
+    >
+      Ngừng hoạt động
+    </button>
+  </div>
+</div>
+
+<!-- Loading indicator -->
+<div class="loading-shimmer" *if="isLoading || isLoadingRoles">
+  <div class="shimmer-item"></div>
+  <div class="shimmer-item"></div>
+  <div class="shimmer-item"></div>
+  <div class="shimmer-item"></div>
+  <div class="shimmer-item"></div>
+</div>
+
+<!-- Table -->
+<div class="table-container mat-elevation-z2" *if="!isLoading && !isLoadingRoles">
+  <table mat-table [dataSource]="filteredUsers" class="mat-elevation-z8">
+
+    <!-- Avatar Column -->
+    <ng-container matColumnDef="avatar">
+      <th mat-header-cell *matHeaderCellDef>Avatar</th>
+      <td mat-cell *matCellDef="let user" class="avatar-cell">
+        <div class="avatar-wrapper">
+          <img *ngIf="user.avatar" [src]="user.avatar" alt="Avatar" class="avatar-image">
+          <div *ngIf="!user.avatar" class="avatar-initials">
+            {{ (user.firstName ? user.firstName[0] : 'A') }}{{ (user.lastName ? user.lastName[0] : 'A') }}
+          </div>
+        </div>
+      </td>
+    </ng-container>
+
+    <!-- Full Name Column -->
+    <ng-container matColumnDef="fullName">
+      <th mat-header-cell *matHeaderCellDef>Họ tên</th>
+      <td mat-cell *matCellDef="let user">{{ user.fullName || '-' }}</td>
+    }}</td>
+    </ng-container>
+
+    <!-- Email Column -->
+    <ng-container matColumnDef="email">
+      <th mat-header-cell *matHeaderCellDef>Email</th>
+      <td mat-cell *matCellDef="let user">{{ user.email || '-' }}</td>
+    </ng-container>
+
+    <!-- Phone Column -->
+    <ng-container matColumnDef="phone">
+      <th mat-header-cell *matHeaderCellDef>Điện thoại</th>
+      <td mat-cell *matCellDef="let user">{{ user.phone || '-' }}</td>
+    </ng-container>
+
+    <!-- Roles Column -->
+    <ng-container matColumnDef="roles">
+      <th mat-header-cell *matHeaderCellDef>Vai trò</th>
+      <td mat-cell *matCellDef="let user" class="roles-cell">
+        <div class="role-chips">
+          <mat-chip
+            *ngFor="let role of (user.roles || [])"
+            color="primary"
+            size="small">
+            {{ role.name }}
+          </mat-chip>
+        </div>
+      </td>
+    </ng-container>
+
+    <!-- Status Column -->
+    <ng-container matColumnDef="status">
+      <th mat-header-cell *matHeaderCellDef>Trạng thái</th>
+      <td mat-cell *matCellDef="let user" class="status-cell">
+        <button
+          mat-icon-button
+          (click)="toggleUserStatus(user)"
+          [attr.aria-label]="'Đổi trạng thái thành ' + (isUserActive(user) ? 'ngừng hoạt động' : 'hoạt động')"
+          class="status-toggle-btn">
+          <mat-icon *ngIf="isUserActive(user)">check_circle</mat-icon>
+          <mat-icon *ngIf="!isUserActive(user)">cancel</mat-icon>
+        </button>
+        <span class="status-label">{{ isUserActive(user) ? 'Hoạt động' : 'Ngừng hoạt động' }}</span>
+      </td>
+    </ng-container>
+
+    <!-- Actions Column -->
+    <ng-container matColumnDef="actions">
+      <th mat-header-cell *matHeaderCellDef>Thao tác</th>
+      <td mat-cell *matCellDef="let user" class="actions-cell">
+        <button
+          mat-icon-button
+          color="primary"
+          (click)="viewUserDetail(user)"
+          aria-label="Xem chi tiết"
+          class="action-btn">
+          <mat-icon>visibility</mat-icon>
+        </button>
+        <button
+          mat-icon-button
+          color="accent"
+          (click)="editUser(user)"
+          aria-label="Chỉnh sửa"
+          class="action-btn">
+          <mat-icon>edit</mat-icon>
+        </button>
+        <button
+          mat-icon-button
+          color="warn"
+          (click)="deleteUser(user)"
+          aria-label="Xóa"
+          class="action-btn">
+          <mat-icon>delete</mat-icon>
+        </button>
+      </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="user-row"></tr>
+  </table>
+</div>
+
+<!-- Empty state -->
+<div class="empty-state" *if="!isLoading && !isLoadingRoles && filteredUsers.length === 0">
+  <mat-icon>people_outline</mat-icon>
+  <p>Không tìm thấy người dùng nào</p>
+  <button mat-flat-button color="primary" (click)="clearFilters()">Xóa bộ lọc</button>
 </div>

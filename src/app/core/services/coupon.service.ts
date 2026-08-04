@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { ApiService } from './api.service';
 import { API_ENDPOINTS } from '@core/utils/constants';
 import { Observable } from 'rxjs';
-import { Coupon, CouponCreationRequest } from '@core/models/coupon.model';
+import { CouponResponse, CouponCreationRequest } from '@core/models/coupon.model';
 
 @Injectable({
   providedIn: 'root'
@@ -12,20 +12,20 @@ export class CouponService {
 
   constructor(private api: ApiService) {}
 
-  getCoupons(): Observable<Coupon[]> {
-    return this.api.get<Coupon[]>(this.apiUrl);
+  getCoupons(): Observable<CouponResponse[]> {
+    return this.api.get<CouponResponse[]>(this.apiUrl);
   }
 
-  getCouponById(id: number): Observable<Coupon> {
-    return this.api.get<Coupon>(`${this.apiUrl}/${id}`);
+  getCouponById(id: number): Observable<CouponResponse> {
+    return this.api.get<CouponResponse>(`${this.apiUrl}/${id}`);
   }
 
-  createCoupon(data: CouponCreationRequest): Observable<Coupon> {
-    return this.api.post<Coupon, CouponCreationRequest>(this.apiUrl, data);
+  createCoupon(data: CouponCreationRequest): Observable<CouponResponse> {
+    return this.api.post<CouponResponse, CouponCreationRequest>(this.apiUrl, data);
   }
 
-  updateCoupon(id: number, data: CouponCreationRequest): Observable<Coupon> {
-    return this.api.put<Coupon, CouponCreationRequest>(`${this.apiUrl}/${id}`, data);
+  updateCoupon(id: number, data: CouponCreationRequest): Observable<CouponResponse> {
+    return this.api.put<CouponResponse, CouponCreationRequest>(`${this.apiUrl}/${id}`, data);
   }
 
   deleteCoupon(id: number): Observable<void> {

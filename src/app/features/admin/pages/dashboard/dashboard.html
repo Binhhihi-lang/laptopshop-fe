@@ -1,77 +1,158 @@
-<mat-grid-list cols="4" rowHeight="150px" gutterSize="16px">
-  @if (!loading) {
-    <mat-grid-tile>
-      <mat-card class="stat-card users-card">
-        <mat-card-header>
-          <div class="mat-card-avatar users-icon">
-            <mat-icon>people</mat-icon>
-          </div>
-          <mat-card-title>Users</mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          <div class="stat-number">{{ userCount }}</div>
-          <div>Total Users</div>
-        </mat-card-content>
-      </mat-card>
-    </mat-grid-tile>
+<app-page-header title="Dashboard" subtitle="Overview of your store performance"></app-page-header>
 
-    <mat-grid-tile>
-      <mat-card class="stat-card products-card">
-        <mat-card-header>
-          <div class="mat-card-avatar products-icon">
-            <mat-icon>inventory_2</mat-icon>
-          </div>
-          <mat-card-title>Products</mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          <div class="stat-number">{{ productCount }}</div>
-          <div>Total Products</div>
-        </mat-card-content>
-      </mat-card>
-    </mat-grid-tile>
+<!-- Loading overlay -->
+@if (loading) {
+  <div class="loading-overlay">
+    <mat-spinner diameter="48"></mat-spinner>
+    <p>Loading dashboard...</p>
+  </div>
+}
 
-    <mat-grid-tile>
-      <mat-card class="stat-card categories-card">
-        <mat-card-header>
-          <div class="mat-card-avatar categories-icon">
-            <mat-icon>category</mat-icon>
-          </div>
-          <mat-card-title>Categories</mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          <div class="stat-number">{{ categoryCount }}</div>
-          <div>Total Categories</div>
-        </mat-card-content>
-      </mat-card>
-    </mat-grid-tile>
-
-    <mat-grid-tile>
-      <mat-card class="stat-card coupons-card">
-        <mat-card-header>
-          <div class="mat-card-avatar coupons-icon">
-            <mat-icon>local_offer</mat-icon>
-          </div>
-          <mat-card-title>Coupons</mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          <div class="stat-number">{{ couponCount }}</div>
-          <div>Total Coupons</div>
-        </mat-card-content>
-      </mat-card>
-    </mat-grid-tile>
-  } @else {
-    <mat-grid-tile colspan="4">
-      <div class="loading-overlay">
-        <mat-spinner diameter="48"></mat-spinner>
-        <p>Loading dashboard statistics...</p>
-      </div>
-    </mat-grid-tile>
-  }
-</mat-grid-list>
-
+<!-- Error message -->
 @if (errorMessage && !loading) {
   <div class="error-message">
     {{ errorMessage }}
     <button mat-button color="primary" (click)="loadStatistics()">Retry</button>
+  </div>
+}
+
+<!-- KPI Cards Grid -->
+@if (!loading) {
+  <div class="kpi-grid">
+    @for (kpi of kpis; track kpi.label) {
+      <div class="kpi-card">
+        <div class="kpi-icon" [ngClass]="kpi.iconClass">
+          <mat-icon>{{ kpi.icon }}</mat-icon>
+        </div>
+        <div class="kpi-content">
+          <div class="kpi-value">{{ kpi.value }}</div>
+          <div class="kpi-label">{{ kpi.label }}</div>
+          @if (kpi.trend) {
+            <div class="kpi-trend">
+              <span class="trend-icon" [ngClass]="{'up': kpi.trend.up, 'down': !kpi.trend.up}">
+                <mat-icon>{{ kpi.trend.up ? 'arrow_upward' : 'arrow_downward' }}</mat-icon>
+              </span>
+              <span class="trend-text">{{ kpi.trend.text }}</span>
+            </div>
+          }
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Bottom Charts -->
+  <div class="charts-container">
+    <!-- Order -->
+<!--    <div class="chart-card">-->
+<!--      <mat-card>-->
+<!--        <mat-card-header>-->
+<!--          <mat-card-title>Recent Orders</mat-card-title>-->
+<!--        </mat-card-header>-->
+<!--        <mat-card-content>-->
+<!--          <div class="table-responsive">-->
+<!--            <table mat-table [dataSource]="recentOrders" class="mat-elevation-z8">-->
+<!--              &lt;!&ndash; Order ID Column &ndash;&gt;-->
+<!--              <ng-container matColumnDef="id">-->
+<!--                <th mat-header-cell *matHeaderCellDef>Order</th>-->
+<!--                <td mat-cell *matCellDef="let order">#{{ order.id | slice:0:8 }}</td>-->
+<!--              </ng-container>-->
+
+<!--              &lt;!&ndash; Customer Column &ndash;&gt;-->
+<!--              <ng-container matColumnDef="customer">-->
+<!--                <th mat-header-cell *matHeaderCellDef>Customer</th>-->
+<!--                <td mat-cell *matCellDef="let order">-->
+<!--                  <div class="customer-info">-->
+<!--                    <div class="avatar">-->
+<!--                      @if (order.user?.avatar) {-->
+<!--                        <img [src]="order.user.avatar" alt="Avatar" class="avatar-sm">-->
+<!--                      } @else {-->
+<!--                        <div class="avatar-sm avatar-initials">-->
+<!--                          {{ (order.user?.firstName ? order.user.firstName[0] : 'A') }}{{ (order.user?.lastName ? order.user.lastName[0] : 'A') }}-->
+<!--                        </div>-->
+<!--                      }-->
+<!--                    </div>-->
+<!--                    <div class="customer-details">-->
+<!--                      <div class="customer-name">{{ order.user?.fullName || order.user?.email || 'Guest' }}</div>-->
+<!--                      @if (order.user?.email) {-->
+<!--                        <div class="customer-email">{{ order.user?.email }}</div>-->
+<!--                      }-->
+<!--                    </div>-->
+<!--                  </div>-->
+<!--                </td>-->
+<!--              </ng-container>-->
+
+<!--              &lt;!&ndash; Total Column &ndash;&gt;-->
+<!--              <ng-container matColumnDef="total">-->
+<!--                <th mat-header-cell *matHeaderCellDef>Total</th>-->
+<!--                <td mat-cell *matCellDef="let order">{{ order.totalAmount | currency }}</td>-->
+<!--              </ng-container>-->
+
+<!--              &lt;!&ndash; Status Column &ndash;&gt;-->
+<!--              <ng-container matColumnDef="status">-->
+<!--                <th mat-header-cell *matHeaderCellDef>Status</th>-->
+<!--                <td mat-cell *matCellDef="let order">-->
+<!--                  <mat-chip [color]="getStatusColor(order.status)">-->
+<!--                    {{ order.status }}-->
+<!--                  </mat-chip>-->
+<!--                </td>-->
+<!--              </ng-container>-->
+
+<!--              &lt;!&ndash; Date Column &ndash;&gt;-->
+<!--              <ng-container matColumnDef="date">-->
+<!--                <th mat-header-cell *matHeaderCellDef>Date</th>-->
+<!--                <td mat-cell *matCellDef="let order">{{ order.createdAt | date:'short' }}</td>-->
+<!--              </ng-container>-->
+
+<!--              <tr mat-header-row *matHeaderRowDef="['id', 'customer', 'total', 'status', 'date']"></tr>-->
+<!--              <tr mat-row *matRowDef="let row; columns: ['id', 'customer', 'total', 'status', 'date'];"></tr>-->
+<!--            </table>-->
+<!--          </div>-->
+<!--        </mat-card-content>-->
+<!--        <mat-card-actions align="end">-->
+<!--          <button mat-button color="primary">View All</button>-->
+<!--        </mat-card-actions>-->
+<!--      </mat-card>-->
+<!--    </div>-->
+
+    <div class="chart-card">
+      <mat-card>
+        <mat-card-header>
+          <mat-card-title>Low Stock Alerts</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          @if (lowStockProducts && lowStockProducts.length > 0) {
+            <div class="alert-list">
+              @for (product of lowStockProducts; track product.id || product.code) {
+                <div class="alert-item">
+                  <div class="alert-info">
+                    @if (product.image) {
+                      <img [src]="product.image" alt="Product" class="product-image-sm">
+                    } @else {
+                      <div class="product-image-sm product-placeholder">
+                        {{ product.name | slice:0:2 | uppercase }}
+                      </div>
+                    }
+                    <div class="product-details">
+                      <div class="product-name">{{ product.name }}</div>
+                      <div class="product-code">{{ product.code }}</div>
+                    </div>
+                  </div>
+                  <div class="alert-status">
+                    <mat-chip color="warn">
+                      {{ product.quantity }} left
+                    </mat-chip>
+                  </div>
+                </div>
+              }
+            </div>
+          } @else {
+            <p class="no-alerts">All products are well stocked.</p>
+          }
+        </mat-card-content>
+        <mat-card-actions align="end">
+          <button mat-button color="primary">View All</button>
+        </mat-card-actions>
+      </mat-card>
+    </div>
   </div>
 }

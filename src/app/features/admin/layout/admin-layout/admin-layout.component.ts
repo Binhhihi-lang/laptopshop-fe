@@ -20,6 +20,7 @@ import { Sidebar } from '@features/admin/layout/sidebar/sidebar';
 })
 export class AdminLayoutComponent {
   isSidebarOpen = true;
+  isSidebarCollapsed = false;
   userInfo: any = null;
 
   constructor(

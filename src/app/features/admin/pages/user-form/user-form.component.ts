@@ -63,7 +63,7 @@ export class UserFormComponent implements OnInit {
         this.userForm.patchValue({
           username: user.username,
           email: user.email,
-          fullName: user.fullName,
+          fullName: user.phone,
           roleNames: user.roleNames,
         });
         this.isLoading = false;

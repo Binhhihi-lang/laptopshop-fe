@@ -1,16 +1,17 @@
 export interface RoleResponse {
-  id: number;
+  id: string;
   name: string;
-  permissionNames: string[];
-}
-
-export interface Role {
-  id: number;
-  name: string;
+  description: string | undefined;
   permissionNames: string[];
 }
 
 export interface RoleCreationRequest {
   name: string;
   permissionNames: string[];
+}
+
+export interface RoleUpdateRequest {
+  name?: string;
+  description?: string | undefined;
+  permissionNames?: string[];
 }

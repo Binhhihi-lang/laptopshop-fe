@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { ApiService } from './api.service';
 import { API_ENDPOINTS } from '@core/utils/constants';
 import { Observable } from 'rxjs';
-import { Permission, PermissionCreationRequest } from '@core/models/permission.model';
+import { PermissionResponse, PermissionCreationRequest } from '@core/models/permission.model';
 
 @Injectable({
   providedIn: 'root'
@@ -12,20 +12,20 @@ export class PermissionService {
 
   constructor(private api: ApiService) {}
 
-  getPermissions(): Observable<Permission[]> {
-    return this.api.get<Permission[]>(this.apiUrl);
+  getPermissions(): Observable<PermissionResponse[]> {
+    return this.api.get<PermissionResponse[]>(this.apiUrl);
   }
 
-  getPermissionById(id: number): Observable<Permission> {
-    return this.api.get<Permission>(`${this.apiUrl}/${id}`);
+  getPermissionById(id: number): Observable<PermissionResponse> {
+    return this.api.get<PermissionResponse>(`${this.apiUrl}/${id}`);
   }
 
-  createPermission(data: PermissionCreationRequest): Observable<Permission> {
-    return this.api.post<Permission, PermissionCreationRequest>(this.apiUrl, data);
+  createPermission(data: PermissionCreationRequest): Observable<PermissionResponse> {
+    return this.api.post<PermissionResponse, PermissionCreationRequest>(this.apiUrl, data);
   }
 
-  updatePermission(id: number, data: PermissionCreationRequest): Observable<Permission> {
-    return this.api.put<Permission, PermissionCreationRequest>(`${this.apiUrl}/${id}`, data);
+  updatePermission(id: number, data: PermissionCreationRequest): Observable<PermissionResponse> {
+    return this.api.put<PermissionResponse, PermissionCreationRequest>(`${this.apiUrl}/${id}`, data);
   }
 
   deletePermission(id: number): Observable<void> {

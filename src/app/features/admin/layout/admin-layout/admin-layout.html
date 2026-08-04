@@ -3,9 +3,10 @@
     class="sidenav"
     [mode]="'side'"
     [opened]="isSidebarOpen"
+    [style.widthpx]="isSidebarCollapsed ? 64 : 240"
     (openedStart)="isSidebarOpen = true"
     (closedStart)="isSidebarOpen = false">
-    <app-sidebar></app-sidebar>
+    <app-sidebar [collapsed]="isSidebarCollapsed" (collapsedChange)="isSidebarCollapsed = $event"></app-sidebar>
   </mat-sidenav>
 
   <mat-sidenav-content>

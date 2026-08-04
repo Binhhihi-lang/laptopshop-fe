@@ -1,33 +1,50 @@
 <mat-toolbar color="primary" class="header">
+  <!-- Hamburger button to toggle sidebar (mobile) -->
   <button
     type="button"
     aria-label="Toggle sidebar"
     mat-icon-button
-    (click)="onToggleSidebar()">
+    (click)="onToggleSidebar()"
+    class="menu-button">
     <mat-icon>menu</mat-icon>
   </button>
-  <span>LaptopShop Admin Dashboard</span>
+
+  <!-- Search bar -->
+  <div class="search-container">
+    <mat-icon class="search-icon">search</mat-icon>
+    <input type="text" placeholder="Tìm kiếm…" class="search-input" aria-label="Search">
+  </div>
+
+  <!-- Spacer to push items to the right -->
   <span class="spacer"></span>
-  <!-- User info and logout button -->
-  @if (userInfo) {
-    <div class="user-info">
-      @if (userInfo.avatar) {
-        <img [src]="userInfo.avatar"
-          alt="User avatar"
-          class="user-avatar">
-      } @else {
-        <mat-icon class="user-avatar-icon">account_circle</mat-icon>
-      }
-      <span class="user-fullname">{{ userInfo.fullName }}</span>
-      <button mat-icon-button [matMenuTriggerFor]="userMenu">
-        <mat-icon>more_vert</mat-icon>
-      </button>
+
+  <!-- Notification bell -->
+  <button
+    mat-icon-button
+    aria-label="Thông báo"
+    class="icon-button">
+    <mat-icon>notifications</mat-icon>
+    <mat-badge
+      color="warn"
+      overlap="true"
+      overlaps="true"
+      [hidden]="true"> <!-- We'll set this conditionally later -->
+      99
+    </mat-badge>
+  </button>
+
+  <!-- User profile -->
+  <div class="user-profile" *ngIf="userInfo">
+    <!-- Avatar -->
+    <div class="avatar">
+      <img *ngIf="userInfo.avatar" [src]="userInfo.avatar" alt="Avatar" class="avatar-image">
+      <div *ngIf="!userInfo.avatar" class="avatar-initials">
+        {{ (userInfo.firstName ? userInfo.firstName[0] : 'A') }}{{ (userInfo.lastName ? userInfo.lastName[0] : 'A') }}
+      </div>
     </div>
-  }
-  <mat-menu #userMenu="matMenu">
-    <button menu-item (click)="onLogout()">
-      <mat-icon>logout</mat-icon>
-      <span>Logout</span>
-    </button>
-  </mat-menu>
+    <div class="user-info-text">
+      <div class="user-name">{{ userInfo.fullName }}</div>
+      <div class="user-role" *ngIf="userInfo.role">{{ userInfo.role }}</div>
+    </div>
+  </div>
 </mat-toolbar>

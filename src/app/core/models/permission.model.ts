@@ -1,11 +1,5 @@
 export interface PermissionResponse {
-  id: number;
-  name: string;
-  description: string;
-}
-
-export interface Permission {
-  id: number;
+  id: string;
   name: string;
   description: string;
 }
@@ -13,4 +7,9 @@ export interface Permission {
 export interface PermissionCreationRequest {
   name: string;
   description: string;
+}
+
+export interface PermissionUpdateRequest {
+  name?: string;
+  description?: string;
 }

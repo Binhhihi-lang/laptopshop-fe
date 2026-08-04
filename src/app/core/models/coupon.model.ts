@@ -1,24 +1,26 @@
 export interface CouponResponse {
-  id: number;
+  id: string;
   code: string;
   discountPercent: number | null;
   discountAmount: number | null;
+  expiryDate: string;
   usageLimit: number;
   usedCount: number;
-}
-
-export interface Coupon {
-  id: number;
-  code: string;
-  discountPercent: number | null;
-  discountAmount: number | null;
-  usageLimit: number;
-  usedCount: number;
+  active: boolean;
 }
 
 export interface CouponCreationRequest {
   code: string;
   discountPercent: number | null;
   discountAmount: number | null;
+  expiryDate: string;
   usageLimit: number;
+}
+
+export interface CouponUpdateRequest {
+  code?: string;
+  discountPercent?: number | null;
+  discountAmount?: number | null;
+  expiryDate?: string;
+  usageLimit?: number;
 }

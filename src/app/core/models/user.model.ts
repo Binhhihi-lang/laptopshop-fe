@@ -1,22 +1,28 @@
 export interface UserResponse {
-  id: number;
-  username: string;
+  id: string;
   email: string;
   fullName: string;
+  phone: string;
+  address: string;
+  avatar: string;
   roleNames: string[];
-  deletedAt: string | null;
 }
 
 export interface UserCreationRequest {
-  username: string;
   email: string;
   password: string;
-  fullName: string;
-  roleNames: string[];
-  avatar?: File;
+  fullName?: string;
+  phone?: string;
+  address?: string;
+  roleNames?: string[];
+  avatar?: string | File;
 }
 
-export interface UserUpdateRequest extends Omit<UserCreationRequest, 'password'> {
-  id: number;
-  password?: string;
+export interface UserUpdateRequest {
+  email?: string;
+  fullName?: string;
+  phone?: string;
+  address?: string;
+  roleNames?: string[];
+  avatar?: string | File;
 }

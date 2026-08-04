@@ -1,22 +1,54 @@
 export interface ProductResponse {
-  id: number;
+  id: string;
+  code: string;
   name: string;
   price: number;
   quantity: number;
   description: string;
   image: string;
   sold: number;
-  categoryId: number;
+  categoryId: string;
   categoryName: string;
+  detailDesc: string;
+  shortDesc: string;
+  factory: string;
+  target: string;
+  cpu: string;
+  ram: string;
+  storage: string;
+  gpu: string;
+  screen: string;
+  os: string;
+  weight: number;
+  warrantyMonths: number;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
-export interface Product{
 
-}
 export interface ProductCreationRequest {
-  name: string;
-  price: number;
-  quantity: number;
-  description: string;
-  image?: File;
-  categoryId: number;
+  code?: string;
+  name?: string;
+  price?: number;
+  quantity?: number;
+  description?: string;
+  categoryId?: string;
+  detailDesc?: string;
+  shortDesc?: string;
+  factory?: string;
+  target?: string;
+  cpu?: string;
+  ram?: string;
+  storage?: string;
+  gpu?: string;
+  screen?: string;
+  os?: string;
+  weight?: number;
+  warrantyMonths?: number;
+  active?: boolean;
+  // inputFile?: string | File;
+}
+
+export interface ProductUpdateRequest extends ProductCreationRequest {
+  sold?: number;
 }
