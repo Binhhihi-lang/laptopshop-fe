@@ -1,0 +1,18 @@
+/* Admin Layout - Modern Clean styles via Tailwind in template */
+:host {
+  display: block;
+  min-height: 100vh;
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Smooth sidebar transition */
+main {
+  transition: margin-left 0.3s ease, padding-left 0.3s ease;
+}

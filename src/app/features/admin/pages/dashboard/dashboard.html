@@ -1,158 +1,234 @@
-<app-page-header title="Dashboard" subtitle="Overview of your store performance"></app-page-header>
-
-<!-- Loading overlay -->
-@if (loading) {
-  <div class="loading-overlay">
-    <mat-spinner diameter="48"></mat-spinner>
-    <p>Loading dashboard...</p>
+<!-- Dashboard - Modern Clean with Dark Mode -->
+<div class="page-container">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <div>
+        <h1 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Bảng điều khiển</h1>
+        <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Tổng quan hiệu suất cửa hàng</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <button
+          (click)="loadStatistics()"
+          [disabled]="loading"
+          class="btn-secondary btn-sm">
+          <mat-icon class="w-4 h-4">refresh</mat-icon>
+          Làm mới
+        </button>
+        <button class="btn-primary btn-sm">
+          <mat-icon class="w-4 h-4">download</mat-icon>
+          Xuất báo cáo
+        </button>
+      </div>
+    </div>
   </div>
-}
 
-<!-- Error message -->
-@if (errorMessage && !loading) {
-  <div class="error-message">
-    {{ errorMessage }}
-    <button mat-button color="primary" (click)="loadStatistics()">Retry</button>
-  </div>
-}
-
-<!-- KPI Cards Grid -->
-@if (!loading) {
-  <div class="kpi-grid">
-    @for (kpi of kpis; track kpi.label) {
-      <div class="kpi-card">
-        <div class="kpi-icon" [ngClass]="kpi.iconClass">
-          <mat-icon>{{ kpi.icon }}</mat-icon>
-        </div>
-        <div class="kpi-content">
-          <div class="kpi-value">{{ kpi.value }}</div>
-          <div class="kpi-label">{{ kpi.label }}</div>
-          @if (kpi.trend) {
-            <div class="kpi-trend">
-              <span class="trend-icon" [ngClass]="{'up': kpi.trend.up, 'down': !kpi.trend.up}">
-                <mat-icon>{{ kpi.trend.up ? 'arrow_upward' : 'arrow_downward' }}</mat-icon>
-              </span>
-              <span class="trend-text">{{ kpi.trend.text }}</span>
+  <!-- Loading Overlay -->
+  @if (loading) {
+    <div class="grid-kpi animate-fade-in" role="status" aria-label="Đang tải thống kê bảng điều khiển">
+      @for (i of [1,2,3,4,5,6,7,8]; track i) {
+        <div class="card-padded">
+          <div class="flex items-center gap-3">
+            <div class="skeleton-avatar"></div>
+            <div class="flex-1 space-y-2">
+              <div class="skeleton-title"></div>
+              <div class="skeleton-text w-3/4"></div>
+              <div class="skeleton-text w-1/2"></div>
             </div>
-          }
+          </div>
+        </div>
+      }
+      <div class="grid-2col animate-fade-in">
+        @for (i of [1,2]; track i) {
+          <div class="skeleton-card"></div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- Error State -->
+  @if (errorMessage && !loading) {
+    <div class="card-padded border-danger border bg-danger-light dark:bg-danger-light/20 animate-slide-up" role="alert">
+      <div class="flex items-start gap-3">
+        <mat-icon class="text-danger mt-0.5">error_outline</mat-icon>
+        <div class="flex-1">
+          <p class="text-sm text-danger-dark dark:text-danger">{{ errorMessage }}</p>
+          <button
+            (click)="loadStatistics()"
+            class="btn-sm btn-danger mt-2">
+            Thử lại
+          </button>
         </div>
       </div>
-    }
-  </div>
+    </div>
+  }
 
-  <!-- Bottom Charts -->
-  <div class="charts-container">
-    <!-- Order -->
-<!--    <div class="chart-card">-->
-<!--      <mat-card>-->
-<!--        <mat-card-header>-->
-<!--          <mat-card-title>Recent Orders</mat-card-title>-->
-<!--        </mat-card-header>-->
-<!--        <mat-card-content>-->
-<!--          <div class="table-responsive">-->
-<!--            <table mat-table [dataSource]="recentOrders" class="mat-elevation-z8">-->
-<!--              &lt;!&ndash; Order ID Column &ndash;&gt;-->
-<!--              <ng-container matColumnDef="id">-->
-<!--                <th mat-header-cell *matHeaderCellDef>Order</th>-->
-<!--                <td mat-cell *matCellDef="let order">#{{ order.id | slice:0:8 }}</td>-->
-<!--              </ng-container>-->
+  <!-- Main Content -->
+  @if (!loading && !errorMessage) {
+    <!-- KPI Grid -->
+    <div class="grid-kpi animate-slide-up">
+      @for (kpi of kpis; track kpi.label) {
+        <article class="card-hover card-padded group"
+                  [attr.data-trend]="kpi.trend?.up ? 'up' : 'down'">
+          <div class="flex items-start justify-between">
+            <div class="flex items-center gap-3">
+              <div class="kpi-icon p-3 rounded-xl"
+                   [class]="kpi.iconClass + ' group-hover:scale-110 transition-transform duration-200'">
+                <mat-icon class="w-6 h-6">{{ kpi.icon }}</mat-icon>
+              </div>
+              <div>
+                <p class="text-caption text-slate-500 dark:text-slate-400">{{ kpi.label }}</p>
+                <p class="text-heading-3 font-bold text-slate-900 dark:text-white tabular-nums">{{ kpi.value }}</p>
+              </div>
+            </div>
+            @if (kpi.trend) {
+              <div class="kpi-trend flex items-center gap-2 px-2 py-1 rounded-full text-xs font-medium transition-colors"
+                   [class]="kpi.trend.up ? 'bg-success-light text-success dark:bg-success-light/30 dark:text-success' : 'bg-danger-light text-danger dark:bg-danger-light/30 dark:text-danger'">
+                <mat-icon class="w-3.5 h-3.5">{{ kpi.trend.up ? 'trending_up' : 'trending_down' }}</mat-icon>
+                <span class="trend-text whitespace-nowrap">{{ kpi.trend.text }}</span>
+              </div>
+            }
+          </div>
+        </article>
+      }
+    </div>
 
-<!--              &lt;!&ndash; Customer Column &ndash;&gt;-->
-<!--              <ng-container matColumnDef="customer">-->
-<!--                <th mat-header-cell *matHeaderCellDef>Customer</th>-->
-<!--                <td mat-cell *matCellDef="let order">-->
-<!--                  <div class="customer-info">-->
-<!--                    <div class="avatar">-->
-<!--                      @if (order.user?.avatar) {-->
-<!--                        <img [src]="order.user.avatar" alt="Avatar" class="avatar-sm">-->
-<!--                      } @else {-->
-<!--                        <div class="avatar-sm avatar-initials">-->
-<!--                          {{ (order.user?.firstName ? order.user.firstName[0] : 'A') }}{{ (order.user?.lastName ? order.user.lastName[0] : 'A') }}-->
-<!--                        </div>-->
-<!--                      }-->
-<!--                    </div>-->
-<!--                    <div class="customer-details">-->
-<!--                      <div class="customer-name">{{ order.user?.fullName || order.user?.email || 'Guest' }}</div>-->
-<!--                      @if (order.user?.email) {-->
-<!--                        <div class="customer-email">{{ order.user?.email }}</div>-->
-<!--                      }-->
-<!--                    </div>-->
-<!--                  </div>-->
-<!--                </td>-->
-<!--              </ng-container>-->
-
-<!--              &lt;!&ndash; Total Column &ndash;&gt;-->
-<!--              <ng-container matColumnDef="total">-->
-<!--                <th mat-header-cell *matHeaderCellDef>Total</th>-->
-<!--                <td mat-cell *matCellDef="let order">{{ order.totalAmount | currency }}</td>-->
-<!--              </ng-container>-->
-
-<!--              &lt;!&ndash; Status Column &ndash;&gt;-->
-<!--              <ng-container matColumnDef="status">-->
-<!--                <th mat-header-cell *matHeaderCellDef>Status</th>-->
-<!--                <td mat-cell *matCellDef="let order">-->
-<!--                  <mat-chip [color]="getStatusColor(order.status)">-->
-<!--                    {{ order.status }}-->
-<!--                  </mat-chip>-->
-<!--                </td>-->
-<!--              </ng-container>-->
-
-<!--              &lt;!&ndash; Date Column &ndash;&gt;-->
-<!--              <ng-container matColumnDef="date">-->
-<!--                <th mat-header-cell *matHeaderCellDef>Date</th>-->
-<!--                <td mat-cell *matCellDef="let order">{{ order.createdAt | date:'short' }}</td>-->
-<!--              </ng-container>-->
-
-<!--              <tr mat-header-row *matHeaderRowDef="['id', 'customer', 'total', 'status', 'date']"></tr>-->
-<!--              <tr mat-row *matRowDef="let row; columns: ['id', 'customer', 'total', 'status', 'date'];"></tr>-->
-<!--            </table>-->
-<!--          </div>-->
-<!--        </mat-card-content>-->
-<!--        <mat-card-actions align="end">-->
-<!--          <button mat-button color="primary">View All</button>-->
-<!--        </mat-card-actions>-->
-<!--      </mat-card>-->
-<!--    </div>-->
-
-    <div class="chart-card">
-      <mat-card>
-        <mat-card-header>
-          <mat-card-title>Low Stock Alerts</mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          @if (lowStockProducts && lowStockProducts.length > 0) {
-            <div class="alert-list">
+    <!-- Charts & Alerts Section -->
+    <div class="grid-2col animate-slide-up mt-6" style="animation-delay: 100ms;">
+      <!-- Low Stock Alerts Card -->
+      <section class="card overflow-hidden">
+        <div class="card-header flex items-center justify-between">
+          <h2 class="text-heading-5 font-semibold text-slate-900 dark:text-white">Sản phẩm sắp hết hàng</h2>
+          <button class="btn-ghost btn-sm text-primary hover:text-primary-hover">
+            Xem tất cả
+            <mat-icon class="w-4 h-4">chevron_right</mat-icon>
+          </button>
+        </div>
+        <div class="card-content p-0">
+          @if (lowStockProducts.length > 0) {
+            <div class="divide-y divide-slate-200 dark:divide-slate-700">
               @for (product of lowStockProducts; track product.id || product.code) {
-                <div class="alert-item">
-                  <div class="alert-info">
+                <div class="alert-item p-4 flex items-center gap-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                  <div class="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-slate-100 dark:bg-slate-800">
                     @if (product.image) {
-                      <img [src]="product.image" alt="Product" class="product-image-sm">
+                      <img [src]="product.image" alt="Product" class="w-full h-full object-cover">
                     } @else {
-                      <div class="product-image-sm product-placeholder">
-                        {{ product.name | slice:0:2 | uppercase }}
+                      <div class="w-full h-full flex items-center justify-center text-slate-400 dark:text-slate-500">
+                        <mat-icon class="w-6 h-6">inventory_2</mat-icon>
                       </div>
                     }
-                    <div class="product-details">
-                      <div class="product-name">{{ product.name }}</div>
-                      <div class="product-code">{{ product.code }}</div>
-                    </div>
                   </div>
-                  <div class="alert-status">
-                    <mat-chip color="warn">
-                      {{ product.quantity }} left
-                    </mat-chip>
+                  <div class="flex-1 min-w-0">
+                    <p class="font-medium text-slate-900 dark:text-white truncate">{{ product.name }}</p>
+                    <p class="text-caption text-slate-500 dark:text-slate-400 truncate">{{ product.code }}</p>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <span class="badge badge-warning text-xs">{{ product.quantity }} còn lại</span>
+                    <button class="btn-icon btn-ghost p-1.5 text-slate-400 hover:text-primary" aria-label="Xem sản phẩm">
+                      <mat-icon class="w-4 h-4">visibility</mat-icon>
+                    </button>
                   </div>
                 </div>
               }
             </div>
           } @else {
-            <p class="no-alerts">All products are well stocked.</p>
+            <div class="empty-state h-48">
+              <mat-icon class="empty-state-icon">check_circle_outline</mat-icon>
+              <p class="empty-state-title text-success">Đủ hàng</p>
+              <p class="empty-state-description">Không có sản phẩm nào sắp hết hàng</p>
+            </div>
           }
-        </mat-card-content>
-        <mat-card-actions align="end">
-          <button mat-button color="primary">View All</button>
-        </mat-card-actions>
-      </mat-card>
+        </div>
+      </section>
+
+      <!-- Recent Activity Card (Placeholder for charts) -->
+      <section class="card overflow-hidden">
+        <div class="card-header flex items-center justify-between">
+          <h2 class="text-heading-5 font-semibold text-slate-900 dark:text-white">Hoạt động gần đây</h2>
+          <div class="flex items-center gap-2">
+            <select class="input input-sm w-auto py-1.5 pl-2 pr-8 text-xs" aria-label="Khoảng thời gian">
+              <option value="today">Hôm nay</option>
+              <option value="week" selected>Tuần này</option>
+              <option value="month">Tháng này</option>
+            </select>
+          </div>
+        </div>
+        <div class="card-content">
+          <div class="space-y-3">
+            @for (activity of recentActivity; track activity.id) {
+              <div class="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
+                     [class]="activity.iconClass">
+                  <mat-icon class="w-5 h-5">{{ activity.icon }}</mat-icon>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="font-medium text-slate-900 dark:text-white truncate">{{ activity.title }}</p>
+                  <p class="text-caption text-slate-500 dark:text-slate-400 truncate">{{ activity.description }}</p>
+                </div>
+                <span class="text-caption text-slate-400 dark:text-slate-500 whitespace-nowrap">{{ activity.time }}</span>
+              </div>
+            }
+            @if (recentActivity.length === 0) {
+              <div class="empty-state py-8">
+                <mat-icon class="empty-state-icon">history</mat-icon>
+                <p class="empty-state-title">Chưa có hoạt động</p>
+                <p class="empty-state-description">Hoạt động sẽ hiển thị ở đây</p>
+              </div>
+            }
+          </div>
+        </div>
+        <div class="card-footer border-t border-slate-200 dark:border-slate-700">
+          <button class="btn-ghost btn-sm text-primary hover:text-primary-hover">
+            Xem tất cả hoạt động
+            <mat-icon class="w-4 h-4">chevron_right</mat-icon>
+          </button>
+        </div>
+      </section>
     </div>
-  </div>
-}
+
+    <!-- Revenue Chart Placeholder -->
+    <section class="card animate-slide-up mt-6" style="animation-delay: 200ms;">
+      <div class="card-header flex items-center justify-between">
+        <h2 class="text-heading-5 font-semibold text-slate-900 dark:text-white">Tổng quan doanh thu</h2>
+        <div class="flex items-center gap-2">
+          <button class="btn-ghost btn-sm" aria-label="Kỳ trước">
+            <mat-icon class="w-4 h-4">chevron_left</mat-icon>
+          </button>
+          <span class="text-sm font-medium text-slate-700 dark:text-slate-300 px-2">Tháng này</span>
+          <button class="btn-ghost btn-sm" aria-label="Kỳ sau">
+            <mat-icon class="w-4 h-4">chevron_right</mat-icon>
+          </button>
+        </div>
+      </div>
+      <div class="card-content">
+        <div class="h-64 flex items-center justify-center bg-slate-50 dark:bg-slate-800/50 rounded-lg relative overflow-hidden">
+          <!-- Chart canvas placeholder -->
+          <canvas #revenueChart class="w-full h-full"></canvas>
+          <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div class="text-center">
+              <mat-icon class="text-slate-300 dark:text-slate-600 text-6xl mb-2">show_chart</mat-icon>
+              <p class="text-slate-500 dark:text-slate-400">Tích hợp biểu đồ sắp ra mắt</p>
+              <p class="text-caption text-slate-400 dark:text-slate-500 mt-1">Kết nối Chart.js / ApexCharts / ngx-charts</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card-footer border-t border-slate-200 dark:border-slate-700">
+        <div class="flex items-center gap-4 text-sm text-slate-600 dark:text-slate-400">
+          <span class="flex items-center gap-2">
+            <span class="w-3 h-3 rounded-full bg-primary"></span>
+            Doanh thu
+          </span>
+          <span class="flex items-center gap-2">
+            <span class="w-3 h-3 rounded-full bg-success"></span>
+            Lợi nhuận
+          </span>
+          <span class="flex items-center gap-2">
+            <span class="w-3 h-3 rounded-full bg-warning"></span>
+            Chi phí
+          </span>
+        </div>
+      </div>
+    </section>
+  }
+</div>

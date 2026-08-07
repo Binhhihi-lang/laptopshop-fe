@@ -1,0 +1,25 @@
+<!-- Admin Layout - Modern Clean with Dark Mode -->
+<div class="min-h-screen bg-slate-50 dark:bg-slate-950">
+  <!-- Sidebar -->
+  <app-sidebar
+    [collapsedInput]="isSidebarCollapsed()"
+    [mobileOpenInput]="mobileSidebarOpen()"
+    (collapsedChange)="onSidebarCollapsedChange($event)"
+    (mobileOpenChange)="onMobileSidebarChange($event)">
+  </app-sidebar>
+
+  <!-- Main Content Area -->
+  <div [class]="mainContentClasses">
+    <!-- Header -->
+    <app-header
+      [userInfo]="userInfo"
+      (logout)="logout()"
+      (toggleSidebar)="onToggleSidebar()">
+    </app-header>
+
+    <!-- Page Content -->
+    <main class="flex-1 p-4 md:p-6 lg:p-8">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</div>
