@@ -6,6 +6,9 @@ export interface UserResponse {
   address: string;
   avatar: string;
   roleNames: string[];
+  isActive?: boolean;
+  lastLoginAt?: string;
+  createdAt?: string;
 }
 
 export interface UserCreationRequest {
@@ -24,5 +27,6 @@ export interface UserUpdateRequest {
   phone?: string;
   address?: string;
   roleNames?: string[];
+  isActive?: boolean;
   avatar?: string | File;
 }

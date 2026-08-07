@@ -1,130 +1,260 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal, computed, inject, effect, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import { MaterialModule } from '@shared/material.module';
+import { RoleService } from '@core/services/role.service';
 import { UserService } from '@core/services/user.service';
-import { UserCreationRequest, UserUpdateRequest } from '@core/models/user.model';
+import { RoleResponse } from '@core/models/role.model';
+import { UserResponse, UserCreationRequest, UserUpdateRequest } from '@core/models/user.model';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { Subject, takeUntil, filter } from 'rxjs';
 
 @Component({
   selector: 'app-user-form',
   standalone: true,
-  imports: [
-    CommonModule,
-    RouterModule,
-    ReactiveFormsModule,
-    MaterialModule,
-  ],
+  imports: [CommonModule, MaterialModule, FormsModule, ReactiveFormsModule, RouterModule],
   templateUrl: './user-form.component.html',
   styleUrl: './user-form.component.css',
 })
-export class UserFormComponent implements OnInit {
-  userForm: FormGroup;
-  isLoading = false;
-  isEditMode = false;
-  userId: number | null = null;
+export class UserFormComponent implements OnInit, OnDestroy {
+  private readonly fb = inject(FormBuilder);
+  private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
+  private readonly userService = inject(UserService);
+  private readonly roleService = inject(RoleService);
+  private readonly snackBar = inject(MatSnackBar);
+  private readonly destroy$ = new Subject<void>();
 
-  avatarFile: File | null = null;
-  avatarPreview: string | null = null;
+  // State signals
+  isLoading = signal(false);
+  isSubmitting = signal(false);
+  roles = signal<RoleResponse[]>([]);
+  currentUser = signal<UserResponse | null>(null);
+  selectedAvatar = signal<File | null>(null);
+  avatarPreview = signal<string | null>(null);
+  showPassword = signal(false);
 
-  roles: string[] = ['ADMIN', 'STAFF', 'USER']; // TODO: thay bằng RoleService.getRoles() nếu muốn load động
+  // Route param
+  userId = signal<string>('');
 
-  constructor(
-    private fb: FormBuilder,
-    private route: ActivatedRoute,
-    private router: Router,
-    private userService: UserService,
-  ) {
-    this.userForm = this.fb.group({
-      username: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(50)]],
-      email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.minLength(6)]],
-      fullName: ['', [Validators.required, Validators.maxLength(100)]],
-      roleNames: [[], [Validators.required]],
+  // Form
+  userForm: FormGroup = this.fb.group({
+    email: ['', [Validators.required, Validators.email]],
+    password: ['', [Validators.required, Validators.minLength(6)]],
+    fullName: ['', [Validators.required, Validators.minLength(2)]],
+    phone: ['', [Validators.pattern(/^[0-9]{10,11}$/)]],
+    address: [''],
+    roleNames: [[], [Validators.required]],
+    isActive: [true],
+  });
+
+  // Computed
+  isEditMode = computed(() => !!this.userId());
+  pageTitle = computed(() => this.isEditMode() ? 'Chỉnh sửa người dùng' : 'Thêm người dùng mới');
+  pageSubtitle = computed(() => this.isEditMode() ? 'Cập nhật thông tin tài khoản người dùng' : 'Điền thông tin để tạo tài khoản người dùng mới');
+  submitButtonText = computed(() => this.isEditMode() ? 'Cập nhật' : 'Tạo người dùng');
+
+  ngOnInit(): void {
+    // Get userId from route params (handles both initial load and param changes)
+    this.route.params.pipe(
+      filter(params => !!params['id']),
+      takeUntil(this.destroy$)
+    ).subscribe(params => {
+      const id = params['id'];
+      if (id && id !== this.userId()) {
+        this.userId.set(id);
+        this.loadUser();
+        // Edit mode: password không bắt buộc
+        this.userForm.get('password')?.clearValidators();
+        this.userForm.get('password')?.updateValueAndValidity();
+      }
     });
-  }
 
-  ngOnInit() {
-    const idParam = this.route.snapshot.paramMap.get('id');
-    if (idParam) {
-      this.isEditMode = true;
-      this.userId = Number(idParam);
-      this.loadUser(this.userId);
-      // Edit mode: password không bắt buộc
-      this.userForm.get('password')?.clearValidators();
-      this.userForm.get('password')?.updateValueAndValidity();
+    // Also check initial snapshot (for direct navigation)
+    const initialId = this.route.snapshot.paramMap.get('id');
+    if (initialId) {
+      this.userId.set(initialId);
+    }
+
+    this.loadRoles();
+
+    if (this.isEditMode()) {
+      // loadUser will be called via route params subscription above
     }
   }
 
-  loadUser(id: number) {
-    this.isLoading = true;
-    this.userService.getUserById(id).subscribe({
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  loadRoles(): void {
+    this.isLoading.set(true);
+    this.roleService.getRoles().subscribe({
+      next: (roles) => {
+        this.roles.set(roles);
+        this.isLoading.set(false);
+      },
+      error: (error) => {
+        console.error('Error loading roles:', error);
+        this.snackBar.open('Không thể tải danh sách vai trò', 'Đóng', { duration: 3000 });
+        this.isLoading.set(false);
+      },
+    });
+  }
+
+  loadUser(): void {
+    if (!this.userId()) return;
+
+    this.isLoading.set(true);
+    this.userService.getUserById(this.userId()).subscribe({
       next: (user) => {
-        this.userForm.patchValue({
-          username: user.username,
-          email: user.email,
-          fullName: user.phone,
-          roleNames: user.roleNames,
-        });
-        this.isLoading = false;
+        this.currentUser.set(user);
+        this.patchForm(user);
+        this.isLoading.set(false);
       },
-      error: () => {
-        this.isLoading = false;
+      error: (error) => {
+        console.error('Error loading user:', error);
+        this.snackBar.open('Không thể tải thông tin người dùng', 'Đóng', { duration: 3000 });
+        this.router.navigate(['/admin/users']);
+        this.isLoading.set(false);
       },
     });
   }
 
-  onFileSelected(event: Event) {
-    const input = event.target as HTMLInputElement;
-    if (input.files && input.files.length > 0) {
-      this.avatarFile = input.files[0];
-      const reader = new FileReader();
-      reader.onload = () => (this.avatarPreview = reader.result as string);
-      reader.readAsDataURL(this.avatarFile);
+  patchForm(user: UserResponse): void {
+    this.userForm.patchValue({
+      email: user.email,
+      fullName: user.fullName,
+      phone: user.phone || '',
+      address: user.address || '',
+      roleNames: user.roleNames || [],
+      isActive: user.isActive ?? true,
+    });
+
+    // Set avatar preview if exists
+    if (user.avatar) {
+      this.avatarPreview.set(user.avatar);
     }
   }
 
-  onSubmit() {
-    if (this.userForm.invalid) return;
+  onAvatarSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      const file = input.files[0];
+      if (!file.type.startsWith('image/')) {
+        this.snackBar.open('Vui lòng chọn file hình ảnh', 'Đóng', { duration: 3000 });
+        return;
+      }
+      if (file.size > 2 * 1024 * 1024) {
+        this.snackBar.open('Kích thước ảnh không được vượt quá 2MB', 'Đóng', { duration: 3000 });
+        return;
+      }
+      this.selectedAvatar.set(file);
+      const reader = new FileReader();
+      reader.onload = (e) => this.avatarPreview.set(e.target?.result as string);
+      reader.readAsDataURL(file);
+    }
+  }
 
-    this.isLoading = true;
+  removeAvatar(): void {
+    this.selectedAvatar.set(null);
+    this.avatarPreview.set(null);
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    if (fileInput) fileInput.value = '';
+  }
+
+  onSubmit(): void {
+    if (this.userForm.invalid) {
+      this.markFormGroupTouched(this.userForm);
+      this.snackBar.open('Vui lòng điền đầy đủ thông tin bắt buộc', 'Đóng', { duration: 3000 });
+      return;
+    }
+
+    this.isSubmitting.set(true);
+
     const formValue = this.userForm.value;
 
-    if (this.isEditMode && this.userId) {
+    if (this.isEditMode() && this.userId()) {
       const userData: UserUpdateRequest = {
-        id: this.userId,
-        username: formValue.username,
         email: formValue.email,
         fullName: formValue.fullName,
+        phone: formValue.phone || undefined,
+        address: formValue.address || undefined,
         roleNames: formValue.roleNames,
+        isActive: formValue.isActive,
         ...(formValue.password ? { password: formValue.password } : {}),
-        ...(this.avatarFile ? { avatar: this.avatarFile } : {}),
+        ...(this.selectedAvatar() ? { avatar: this.selectedAvatar()! } : {}),
       };
-      this.userService.updateUser(this.userId, userData).subscribe({
-        next: () => this.router.navigate(['/admin/users']),
-        error: () => (this.isLoading = false),
+      this.userService.updateUser(this.userId(), userData).subscribe({
+        next: () => {
+          this.snackBar.open('Cập nhật người dùng thành công', 'Đóng', { duration: 3000 });
+          this.router.navigate(['/admin/users']);
+        },
+        error: (error) => {
+          console.error('Error updating user:', error);
+          this.snackBar.open(error.error?.message || 'Cập nhật người dùng thất bại', 'Đóng', { duration: 5000 });
+          this.isSubmitting.set(false);
+        },
       });
     } else {
       const userData: UserCreationRequest = {
-        username: formValue.username,
         email: formValue.email,
         password: formValue.password,
         fullName: formValue.fullName,
+        phone: formValue.phone || undefined,
+        address: formValue.address || undefined,
         roleNames: formValue.roleNames,
-        ...(this.avatarFile ? { avatar: this.avatarFile } : {}),
+        ...(this.selectedAvatar() ? { avatar: this.selectedAvatar()! } : {}),
       };
       this.userService.createUser(userData).subscribe({
-        next: () => this.router.navigate(['/admin/users']),
-        error: () => (this.isLoading = false),
+        next: () => {
+          this.snackBar.open('Tạo người dùng thành công', 'Đóng', { duration: 3000 });
+          this.router.navigate(['/admin/users']);
+        },
+        error: (error) => {
+          console.error('Error creating user:', error);
+          this.snackBar.open(error.error?.message || 'Tạo người dùng thất bại', 'Đóng', { duration: 5000 });
+          this.isSubmitting.set(false);
+        },
       });
     }
   }
 
-  onCancel() {
+  onCancel(): void {
     this.router.navigate(['/admin/users']);
   }
 
-  get f() {
-    return this.userForm.controls;
+  private markFormGroupTouched(formGroup: FormGroup): void {
+    Object.values(formGroup.controls).forEach(control => {
+      control.markAsTouched();
+      if (control instanceof FormGroup) {
+        this.markFormGroupTouched(control);
+      }
+    });
+  }
+
+  // Helper getters for template
+  get email() { return this.userForm.get('email'); }
+  get password() { return this.userForm.get('password'); }
+  get fullName() { return this.userForm.get('fullName'); }
+  get phone() { return this.userForm.get('phone'); }
+  get roleNames() { return this.userForm.get('roleNames'); }
+
+  hasError(controlName: string, errorName: string): boolean {
+    const control = this.userForm.get(controlName);
+    return (control?.touched && control?.hasError(errorName)) ?? false;
+  }
+
+  hasFormError(errorName: string): boolean {
+    return (this.userForm.touched && this.userForm.hasError(errorName)) ?? false;
+  }
+
+  getInitials(fullName: string): string {
+    if (!fullName) return 'NA';
+    const parts = fullName.trim().split(/\s+/);
+    if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+    return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
   }
 }

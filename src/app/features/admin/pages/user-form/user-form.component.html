@@ -1,118 +1,302 @@
-<div class="form-container">
-  <div class="form-header">
-    <h2>{{ isEditMode ? 'Chỉnh sửa người dùng' : 'Thêm người dùng mới' }}</h2>
-  </div>
-
-  @if (isLoading) {
-    <div class="loading-overlay">
-      <mat-spinner diameter="40"></mat-spinner>
+<!-- User Form Page - Modern Clean with Tailwind -->
+<div class="min-h-screen bg-slate-50 dark:bg-slate-950">
+  <!-- Page Header -->
+  <header class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-40">
+    <div class="max-w-3xl mx-auto px-4 py-4">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 class="text-2xl font-bold text-slate-900 dark:text-white">{{ pageTitle() }}</h1>
+          <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">{{ pageSubtitle() }}</p>
+        </div>
+        <button
+          (click)="onCancel()"
+          class="flex items-center gap-2 px-4 py-2 text-sm text-slate-600 dark:text-slate-400 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+          [disabled]="isSubmitting()">
+          <mat-icon class="w-5 h-5">arrow_back</mat-icon>
+          <span>Quay lại</span>
+        </button>
+      </div>
     </div>
-  }
+  </header>
 
-  <form [formGroup]="userForm" (ngSubmit)="onSubmit()">
-    <mat-form-field appearance="fill" class="full-width">
-      <mat-label>Tên đăng nhập</mat-label>
-      <input matInput formControlName="username" placeholder="Nhập tên đăng nhập">
-      @if (f['username'].hasError('required')) {
-        <mat-error>
-          Tên đăng nhập là bắt buộc
-        </mat-error>
-      }
-      @if (f['username'].hasError('minlength')) {
-        <mat-error>
-          Tên đăng nhập phải có ít nhất 3 ký tự
-        </mat-error>
-      }
-      @if (f['username'].hasError('maxlength')) {
-        <mat-error>
-          Tên đăng nhập không được vượt quá 50 ký tự
-        </mat-error>
-      }
-    </mat-form-field>
-
-    <mat-form-field appearance="fill" class="full-width">
-      <mat-label>Email</mat-label>
-      <input matInput formControlName="email" type="email" placeholder="Nhập email">
-      @if (f['email'].hasError('required')) {
-        <mat-error>
-          Email là bắt buộc
-        </mat-error>
-      }
-      @if (f['email'].hasError('email')) {
-        <mat-error>
-          Vui lòng nhập email hợp lệ
-        </mat-error>
-      }
-    </mat-form-field>
-
-    <mat-form-field appearance="fill" class="full-width">
-      <mat-label>Họ và tên</mat-label>
-      <input matInput formControlName="fullName" placeholder="Nhập họ và tên">
-      @if (f['fullName'].hasError('required')) {
-        <mat-error>
-          Họ và tên là bắt buộc
-        </mat-error>
-      }
-      @if (f['fullName'].hasError('maxlength')) {
-        <mat-error>
-          Họ và tên không được vượt quá 100 ký tự
-        </mat-error>
-      }
-    </mat-form-field>
-
-    <mat-form-field appearance="fill" class="full-width">
-      <mat-label>Mật khẩu</mat-label>
-      <input matInput formControlName="password" type="password" placeholder="Nhập mật khẩu">
-      @if (!isEditMode) {
-        <mat-hint>
-          Mật khẩu tối thiểu 6 ký tự
-        </mat-hint>
-      }
-      @if (isEditMode) {
-        <mat-hint>
-          Để trống nếu không muốn thay đổi mật khẩu
-        </mat-hint>
-      }
-      @if (f['password'].hasError('minlength') && !isEditMode) {
-        <mat-error>
-          Mật khẩu cần có ít nhất 6 ký tự
-        </mat-error>
-      }
-    </mat-form-field>
-
-    <mat-form-field appearance="fill" class="full-width">
-      <mat-label>Vai trò</mat-label>
-      <mat-select formControlName="roleNames" multiple>
-        @for (role of roles; track role) {
-          <mat-option [value]="role">
-            {{ role }}
-          </mat-option>
+  <!-- Form Container -->
+  <main class="max-w-3xl mx-auto px-4 py-8">
+    @if (isLoading()) {
+      <!-- Loading Skeleton -->
+      <div class="space-y-6">
+        @for (i of [1,2,3,4]; track i) {
+          <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm p-6 animate-pulse">
+            <div class="h-6 w-1/4 bg-slate-200 dark:bg-slate-700 rounded mb-4"></div>
+            <div class="space-y-4">
+              @for (j of [1,2]; track j) {
+                <div class="h-10 w-full bg-slate-200 dark:bg-slate-700 rounded"></div>
+              }
+            </div>
+          </div>
         }
-      </mat-select>
-      @if (f['roleNames'].hasError('required')) {
-        <mat-error>
-          Vui lòng chọn ít nhất một vai trò
-        </mat-error>
-      }
-    </mat-form-field>
+      </div>
+    } @else {
+      <form [formGroup]="userForm" (ngSubmit)="onSubmit()" class="space-y-6" novalidate>
+        <!-- Avatar Section -->
+        <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
+          <div class="px-6 py-5 border-b border-slate-200 dark:border-slate-700">
+            <h2 class="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+              <mat-icon class="w-5 h-5 text-primary">photo_camera</mat-icon>
+              Ảnh đại diện
+            </h2>
+          </div>
+          <div class="p-6">
+            <div class="flex items-center gap-6">
+              <!-- Avatar Preview -->
+              <div class="relative shrink-0">
+                <div class="w-24 h-24 rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center overflow-hidden shadow-lg"
+                     [style.background-image]="avatarPreview() ? 'url(' + avatarPreview() + ')' : 'none'">
+                  @if (!avatarPreview()) {
+                    <mat-icon class="w-12 h-12 text-white/80">person</mat-icon>
+                  }
+                  <label class="absolute bottom-0 right-0 w-8 h-8 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center cursor-pointer border border-slate-200 dark:border-slate-700 shadow-md hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+                    <input type="file" accept="image/*" (change)="onAvatarSelected($event)" class="sr-only" id="avatarInput" [disabled]="isSubmitting()">
+                    <mat-icon class="w-4 h-4 text-slate-600 dark:text-slate-400">camera_alt</mat-icon>
+                  </label>
+                  @if (avatarPreview()) {
+                    <button type="button" (click)="removeAvatar()" class="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center shadow-lg hover:bg-red-600 transition-colors" aria-label="Xóa ảnh">
+                      <mat-icon class="w-4 h-4">close</mat-icon>
+                    </button>
+                  }
+                </div>
+              </div>
+              <!-- Avatar Info -->
+              <div class="flex-1 min-w-0">
+                <p class="text-sm text-slate-600 dark:text-slate-400">Tải lên ảnh đại diện cho người dùng (tùy chọn)</p>
+                <p class="text-xs text-slate-500 dark:text-slate-500 mt-1">Hỗ trợ JPG, PNG. Kích thước tối đa 2MB. Tỷ lệ khuyến nghị: 1:1</p>
+              </div>
+            </div>
+          </div>
+        </div>
 
-    <div class="avatar-field">
-      <label class="avatar-label">Ảnh đại diện</label>
-      <input type="file" accept="image/*" (change)="onFileSelected($event)">
-      @if (avatarPreview) {
-        <img [src]="avatarPreview" class="avatar-preview" alt="preview">
-      }
-    </div>
+        <!-- Account Information -->
+        <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
+          <div class="px-6 py-5 border-b border-slate-200 dark:border-slate-700">
+            <h2 class="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+              <mat-icon class="w-5 h-5 text-primary">badge</mat-icon>
+              Thông tin tài khoản
+            </h2>
+          </div>
+          <div class="p-6 space-y-6">
+            <!-- Email -->
+            <div class="form-group">
+              <label for="email" class="input-label">Email <span class="text-red-500">*</span></label>
+              <div class="relative">
+                <mat-icon class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400">email</mat-icon>
+                <input
+                  type="email"
+                  id="email"
+                  formControlName="email"
+                  class="input pl-12"
+                  placeholder="nguyenvana@example.com"
+                  autocomplete="email"
+                  [disabled]="isSubmitting() || isEditMode()"
+                  [class.input-error]="hasError('email', 'required') || hasError('email', 'email')">
+              </div>
+              @if (hasError('email', 'required')) {
+                <p class="input-error-text">Email là bắt buộc</p>
+              } @else if (hasError('email', 'email')) {
+                <p class="input-error-text">Email không hợp lệ</p>
+              }
+              @if (isEditMode()) {
+                <p class="input-hint">Email không thể thay đổi sau khi tạo tài khoản</p>
+              }
+            </div>
 
-    <div class="form-actions">
-      <button mat-button type="button" (click)="onCancel()">Hủy</button>
-      <button
-        mat-flat-button
-        color="primary"
-        [disabled]="userForm.invalid || isLoading"
-        type="submit">
-        {{ isLoading ? 'Đang xử lý...' : (isEditMode ? 'Cập nhật' : 'Thêm mới') }}
-      </button>
-    </div>
-  </form>
+            <!-- Password -->
+            <div class="form-group">
+              <label for="password" class="input-label">Mật khẩu <span class="text-red-500">*</span></label>
+              <div class="relative">
+                <mat-icon class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400">lock</mat-icon>
+                <input
+                  [type]="showPassword() ? 'text' : 'password'"
+                  id="password"
+                  formControlName="password"
+                  class="input pl-12 pr-12"
+                  placeholder="Nhập mật khẩu"
+                  autocomplete="new-password"
+                  [disabled]="isSubmitting()"
+                  [class.input-error]="hasError('password', 'required') || hasError('password', 'minlength')">
+                <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300" (click)="showPassword.set(!showPassword())" aria-label="Hiện/ẩn mật khẩu">
+                  <mat-icon class="w-5 h-5">{{ showPassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
+                </button>
+              </div>
+              @if (!isEditMode()) {
+                @if (hasError('password', 'required')) {
+                  <p class="input-error-text">Mật khẩu là bắt buộc</p>
+                } @else if (hasError('password', 'minlength')) {
+                  <p class="input-error-text">Mật khẩu phải có ít nhất 6 ký tự</p>
+                }
+                <p class="input-hint">Tối thiểu 6 ký tự</p>
+              } @else {
+                @if (hasError('password', 'minlength')) {
+                  <p class="input-error-text">Mật khẩu phải có ít nhất 6 ký tự</p>
+                }
+                <p class="input-hint">Để trống nếu không muốn thay đổi mật khẩu</p>
+              }
+            </div>
+
+            <!-- isActive Toggle -->
+            <div class="form-group">
+              <label class="input-label">Trạng thái tài khoản</label>
+              <div class="flex items-center gap-4">
+                <label class="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" formControlName="isActive" class="sr-only peer" [disabled]="isSubmitting()">
+                  <div class="w-12 h-7 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600 peer-disabled:opacity-50 peer-disabled:cursor-not-allowed"></div>
+                </label>
+                <div>
+                  <p class="font-medium text-slate-900 dark:text-white">{{ userForm.get('isActive')?.value ? 'Đang hoạt động' : 'Ngừng hoạt động' }}</p>
+                  <p class="text-sm text-slate-500 dark:text-slate-400">Người dùng {{ userForm.get('isActive')?.value ? 'có thể' : 'không thể' }} đăng nhập vào hệ thống</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Personal Information -->
+        <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
+          <div class="px-6 py-5 border-b border-slate-200 dark:border-slate-700">
+            <h2 class="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+              <mat-icon class="w-5 h-5 text-primary">person</mat-icon>
+              Thông tin cá nhân
+            </h2>
+          </div>
+          <div class="p-6 space-y-6">
+            <div class="form-row">
+              <!-- Full Name -->
+              <div class="form-group">
+                <label for="fullName" class="input-label">Họ tên <span class="text-red-500">*</span></label>
+                <div class="relative">
+                  <mat-icon class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400">person_outline</mat-icon>
+                  <input
+                    type="text"
+                    id="fullName"
+                    formControlName="fullName"
+                    class="input pl-12"
+                    placeholder="Nguyễn Văn A"
+                    autocomplete="name"
+                    [disabled]="isSubmitting()"
+                    [class.input-error]="hasError('fullName', 'required') || hasError('fullName', 'minlength')">
+                </div>
+                @if (hasError('fullName', 'required')) {
+                  <p class="input-error-text">Họ tên là bắt buộc</p>
+                } @else if (hasError('fullName', 'minlength')) {
+                  <p class="input-error-text">Họ tên phải có ít nhất 2 ký tự</p>
+                }
+              </div>
+
+              <!-- Phone -->
+              <div class="form-group">
+                <label for="phone" class="input-label">Số điện thoại</label>
+                <div class="relative">
+                  <mat-icon class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400">phone</mat-icon>
+                  <input
+                    type="tel"
+                    id="phone"
+                    formControlName="phone"
+                    class="input pl-12"
+                    placeholder="0901234567"
+                    autocomplete="tel"
+                    [disabled]="isSubmitting()"
+                    [class.input-error]="hasError('phone', 'pattern')">
+                </div>
+                @if (hasError('phone', 'pattern')) {
+                  <p class="input-error-text">Số điện thoại không hợp lệ (10-11 số)</p>
+                }
+              </div>
+            </div>
+
+            <!-- Address -->
+            <div class="form-group">
+              <label for="address" class="input-label">Địa chỉ</label>
+              <div class="relative">
+                <mat-icon class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400">location_on</mat-icon>
+                <textarea
+                  id="address"
+                  formControlName="address"
+                  class="input pl-12 resize-none"
+                  placeholder="Số nhà, đường, phường, quận, thành phố"
+                  rows="3"
+                  [disabled]="isSubmitting()"></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Roles & Permissions -->
+        <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
+          <div class="px-6 py-5 border-b border-slate-200 dark:border-slate-700">
+            <h2 class="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+              <mat-icon class="w-5 h-5 text-primary">security</mat-icon>
+              Vai trò & Phân quyền
+            </h2>
+          </div>
+          <div class="p-6 space-y-6">
+            <div class="form-group">
+              <label class="input-label">Vai trò <span class="text-red-500">*</span></label>
+              <div class="space-y-2">
+                @if (isLoading()) {
+                  <div class="flex gap-2">
+                    @for (i of [1,2,3]; track i) {
+                      <div class="flex-1 h-10 bg-slate-200 dark:bg-slate-700 rounded-lg animate-pulse"></div>
+                    }
+                  </div>
+                }
+                @if (!isLoading()) {
+                  @for (role of roles(); track role.id) {
+                    <label class="flex items-center gap-3 p-4 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl cursor-pointer hover:border-primary/50 dark:hover:border-primary/50 transition-colors">
+                      <input
+                        type="checkbox"
+                        [value]="role.id"
+                        class="w-5 h-5 text-primary border-slate-300 rounded focus:ring-primary/30"
+                        formControlName="roleNames"
+                        [disabled]="isSubmitting()">
+                      <div class="flex-1">
+                        <p class="font-medium text-slate-900 dark:text-white">{{ role.name }}</p>
+                        @if (role.description) {
+                          <p class="text-sm text-slate-500 dark:text-slate-400">{{ role.description }}</p>
+                        }
+                      </div>
+                    </label>
+                  }
+                }
+              </div>
+              @if (hasError('roleNames', 'required')) {
+                <p class="input-error-text">Vui lòng chọn ít nhất một vai trò</p>
+              }
+            </div>
+          </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+          <button
+            type="button"
+            (click)="onCancel()"
+            class="btn-secondary w-full sm:w-auto"
+            [disabled]="isSubmitting()">
+            <mat-icon class="w-5 h-5">close</mat-icon>
+            <span>Hủy</span>
+          </button>
+          <button
+            type="submit"
+            class="btn-primary w-full sm:w-auto"
+            [disabled]="isSubmitting()">
+            @if (isSubmitting()) {
+              <mat-icon class="w-5 h-5 animate-spin">refresh</mat-icon>
+              <span>Đang xử lý...</span>
+            } @else {
+              <mat-icon class="w-5 h-5">{{ isEditMode() ? 'save' : 'person_add' }}</mat-icon>
+              <span>{{ submitButtonText() }}</span>
+            }
+          </button>
+        </div>
+      </form>
+    }
+  </main>
 </div>

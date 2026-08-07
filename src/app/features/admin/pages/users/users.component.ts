@@ -1,244 +1,425 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, signal, computed, effect, inject, ViewChild, ElementRef } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule, ReactiveFormsModule, FormControl } from '@angular/forms';
+import { Router, RouterModule } from '@angular/router';
 import { MaterialModule } from '@shared/material.module';
-import { UserFormComponent } from '@features/admin/pages/user-form/user-form.component';
-import { ConfirmDialogComponent } from '@shared/confirm-dialog/confirm-dialog.component';
-import { UserResponse } from '@core/models/user.model';
-import { RoleResponse } from '@core/models/role.model';
 import { UserService } from '@core/services/user.service';
 import { RoleService } from '@core/services/role.service';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { MatDialog } from '@angular/material/dialog';
+import { UserResponse } from '@core/models/user.model';
+import { RoleResponse } from '@core/models/role.model';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatDialog } from '@angular/material/dialog';
 import { forkJoin } from 'rxjs';
+import { UserDetailComponent, UserDetailDialogData } from '../user-detail/user-detail.component';
+
+interface Column {
+  key: string;
+  label: string;
+  visible: boolean;
+  width?: string;
+}
+
+interface FilterPreset {
+  name: string;
+  searchTerm: string;
+  roleId: string; // Single role ID
+  status: 'all' | 'active' | 'inactive';
+}
 
 @Component({
   selector: 'app-users',
   standalone: true,
-  imports: [CommonModule, MaterialModule, FormsModule],
+  imports: [CommonModule, MaterialModule, FormsModule, ReactiveFormsModule, RouterModule],
   templateUrl: './users.html',
   styleUrl: './users.css',
 })
 export class UsersComponent implements OnInit {
-  users: UserResponse[] = [];
-  filteredUsers: UserResponse[] = [];
-  roles: RoleResponse[] = [];
+  private readonly userService = inject(UserService);
+  private readonly roleService = inject(RoleService);
+  private readonly router = inject(Router);
+  private readonly snackBar = inject(MatSnackBar);
+  private readonly dialog = inject(MatDialog);
 
-  // Filter states
-  searchTerm = '';
-  selectedRoleIds: string[] = [];
-  statusFilter: 'all' | 'active' | 'inactive' = 'all';
+  // Data signals
+  users = signal<UserResponse[]>([]);
+  filteredUsers = signal<UserResponse[]>([]);
+  roles = signal<RoleResponse[]>([]);
 
-  isLoading = false;
-  isLoadingRoles = false;
+  // Loading states
+  isLoading = signal(false);
+  isLoadingRoles = signal(false);
 
-  displayedColumns: string[] = ['avatar', 'fullName', 'email', 'phone', 'roles', 'status', 'actions'];
+  // Filter signals
+  searchTerm = signal('');
+  roleFilter = signal<string>(''); // Single role filter instead of multi-select
+  statusFilter = signal<'all' | 'active' | 'inactive'>('all');
 
-  constructor(
-    private userService: UserService,
-    private roleService: RoleService,
-    private dialog: MatDialog,
-    private snackBar: MatSnackBar,
-    private cdr: ChangeDetectorRef,
-  ) {}
+  // UI state signals
+  showColumnPicker = signal(false);
+  showFilterPresets = signal(false);
+  density = signal<'comfortable' | 'compact' | 'spacious'>('comfortable');
+  selectedUserIds = signal<string[]>([]);
+  selectAll = signal(false);
+  sortColumn = signal<string>('');
+  sortDirection = signal<'asc' | 'desc'>('asc');
+  actionMenuOpen = signal<string | null>(null); // Stores user.id of open menu
 
-  ngOnInit() {
-    this.loadData();
+  // Column definitions
+  columns = signal<Column[]>([
+    { key: 'avatar', label: 'Avatar', visible: true, width: '60px' },
+    { key: 'fullName', label: 'Họ tên', visible: true },
+    { key: 'email', label: 'Email', visible: true },
+    { key: 'phone', label: 'Điện thoại', visible: true },
+    { key: 'roles', label: 'Vai trò', visible: true },
+    { key: 'status', label: 'Trạng thái', visible: true, width: '120px' },
+    { key: 'lastLogin', label: 'Đăng nhập cuối', visible: false },
+    { key: 'createdAt', label: 'Ngày tạo', visible: false },
+    { key: 'actions', label: 'Thao tác', visible: true, width: '120px' },
+  ]);
+
+  // Filter presets
+  filterPresets = signal<FilterPreset[]>([
+    { name: 'Tất cả Admin', searchTerm: '', roleId: 'ADMIN', status: 'all' },
+    { name: 'Nhân viên hoạt động', searchTerm: '', roleId: 'STAFF', status: 'active' },
+    { name: 'Người dùng mới', searchTerm: '', roleId: 'USER', status: 'active' },
+    { name: 'Tài khoản bị khóa', searchTerm: '', roleId: '', status: 'inactive' },
+  ]);
+
+  // Visible columns computed
+  visibleColumns = computed(() => this.columns().filter(c => c.visible).map(c => c.key));
+
+  // Selected count
+  selectedCount = computed(() => this.selectedUserIds().length);
+
+  // All visible users IDs
+  visibleUserIds = computed(() => this.filteredUsers().map(u => u.id));
+
+  // Sorting
+  sortedUsers = computed(() => {
+    const users = [...this.filteredUsers()];
+    const column = this.sortColumn();
+    const direction = this.sortDirection();
+
+    if (!column) return users;
+
+    return users.sort((a, b) => {
+      const aVal = (a as any)[column];
+      const bVal = (b as any)[column];
+      if (aVal === bVal) return 0;
+      const result = aVal > bVal ? 1 : -1;
+      return direction === 'asc' ? result : -result;
+    });
+  });
+
+  constructor() {
+    // Persist filter presets to localStorage
+    effect(() => {
+      localStorage.setItem('userFilterPresets', JSON.stringify(this.filterPresets()));
+    });
   }
 
-  loadData() {
-    this.isLoading = true;
-    this.isLoadingRoles = true;
+  ngOnInit(): void {
+    this.loadData();
+    this.loadPresets();
+  }
+
+  loadData(): void {
+    this.isLoading.set(true);
+    this.isLoadingRoles.set(true);
 
     forkJoin({
       users: this.userService.getUsers(),
       roles: this.roleService.getRoles(),
     }).subscribe({
       next: ({ users, roles }) => {
-        this.users = users;
-        this.roles = roles;
+        this.users.set(users);
+        this.roles.set(roles);
         this.applyFilter();
-        this.isLoading = false;
-        this.isLoadingRoles = false;
-        this.cdr.detectChanges();
+        this.isLoading.set(false);
+        this.isLoadingRoles.set(false);
       },
       error: (error) => {
         console.error('Error loading data:', error);
-        this.snackBar.open('Failed to load data', 'Close', { duration: 3000 });
-        this.isLoading = false;
-        this.isLoadingRoles = false;
-        this.cdr.detectChanges();
+        this.snackBar.open('Không thể tải dữ liệu người dùng', 'Đóng', { duration: 3000 });
+        this.isLoading.set(false);
+        this.isLoadingRoles.set(false);
       },
     });
   }
 
-  applyFilter() {
-    if (!this.users) {
-      this.filteredUsers = [];
-      return;
+  loadPresets(): void {
+    const stored = localStorage.getItem('userFilterPresets');
+    if (stored) {
+      try {
+        this.filterPresets.set([...this.filterPresets(), ...JSON.parse(stored)].slice(0, 10));
+      } catch {
+        // ignore
+      }
     }
+  }
 
-    let filtered = this.users;
+  applyFilter(): void {
+    let filtered = this.users();
 
-    // Search by name, email, phone
-    if (this.searchTerm.trim()) {
-      const term = this.searchTerm.trim().toLowerCase();
-      filtered = filtered.filter(
-        (user) =>
-          (user.fullName || '').toLowerCase().includes(term) ||
-          (user.email || '').toLowerCase().includes(term) ||
-          (user.phone || '').toLowerCase().includes(term),
+    // Search filter
+    const term = this.searchTerm().trim().toLowerCase();
+    if (term) {
+      filtered = filtered.filter(user =>
+        (user.fullName || '').toLowerCase().includes(term) ||
+        (user.email || '').toLowerCase().includes(term) ||
+        (user.phone || '').toLowerCase().includes(term),
       );
     }
 
-    // Filter by role
-    if (this.selectedRoleIds.length > 0) {
-      filtered = filtered.filter((user) => {
-        const userRoleIds = (user.roleNames || []).map((r) => r.id);
-        return this.selectedRoleIds.some((id) => userRoleIds.includes(id));
+    // Role filter (single select)
+    const roleId = this.roleFilter();
+    if (roleId) {
+      filtered = filtered.filter(user => {
+        const userRoleIds = user.roleNames || [];
+        return userRoleIds.includes(roleId);
       });
     }
 
-    // Filter by status
-    if (this.statusFilter !== 'all') {
-      const isActive = (user: UserResponse) => !user.deletedAt;
-      if (this.statusFilter === 'active') {
-        filtered = filtered.filter(isActive);
-      } else if (this.statusFilter === 'inactive') {
-        filtered = filtered.filter((u) => !isActive(u));
-      }
+    // Status filter
+    const status = this.statusFilter();
+    if (status !== 'all') {
+      filtered = filtered.filter(user => {
+        if (status === 'active') return (user.isActive ?? true);
+        return !(user.isActive ?? true);
+      });
     }
 
-    this.filteredUsers = filtered;
-    this.cdr.detectChanges();
+    this.filteredUsers.set(filtered);
+    this.updateSelectAll();
   }
 
-  onSearchChange() {
+  onSearchChange(): void {
     this.applyFilter();
   }
 
-  onRoleChange() {
+  onRoleChange(): void {
     this.applyFilter();
   }
 
-  setStatusFilter(status: 'all' | 'active' | 'inactive') {
-    if (this.statusFilter !== status) {
-      this.statusFilter = status;
-      this.applyFilter();
+  setStatusFilter(status: 'all' | 'active' | 'inactive'): void {
+    this.statusFilter.set(status);
+    this.applyFilter();
+  }
+
+  clearFilters(): void {
+    this.searchTerm.set('');
+    this.roleFilter.set('');
+    this.statusFilter.set('all');
+    this.applyFilter();
+  }
+
+  // Column picker
+  toggleColumnPicker(): void {
+    this.showColumnPicker.set(!this.showColumnPicker());
+  }
+
+  toggleColumn(columnKey: string): void {
+    this.columns.update(cols =>
+      cols.map(c => c.key === columnKey ? { ...c, visible: !c.visible } : c)
+    );
+  }
+
+  // Sorting
+  onSort(columnKey: string): void {
+    if (this.sortColumn() === columnKey) {
+      this.sortDirection.update(d => d === 'asc' ? 'desc' : 'asc');
+    } else {
+      this.sortColumn.set(columnKey);
+      this.sortDirection.set('asc');
     }
   }
 
-  clearFilters() {
-    this.searchTerm = '';
-    this.selectedRoleIds = [];
-    this.statusFilter = 'all';
+  // Selection
+  toggleSelectAll(): void {
+    const allSelected = this.selectAll();
+    const ids = this.visibleUserIds();
+    if (!allSelected) {
+      this.selectedUserIds.set([...ids]);
+    } else {
+      this.selectedUserIds.set([]);
+    }
+    this.selectAll.set(!allSelected);
+  }
+
+  toggleSelectUser(userId: string): void {
+    this.selectedUserIds.update(ids =>
+      ids.includes(userId) ? ids.filter(id => id !== userId) : [...ids, userId]
+    );
+    this.updateSelectAll();
+  }
+
+  isSelected(userId: string): boolean {
+    return this.selectedUserIds().includes(userId);
+  }
+
+  updateSelectAll(): void {
+    const visibleIds = this.visibleUserIds();
+    this.selectAll.set(visibleIds.length > 0 && visibleIds.every(id => this.selectedUserIds().includes(id)));
+  }
+
+  // Bulk actions
+  bulkDelete(): void {
+    if (this.selectedCount() === 0) return;
+
+    if (confirm(`Bạn có chắc chắn muốn xóa ${this.selectedCount()} người dùng đã chọn?`)) {
+      this.snackBar.open('Đang xóa...', 'Đóng', { duration: 2000 });
+      // In real app, call bulk delete API
+      this.snackBar.open('Chức năng xóa hàng loạt sẽ được triển khai', 'Đóng', { duration: 3000 });
+      this.selectedUserIds.set([]);
+      this.selectAll.set(false);
+    }
+  }
+
+  bulkActivate(): void {
+    if (this.selectedCount() === 0) return;
+    this.snackBar.open('Chức năng kích hoạt hàng loạt sẽ được triển khai', 'Đóng', { duration: 3000 });
+  }
+
+  bulkDeactivate(): void {
+    if (this.selectedCount() === 0) return;
+    this.snackBar.open('Chức năng khóa hàng loạt sẽ được triển khai', 'Đóng', { duration: 3000 });
+  }
+
+  // Filter presets
+  applyPreset(preset: FilterPreset): void {
+    this.searchTerm.set(preset.searchTerm);
+    this.roleFilter.set(preset.roleId);
+    this.statusFilter.set(preset.status);
     this.applyFilter();
+    this.showFilterPresets.set(false);
   }
 
-  toggleUserStatus(user: UserResponse) {
-    const newState = !user.deletedAt; // If currently active (deletedAt null), then deactivate; else activate
-    const updateData: any = { deletedAt: newState ? new Date() : null };
-
-    this.userService.updateUser(user.id, updateData).subscribe({
-      next: () => {
-        const action = newState ? 'deactivated' : 'activated';
-        this.snackBar.open(`Người dùng đã được ${action}`, 'Close', { duration: 3000 });
-        this.loadData(); // Refresh to update the status
-      },
-      error: (error) => {
-        console.error('Error toggling user status:', error);
-        this.snackBar.open('Không thể thay đổi trạng thái người dùng', 'Close', { duration: 3000 });
-      },
-    });
+  saveCurrentPreset(): void {
+    const name = prompt('Nhập tên bộ lọc:');
+    if (name) {
+      const preset: FilterPreset = {
+        name,
+        searchTerm: this.searchTerm(),
+        roleId: this.roleFilter(),
+        status: this.statusFilter(),
+      };
+      this.filterPresets.update(presets => [preset, ...presets].slice(0, 10));
+    }
   }
 
-  createUser() {
-    const dialogRef = this.dialog.open(UserFormComponent, {
-      width: '500px',
-      data: {
-        title: 'Thêm mới người dùng',
-        user: null,
-      },
+  deletePreset(index: number): void {
+    this.filterPresets.update(presets => presets.filter((_, i) => i !== index));
+  }
+
+  toggleFilterPresets(): void {
+    this.showFilterPresets.set(!this.showFilterPresets());
+  }
+
+  // Density
+  setDensity(density: 'comfortable' | 'compact' | 'spacious'): void {
+    this.density.set(density);
+  }
+
+  // Navigation
+  createUser(): void {
+    this.router.navigate(['/admin/users/create']);
+  }
+
+  editUser(user: UserResponse): void {
+    this.router.navigate(['/admin/users', user.id, 'edit']);
+  }
+
+  viewUser(user: UserResponse): void {
+    const dialogRef = this.dialog.open(UserDetailComponent, {
+      data: { user } as UserDetailDialogData,
+      width: '580px',
+      maxWidth: '90vw',
+      panelClass: 'custom-dialog-panel',
     });
 
-    dialogRef.afterClosed().subscribe((result: boolean) => {
-      if (result) {
-        this.userService.createUser(result as any).subscribe({
-          next: () => {
-            this.snackBar.open('Thêm người dùng thành công', 'Close', { duration: 3000 });
-            this.loadData();
-          },
-          error: (error) => {
-            console.error('Error creating user:', error);
-            this.snackBar.open('Thêm người dùng thất bại', 'Close', { duration: 3000 });
-          },
-        });
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result === 'edit') {
+        this.editUser(user);
       }
     });
   }
 
-  editUser(user: UserResponse) {
-    const dialogRef = this.dialog.open(UserFormComponent, {
-      width: '500px',
-      data: {
-        title: 'Chỉnh sửa người dùng',
-        user: user,
-      },
-    });
+  deleteUser(user: UserResponse): void {
+    if (confirm(`Bạn có chắc chắn muốn xóa người dùng ${user.email}? Hành động này không thể hoàn tác.`)) {
+      this.userService.deleteUser(user.id).subscribe({
+        next: () => {
+          this.snackBar.open('Xóa người dùng thành công', 'Đóng', { duration: 3000 });
+          this.loadData();
+        },
+        error: (error) => {
+          console.error('Error deleting user:', error);
+          this.snackBar.open('Xóa người dùng thất bại', 'Đóng', { duration: 3000 });
+        },
+      });
+    }
+  }
 
-    dialogRef.afterClosed().subscribe((result: boolean) => {
-      if (result) {
-        this.userService.updateUser(user.id, result as any).subscribe({
-          next: () => {
-            this.snackBar.open('Cập nhật người dùng thành công', 'Close', { duration: 3000 });
-            this.loadData();
-          },
-          error: (error) => {
-            console.error('Error updating user:', error);
-            this.snackBar.open('Cập nhật người dùng thất bại', 'Close', { duration: 3000 });
-          },
-        });
-      }
+  toggleUserStatus(user: UserResponse): void {
+    this.snackBar.open('Chức năng thay đổi trạng thái sẽ được triển khai', 'Đóng', { duration: 3000 });
+  }
+
+  // Action menu
+  toggleActionMenu(user: UserResponse): void {
+    this.actionMenuOpen.update(current => current === user.id ? null : user.id);
+  }
+
+  closeActionMenu(): void {
+    this.actionMenuOpen.set(null);
+  }
+
+  closeAllDropdowns(): void {
+    this.showColumnPicker.set(false);
+    this.showFilterPresets.set(false);
+    this.closeActionMenu();
+  }
+
+  // Helpers
+  getRoleNames(user: UserResponse): string {
+    return (user.roleNames || []).join(', ');
+  }
+
+  getStatusBadgeClass(user: UserResponse): string {
+    const active = user.isActive ?? true;
+    return active ? 'badge-success' : 'badge-danger';
+  }
+
+  getStatusText(user: UserResponse): string {
+    return (user.isActive ?? true) ? 'Hoạt động' : 'Ngừng hoạt động';
+  }
+
+  getInitials(fullName: string): string {
+    if (!fullName) return 'NA';
+    const parts = fullName.trim().split(/\s+/);
+    if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+    return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+  }
+
+  formatDate(dateString?: string): string {
+    if (!dateString) return '-';
+    return new Date(dateString).toLocaleDateString('vi-VN', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
     });
   }
 
-  deleteUser(user: UserResponse) {
-    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
-      width: '300px',
-      data: {
-        title: 'Xác nhận xóa',
-        message: `Bạn có chắc chắn muốn xóa người dùng ${user.username}? Hành động này không thể hoàn tác.`,
-      },
-    });
-
-    dialogRef.afterClosed().subscribe((result: boolean) => {
-      if (result) {
-        this.userService.deleteUser(user.id).subscribe({
-          next: () => {
-            this.snackBar.open('Xóa người dùng thành công', 'Close', { duration: 3000 });
-            this.loadData();
-          },
-          error: (error) => {
-            console.error('Error deleting user:', error);
-            this.snackBar.open('Xóa người dùng thất bại', 'Close', { duration: 3000 });
-          },
-        });
-      }
-    });
+  // Track by functions
+  trackByUserId(index: number, user: UserResponse): string {
+    return user.id;
   }
 
-  viewUserDetail(user: UserResponse) {
-    // For now, we'll just log it. In a real app, we might navigate to a detail page.
-    console.log('Viewing user:', user);
+  trackByRoleId(index: number, role: RoleResponse): string {
+    return role.id;
   }
 
-  // Helper to check if a user is active
-  isUserActive(user: UserResponse): boolean {
-    return !user.deletedAt;
-  }
-
-  // Helper to get status badge color (if needed)
-  getStatusColor(user: UserResponse): string {
-    return this.isUserActive(user) ? 'success' : 'error';
+  trackByColumn(index: number, column: Column): string {
+    return column.key;
   }
 }
