@@ -1,50 +1,216 @@
-<mat-toolbar color="primary" class="header">
-  <!-- Hamburger button to toggle sidebar (mobile) -->
-  <button
-    type="button"
-    aria-label="Toggle sidebar"
-    mat-icon-button
-    (click)="onToggleSidebar()"
-    class="menu-button">
-    <mat-icon>menu</mat-icon>
-  </button>
+<!-- Header toolbar - Modern Clean with Dark Mode -->
+<header class="sticky top-0 z-[100] h-16 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-700">
+  <div class="h-full max-w-screen-2xl mx-auto px-4 md:px-6 lg:px-8 flex items-center justify-between gap-4">
+    <!-- Left: Hamburger + Search -->
+    <div class="flex items-center gap-4 flex-1 min-w-0 search-container">
+      <!-- Hamburger (mobile only) -->
+      <button
+        (click)="toggleSidebar.emit()"
+        class="lg:hidden p-2 rounded-lg text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+        aria-label="Toggle menu"
+        aria-expanded="false">
+        <mat-icon class="w-6 h-6">menu</mat-icon>
+      </button>
 
-  <!-- Search bar -->
-  <div class="search-container">
-    <mat-icon class="search-icon">search</mat-icon>
-    <input type="text" placeholder="Tìm kiếm…" class="search-input" aria-label="Search">
-  </div>
+      <!-- Search input with dropdown -->
+      <div class="relative flex-1 max-w-xl hidden sm:block">
+        <mat-icon class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 dark:text-slate-500">search</mat-icon>
+        <input
+          #searchInput
+          type="search"
+          [(ngModel)]="searchQuery"
+          (input)="onSearchInput($event)"
+          (focus)="onSearchFocus()"
+          (blur)="onSearchBlur()"
+          (keydown)="onSearchKeydown($event)"
+          placeholder="Tìm kiếm sản phẩm, đơn hàng, người dùng... (⌘K)"
+          class="w-full h-9 pl-10 pr-4 text-sm bg-slate-100 dark:bg-slate-800 border-0 rounded-lg text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:bg-white dark:focus:bg-slate-800 transition-all"
+          aria-label="Search"
+          aria-autocomplete="list"
+          aria-controls="search-results"
+          [attr.aria-expanded]="showSearchResults() && recentSearches().length > 0">
 
-  <!-- Spacer to push items to the right -->
-  <span class="spacer"></span>
+        <!-- Search results dropdown -->
+        @if (showSearchResults() && (recentSearches().length > 0 || searchQuery())) {
+          <div id="search-results" class="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700 overflow-hidden z-[200] animate-in fade-in-0 zoom-in-95 duration-150">
+            @if (searchQuery()) {
+              <div class="px-4 py-2 border-b border-slate-200 dark:border-slate-700">
+                <p class="text-sm font-medium text-slate-900 dark:text-white">Tìm kiếm: "{{ searchQuery() }}"</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Nhấn Enter để xem kết quả</p>
+              </div>
+            }
+            @if (recentSearches().length > 0) {
+              <div class="px-3 py-2 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                <p class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Tìm kiếm gần đây</p>
+                <button
+                  (click)="clearRecentSearches()"
+                  class="text-xs text-primary hover:text-primary-hover"
+                  aria-label="Xóa lịch sử tìm kiếm">
+                  Xóa tất cả
+                </button>
+              </div>
+              <div class="max-h-48 overflow-y-auto">
+                @for (search of recentSearches(); track search.query) {
+                  <button
+                    (click)="selectRecentSearch(search)"
+                    class="w-full px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors flex items-center gap-3">
+                    <mat-icon class="w-4 h-4 text-slate-400 dark:text-slate-500">history</mat-icon>
+                    <span class="truncate">{{ search.query }}</span>
+                    <span class="ml-auto text-xs text-slate-400 dark:text-slate-500">{{ getTimeAgo(search.timestamp) }}</span>
+                  </button>
+                }
+              </div>
+            }
+          </div>
+        }
+      </div>
 
-  <!-- Notification bell -->
-  <button
-    mat-icon-button
-    aria-label="Thông báo"
-    class="icon-button">
-    <mat-icon>notifications</mat-icon>
-    <mat-badge
-      color="warn"
-      overlap="true"
-      overlaps="true"
-      [hidden]="true"> <!-- We'll set this conditionally later -->
-      99
-    </mat-badge>
-  </button>
+      <!-- Search shortcut hint (desktop only) -->
+      <span class="hidden lg:inline-flex items-center gap-2 px-2 py-1 text-xs text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800 rounded">
+        <kbd class="px-1.5 py-0.5 bg-white dark:bg-slate-700 rounded text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600">⌘K</kbd>
+        Tìm kiếm
+      </span>
+    </div>
 
-  <!-- User profile -->
-  <div class="user-profile" *ngIf="userInfo">
-    <!-- Avatar -->
-    <div class="avatar">
-      <img *ngIf="userInfo.avatar" [src]="userInfo.avatar" alt="Avatar" class="avatar-image">
-      <div *ngIf="!userInfo.avatar" class="avatar-initials">
-        {{ (userInfo.firstName ? userInfo.firstName[0] : 'A') }}{{ (userInfo.lastName ? userInfo.lastName[0] : 'A') }}
+    <!-- Right: Actions -->
+    <div class="flex items-center gap-2">
+      <!-- Notification bell -->
+      <div class="relative notifications-container">
+        <button
+          (click)="toggleNotifications()"
+          class="relative p-2 rounded-lg text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+          aria-label="Thông báo"
+          aria-expanded="{{ showNotifications() }}"
+          aria-haspopup="true">
+          <mat-icon class="w-6 h-6">notifications_none</mat-icon>
+          <!-- Badge -->
+          @if (unreadCount() > 0) {
+            <span class="absolute -top-1 -right-1 w-5 h-5 min-w-[18px] bg-red-500 text-white text-xs font-medium rounded-full flex items-center justify-center animate-bounce-in">
+              {{ unreadCount() > 9 ? '9+' : unreadCount() }}
+            </span>
+          }
+        </button>
+
+        <!-- Notifications dropdown -->
+        @if (showNotifications()) {
+          <div class="absolute right-0 mt-2 w-80 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 overflow-hidden z-[200] animate-in fade-in-0 zoom-in-95 duration-150">
+            <!-- Header -->
+            <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+              <h3 class="text-sm font-semibold text-slate-900 dark:text-white">Thông báo</h3>
+              @if (unreadCount() > 0) {
+                <button
+                  (click)="markAllAsRead()"
+                  class="text-xs text-primary hover:text-primary-hover font-medium"
+                  aria-label="Đánh dấu tất cả đã đọc">
+                  Đánh dấu đã đọc
+                </button>
+              }
+            </div>
+
+            <!-- Notification list -->
+            <div class="max-h-96 overflow-y-auto">
+              @for (notification of filteredNotifications(); track notification.id) {
+                <button
+                  (click)="onNotificationClick(notification)"
+                  class="w-full px-4 py-3 text-left hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors border-b border-slate-100 dark:border-slate-700/50 flex items-start gap-3"
+                  [class.bg-blue-50/50]="!notification.read"
+                  [class.dark:bg-blue-900/20]="!notification.read">
+                  <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+                       [class]="getNotificationIconClass(notification.type)">
+                    <mat-icon class="w-4 h-4">{{ getNotificationIcon(notification.type) }}</mat-icon>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <p class="font-medium text-slate-900 dark:text-white truncate">{{ notification.title }}</p>
+                    <p class="text-sm text-slate-600 dark:text-slate-400 truncate mt-0.5">{{ notification.message }}</p>
+                    <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">{{ notification.time }}</p>
+                  </div>
+                  @if (!notification.read) {
+                    <span class="w-2 h-2 rounded-full bg-primary flex-shrink-0 mt-2" aria-label="Chưa đọc"></span>
+                  }
+                </button>
+              }
+              @if (filteredNotifications().length === 0) {
+                <div class="p-6 text-center">
+                  <mat-icon class="text-slate-300 dark:text-slate-600 text-4xl mb-2">notifications_off</mat-icon>
+                  <p class="text-slate-500 dark:text-slate-400">Không có thông báo</p>
+                </div>
+              }
+            </div>
+
+            <!-- Footer -->
+            <div class="px-4 py-2 border-t border-slate-200 dark:border-slate-700">
+              <a routerLink="/admin/notifications" class="text-sm font-medium text-primary hover:text-primary-hover flex items-center gap-2">
+                Xem tất cả thông báo
+                <mat-icon class="w-4 h-4">chevron_right</mat-icon>
+              </a>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Theme toggle -->
+      <button
+        (click)="onToggleTheme()"
+        class="p-2 rounded-lg text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+        aria-label="{{ isDark() ? 'Chế độ sáng' : 'Chế độ tối' }}"
+        [attr.aria-pressed]="isDark()">
+        <mat-icon class="w-6 h-6 transition-transform duration-200" [class.rotate-180]="isDark()">{{ isDark() ? 'light_mode' : 'dark_mode' }}</mat-icon>
+      </button>
+
+      <!-- User avatar dropdown -->
+      <div class="relative user-menu-container ml-1">
+        <button
+          (click)="toggleUserMenu()"
+          class="flex items-center gap-2 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+          aria-label="Menu người dùng"
+          aria-expanded="{{ showUserMenu() }}"
+          aria-haspopup="true">
+          <!-- Avatar -->
+          <div class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shrink-0 shadow-sm">
+            <span class="text-white font-medium text-sm">{{ initials() }}</span>
+          </div>
+          <span class="hidden lg:block text-sm font-medium text-slate-700 dark:text-slate-200 truncate max-w-[120px]">{{ userInfo()?.fullName || 'Quản trị viên' }}</span>
+          <mat-icon class="w-5 h-5 text-slate-400 hidden lg:block transition-transform duration-200" [class.rotate-180]="showUserMenu()">expand_more</mat-icon>
+        </button>
+
+        <!-- Dropdown menu -->
+        @if (showUserMenu()) {
+          <div class="absolute right-0 mt-2 w-52 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 py-1 z-[200] animate-in fade-in-0 zoom-in-95 duration-150">
+            <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-700">
+              <p class="text-sm font-medium text-slate-900 dark:text-white truncate">{{ userInfo()?.fullName || 'Quản trị viên' }}</p>
+              <p class="text-xs text-slate-500 dark:text-slate-400 truncate">{{ userInfo()?.email || 'admin@laptopshop.vn' }}</p>
+              <div class="mt-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium badge badge-primary">
+                {{ userInfo()?.role || 'ADMIN' }}
+              </div>
+            </div>
+            <a routerLink="/admin/profile" (click)="closeUserMenu()" class="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700">
+              <mat-icon class="w-5 h-5">person</mat-icon>
+              Hồ sơ cá nhân
+            </a>
+            <a routerLink="/admin/settings" (click)="closeUserMenu()" class="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700">
+              <mat-icon class="w-5 h-5">settings</mat-icon>
+              Cài đặt
+            </a>
+            <hr class="my-1 border-slate-200 dark:border-slate-700">
+            <a routerLink="/admin/help" (click)="closeUserMenu()" class="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700">
+              <mat-icon class="w-5 h-5">help_outline</mat-icon>
+              Trợ giúp
+            </a>
+            <hr class="my-1 border-slate-200 dark:border-slate-700">
+            <button
+              (click)="onLogout()"
+              class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20">
+              <mat-icon class="w-5 h-5">logout</mat-icon>
+              Đăng xuất
+            </button>
+          </div>
+        }
+
+        <!-- Click outside to close -->
+        @if (showUserMenu()) {
+          <div class="fixed inset-0 z-[199]" (click)="closeUserMenu()" aria-hidden="true"></div>
+        }
       </div>
     </div>
-    <div class="user-info-text">
-      <div class="user-name">{{ userInfo.fullName }}</div>
-      <div class="user-role" *ngIf="userInfo.role">{{ userInfo.role }}</div>
-    </div>
   </div>
-</mat-toolbar>
+</header>

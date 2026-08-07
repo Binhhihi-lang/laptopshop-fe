@@ -1,169 +1,78 @@
+/* Sidebar styles - Modern Clean using Tailwind utility classes */
 :host {
   display: block;
   height: 100%;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 240px;
-  max-width: 100%;
-  background-color: #121212;
-  color: #e0e0e0;
-  z-index: 1050;
-  overflow-x: hidden;
-  transition: width 0.3s ease;
 }
 
-/* Collapsed state */
-:host.collapsed {
-  width: 64px;
+/* Sidebar link active state */
+.sidebar-link-active {
+  @apply bg-blue-600 text-white;
 }
 
-.sidebar-wrapper {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
+.sidebar-link-active mat-icon {
+  @apply text-white;
 }
 
-/* Logo section */
-.sidebar-logo {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px;
-  border-bottom: 1px solid rgba(255,255,255,0.1);
+.sidebar-link-active .badge {
+  @apply bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400;
 }
 
-.logo-icon {
-  background: rgba(33,150,243,0.2);
-  border-radius: 8px;
-  padding: 8px;
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+/* Sidebar link hover effects */
+.sidebar-link {
+  @apply transition-all duration-200;
 }
 
-.logo-icon mat-icon {
-  color: #ffffff;
-  font-size: 20px;
+.sidebar-link:hover {
+  @apply bg-slate-800/50 text-white;
 }
 
-.logo-text {
-  display: flex;
-  flex-direction: column;
-  margin-left: 12px;
+.sidebar-link:hover mat-icon {
+  @apply text-white;
 }
 
-.logo-title {
-  font-weight: 600;
-  font-size: 18px;
-  color: #ffffff;
+/* Collapsed state adjustments */
+.sidebar-collapsed .sidebar-link {
+  @apply justify-center;
 }
 
-.logo-subtitle {
-  font-size: 12px;
-  color: rgba(255,255,255,0.6);
+/* Tooltip animation for collapsed sidebar */
+.sidebar-link > span:last-child {
+  animation: fade-in 150ms ease-out;
 }
 
-.toggle-collapse-btn {
-  background: transparent;
-  border: none;
-  color: rgba(255,255,255,0.6);
-  cursor: pointer;
-  padding: 8px;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-left: auto;
+/* Ensure smooth transitions */
+@media (prefers-reduced-motion: reduce) {
+  aside {
+    transition: none !important;
+  }
+
+  .sidebar-link,
+  .sidebar-link mat-icon,
+  .sidebar-link > span:last-child {
+    transition: none !important;
+    animation: none !important;
+  }
 }
 
-.toggle-collapse-btn:hover {
-  background: rgba(255,255,255,0.1);
-  color: #ffffff;
-}
-
-/* Navigation */
-.sidebar-nav {
-  flex: 1;
-  overflow-y: auto;
-}
-
-.mat-nav-list {
-  margin: 0;
-}
-
-.mat-list-item {
-  height: 48px;
-  border-radius: 4px;
-  margin: 0 8px;
-  display: flex;
-  align-items: center;
-}
-
-.mat-list-item:hover {
-  background-color: rgba(255,255,255,0.05);
-}
-
-.mat-list-item.mat-active {
-  background-color: rgba(33,150,243,0.2);
-}
-
-.mat-list-item .mat-icon {
-  width: 24px;
-  height: 24px;
-  font-size: 24px;
-  color: rgba(255,255,255,0.6);
-  margin-right: 12px;
-  min-width: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.mat-list-item.mat-active .mat-icon {
-  color: #ffffff;
-}
-
-.mat-list-item span {
-  font-size: 14px;
-  font-weight: 500;
-  color: rgba(255,255,255,0.8);
-}
-
-.mat-list-item.mat-active span {
-  color: #ffffff;
-  font-weight: 600;
-}
-
-/* Hide text when collapsed */
-:host.collapsed .logo-text,
-:host.collapsed .mat-list-item span {
-  display: none;
-}
-
-/* Adjust icon margin when text is hidden */
-:host.collapsed .mat-list-item .mat-icon {
-  margin-right: 0;
-}
-
-/* Make items center when collapsed */
-:host.collapsed .mat-list-item {
-  justify-content: center;
-}
-
-/* Scrollbar styling */
-::-webkit-scrollbar {
+/* Custom scrollbar for sidebar */
+aside ::-webkit-scrollbar {
   width: 6px;
 }
-::-webkit-scrollbar-track {
-  background: transparent;
+
+aside ::-webkit-scrollbar-track {
+  @apply bg-transparent;
 }
-::-webkit-scrollbar-thumb {
-  background-color: rgba(255,255,255,0.2);
-  border-radius: 3px;
+
+aside ::-webkit-scrollbar-thumb {
+  @apply bg-slate-700 rounded-full;
 }
-::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(255,255,255,0.3);
+
+aside ::-webkit-scrollbar-thumb:hover {
+  @apply bg-slate-600;
+}
+
+/* Focus visible for accessibility */
+.sidebar-link:focus-visible,
+button:focus-visible {
+  @apply outline-none ring-2 ring-blue-500 ring-offset-2 ring-offset-slate-900;
 }

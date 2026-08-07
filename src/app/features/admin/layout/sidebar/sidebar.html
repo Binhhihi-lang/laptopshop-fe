@@ -1,76 +1,103 @@
-<div class="sidebar-wrapper">
-  <!-- Logo section -->
-  <div class="sidebar-logo">
-    <div class="logo-icon">
-      <mat-icon>laptop</mat-icon>
+<!-- Mobile overlay -->
+@if (mobileOpenInput()) {
+  <div
+    class="fixed inset-0 z-[110] bg-slate-900/40 lg:hidden"
+    (click)="closeMobile()"
+    aria-hidden="true"></div>
+}
+
+<!-- Sidebar -->
+<aside
+  class="fixed top-0 left-0 z-[115] h-screen bg-gradient-to-b from-slate-900 to-slate-950 text-slate-300 flex flex-col transition-all duration-300 border-r border-slate-800"
+  [class.w-20]="collapsed()"
+  [class.w-64]="!collapsed()"
+  [class.translate-x-0]="mobileOpenInput()"
+  [class.-translate-x-full]="!mobileOpenInput()"
+  [class.lg:translate-x-0]="true">
+
+  <!-- Logo/Brand Section -->
+  <div class="flex items-center gap-2 px-3 h-16 border-b border-slate-800 shrink-0 overflow-hidden">
+    <div class="w-11 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shrink-0 shadow-lg shadow-blue-500/25">
+      <mat-icon class="w-5 h-5 text-white">laptop_mac</mat-icon>
     </div>
-    <div class="logo-text" *ngIf="!collapsed">
-      <div class="logo-title">LaptopShop</div>
-      <div class="logo-subtitle">Admin Console</div>
-    </div>
-    <button class="toggle-collapse-btn" (click)="toggleCollapse()" aria-label="Toggle sidebar">
-      <mat-icon>chevron_left</mat-icon>
+    @if (!collapsed()) {
+      <div class="overflow-hidden min-w-0 flex-1">
+        <p class="font-bold text-white text-sm leading-tight truncate">LaptopShop</p>
+        <p class="text-xs text-slate-500 truncate">Admin Console</p>
+      </div>
+    }
+    <!-- Collapse button (desktop only) -->
+    <button
+      (click)="toggleCollapse()"
+      class="hidden lg:flex items-center gap-2 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all duration-200 -ml-2"
+      aria-label="{{ collapsed() ? 'Expand' : 'Collapse' }} sidebar">
+      <mat-icon class="w-4 h-4 transition-transform duration-200" [class.rotate-180]="collapsed()">chevron_left</mat-icon>
+      @if (!collapsed()) { <span class="text-sm font-medium">Collapse</span> }
     </button>
   </div>
 
   <!-- Navigation -->
-  <nav class="sidebar-nav">
-    <mat-nav-list>
-      <a mat-list-item
-         [routerLink]="['/admin/dashboard']"
-         routerLinkActive="active"
-         class="nav-item">
-        <mat-icon matListItemIcon>dashboard</mat-icon>
-        <span matListItemTitle *ngIf="!collapsed">Dashboard</span>
+  <nav class="flex-1 overflow-y-auto py-4 px-2 space-y-1" aria-label="Main navigation">
+    @for (item of nav; track item.path) {
+      <a
+        [routerLink]="item.path"
+        routerLinkActive="sidebar-link-active"
+        [routerLinkActiveOptions]="{ exact: item.path === '/admin/dashboard' }"
+        (click)="closeMobile()"
+        class="sidebar-link relative group"
+        [class.justify-center]="collapsed()"
+        [title]="collapsed() ? item.label : ''"
+        [attr.aria-current]="item.path === '/admin/dashboard' ? 'page' : undefined">
+        <mat-icon class="w-5 h-5 shrink-0 transition-transform duration-200 group-hover:scale-110">{{ item.icon }}</mat-icon>
+        @if (!collapsed()) {
+          <span class="font-medium truncate">{{ item.label }}</span>
+          @if (item.badge) {
+            <span class="ml-auto badge badge-primary text-xs">{{ item.badge }}</span>
+          }
+        }
+        <!-- Tooltip for collapsed state -->
+        @if (collapsed() && !mobileOpenInput()) {
+          <span class="absolute left-full ml-3 px-2 py-1.5 text-sm font-medium text-slate-900 dark:text-white bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700 whitespace-nowrap opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none z-[200]">
+            {{ item.label }}
+            @if (item.badge) {
+              <span class="ml-1 badge badge-primary text-xs">{{ item.badge }}</span>
+            }
+          </span>
+        }
       </a>
-
-      <a mat-list-item
-         [routerLink]="['/admin/users']"
-         routerLinkActive="active"
-         class="nav-item">
-        <mat-icon matListItemIcon>people</mat-icon>
-        <span matListItemTitle *ngIf="!collapsed">Người dùng</span>
-      </a>
-
-      <a mat-list-item
-         [routerLink]="['/admin/products']"
-         routerLinkActive="active"
-         class="nav-item">
-        <mat-icon matListItemIcon>inventory_2</mat-icon>
-        <span matListItemTitle *ngIf="!collapsed">Sản phẩm</span>
-      </a>
-
-      <a mat-list-item
-         [routerLink]="['/admin/categories']"
-         routerLinkActive="active"
-         class="nav-item">
-        <mat-icon matListItemIcon>category</mat-icon>
-        <span matListItemTitle *ngIf="!collapsed">Danh mục</span>
-      </a>
-
-      <a mat-list-item
-         [routerLink]="['/admin/coupons']"
-         routerLinkActive="active"
-         class="nav-item">
-        <mat-icon matListItemIcon>local_offer</mat-icon>
-        <span matListItemTitle *ngIf="!collapsed">Mã giảm giá</span>
-      </a>
-
-      <a mat-list-item
-         [routerLink]="['/admin/roles']"
-         routerLinkActive="active"
-         class="nav-item">
-        <mat-icon matListItemIcon>shield</mat-icon>
-        <span matListItemTitle *ngIf="!collapsed">Vai trò</span>
-      </a>
-
-      <a mat-list-item
-         [routerLink]="['/admin/permissions']"
-         routerLinkActive="active"
-         class="nav-item">
-        <mat-icon matListItemIcon>key</mat-icon>
-        <span matListItemTitle *ngIf="!collapsed">Quyền</span>
-      </a>
-    </mat-nav-list>
+    }
   </nav>
-</div>
+
+  <!-- User Profile Section (Bottom) -->
+  @if (!collapsed()) {
+    <div class="p-3 border-t border-slate-800 shrink-0">
+      <div class="flex items-center gap-3 p-2 rounded-xl hover:bg-slate-800/50 transition-colors">
+        <div class="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shrink-0 shadow-lg shadow-blue-500/25">
+          <span class="text-white font-semibold text-sm">{{ userInitials() }}</span>
+        </div>
+        <div class="flex-1 min-w-0 overflow-hidden">
+          <p class="font-medium text-white text-sm truncate">{{ userName() }}</p>
+          <p class="text-xs text-slate-500 truncate">{{ userRole() }}</p>
+        </div>
+        <button
+          class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/50 transition-colors"
+          aria-label="User settings"
+          (click)="navigateToProfile()">
+          <mat-icon class="w-4 h-4">settings</mat-icon>
+        </button>
+      </div>
+    </div>
+  } @else {
+    <!-- Collapsed user indicator -->
+    <div class="p-2 border-t border-slate-800 shrink-0">
+      <button
+        class="w-full flex items-center justify-center p-2 rounded-xl hover:bg-slate-800/50 transition-colors"
+        aria-label="User profile"
+        (click)="navigateToProfile()">
+        <div class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shrink-0 shadow-lg shadow-blue-500/25">
+          <span class="text-white font-semibold text-sm">{{ userInitials() }}</span>
+        </div>
+      </button>
+    </div>
+  }
+</aside>

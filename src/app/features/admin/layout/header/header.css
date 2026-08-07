@@ -1,132 +1,93 @@
-.header {
-  height: 64px;
-  background: rgba(255,255,255,0.8);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid rgba(0,0,0,0.1);
-  display: flex;
-  align-items: center;
-  padding: 0 16px;
-  position: sticky;
-  top: 0;
-  z-index: 1100;
+/* Header styles - Modern Clean using Tailwind utility classes */
+:host {
+  display: block;
 }
 
-/* Hamburger button */
-.menu-button {
-  margin-right: 12px;
-  color: rgba(0,0,0,0.6);
-}
-.menu-button:hover {
-  background: rgba(0,0,0,0.05);
-  border-radius: 4px;
+/* Search dropdown animation */
+.search-dropdown {
+  animation: slide-down 150ms ease-out;
 }
 
-/* Search container */
-.search-container {
-  display: flex;
-  align-items: center;
-  background: rgba(0,0,0,0.04);
-  border-radius: 4px;
-  padding: 4px 8px;
-  flex: 1 1 300px; /* grow, shrink, basis */
-  max-width: 400px;
-  margin: 0 16px;
+/* Notification dropdown */
+.notification-item {
+  transition: background-color 0.1s ease;
 }
-.search-icon {
-  color: rgba(0,0,0,0.4);
-  margin-right: 6px;
-  font-size: 20px;
+
+.notification-item.unread {
+  background-color: rgb(59 130 246 / 0.05);
 }
-.search-input {
-  border: none;
+
+.dark .notification-item.unread {
+  background-color: rgb(59 130 246 / 0.1);
+}
+
+/* Theme toggle icon rotation */
+button[aria-pressed="true"] mat-icon {
+  transform: rotate(180deg);
+}
+
+/* User menu dropdown */
+.user-dropdown {
+  animation: scale-in 150ms ease-out;
+}
+
+/* Keyboard shortcut hint */
+kbd {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 0.7rem;
+}
+
+/* Recent search items */
+.recent-search-item {
+  transition: background-color 0.1s ease;
+}
+
+/* Focus visible for accessibility */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible {
   outline: none;
+  ring: 2px;
+  ring-offset: 2px;
+  ring-color: rgb(59 130 246 / 0.3);
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Scrollbar for dropdowns */
+.max-h-96::-webkit-scrollbar,
+.max-h-48::-webkit-scrollbar {
+  width: 6px;
+}
+
+.max-h-96::-webkit-scrollbar-track,
+.max-h-48::-webkit-scrollbar-track {
   background: transparent;
-  font-size: 14px;
-  color: rgba(0,0,0,0.87);
-  width: 100%;
-}
-.search-input::placeholder {
-  color: rgba(0,0,0,0.38);
 }
 
-/* Spacer */
-.spacer {
-  flex: 1 1 auto;
+.max-h-96::-webkit-scrollbar-thumb,
+.max-h-48::-webkit-scrollbar-thumb {
+  background: rgb(148 163 184);
+  border-radius: 3px;
 }
 
-/* Icon buttons (notification, etc.) */
-.icon-button {
-  margin: 0 8px;
-  color: rgba(0,0,0,0.6);
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-}
-.icon-button:hover {
-  background: rgba(0,0,0,0.05);
-  color: rgba(0,0,0,0.87);
+.dark .max-h-96::-webkit-scrollbar-thumb,
+.dark .max-h-48::-webkit-scrollbar-thumb {
+  background: rgb(100 116 139);
 }
 
-/* Badge for notification count */
-.mat-badge-content {
-  background-color: #f44336 !important;
-  color: white !important;
-  font-size: 0.75rem !important;
-  line-height: 1;
-  padding: 0px 4px !important;
-  min-width: 18px !important;
-  height: 18px !important;
+.max-h-96::-webkit-scrollbar-thumb:hover,
+.max-h-48::-webkit-scrollbar-thumb:hover {
+  background: rgb(100 116 139);
 }
 
-/* User profile */
-.user-profile {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  cursor: pointer;
-}
-.user-profile:hover {
-  background: rgba(0,0,0,0.05);
-  border-radius: 8px;
-}
-.avatar {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  overflow: hidden;
-  flex-shrink: 0;
-}
-.avatar-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-.avatar-initials {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(33,150,243,0.2);
-  color: #ffffff;
-  font-weight: 500;
-  font-size: 14px;
-}
-.user-info-text {
-  display: flex;
-  flex-direction: column;
-}
-.user-name {
-  font-weight: 500;
-  font-size: 14px;
-  white-space: nowrap;
-  color: rgba(0,0,0,0.87);
-}
-.user-role {
-  font-size: 12px;
-  color: rgba(0,0,0,0.5);
-  white-space: nowrap;
+.dark .max-h-96::-webkit-scrollbar-thumb:hover,
+.dark .max-h-48::-webkit-scrollbar-thumb:hover {
+  background: rgb(148 163 184);
 }
