@@ -1,0 +1,5 @@
+/* Products page styles - Now using Tailwind utility classes globally.
+   This file is kept for any component-specific styles if needed in the future. */
+:host {
+  display: block;
+}
