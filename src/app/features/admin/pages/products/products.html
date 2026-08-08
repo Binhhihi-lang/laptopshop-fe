@@ -1,1 +1,422 @@
-<p>products works!</p>
+<!-- Products Page - Modern Clean with Tailwind -->
+<div class="min-h-screen bg-slate-50 dark:bg-slate-950">
+  <!-- Page Header -->
+  <div class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-16 z-[90]">
+    <div class="max-w-screen-2xl mx-auto px-4 md:px-6 lg:px-8 py-4">
+      <!-- Title & Actions -->
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Quản lý sản phẩm</h1>
+          <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Tìm kiếm, lọc và quản lý danh sách sản phẩm</p>
+        </div>
+        <div class="flex items-center gap-3 flex-wrap">
+
+          <!-- Column Picker -->
+          <div class="relative">
+            <button
+              (click)="toggleColumnPicker()"
+              class="flex items-center gap-2 px-3 py-1.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+              aria-label="Chọn cột hiển thị"
+              aria-expanded="{{ showColumnPicker() }}">
+              <mat-icon class="w-5 h-5">view_column</mat-icon>
+              <span class="hidden sm:inline">Cột</span>
+            </button>
+            @if (showColumnPicker()) {
+              <div class="absolute right-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 py-1 z-[200] animate-in fade-in-0 zoom-in-95 duration-150">
+                @for (column of columns(); track column.key) {
+                  <label class="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      [checked]="column.visible"
+                      (change)="toggleColumn(column.key)"
+                      class="w-4 h-4 text-primary border-slate-300 rounded focus:ring-primary/30">
+                    <span>{{ column.label }}</span>
+                  </label>
+                }
+              </div>
+            }
+          </div>
+
+          <!-- Filter Presets -->
+          <div class="relative">
+            <button
+              (click)="toggleFilterPresets()"
+              class="flex items-center gap-2 px-3 py-1.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+              aria-label="Bộ lọc đã lưu"
+              aria-expanded="{{ showFilterPresets() }}">
+              <mat-icon class="w-5 h-5">filter_list</mat-icon>
+              <span class="hidden sm:inline">Bộ lọc</span>
+            </button>
+            @if (showFilterPresets()) {
+              <div class="absolute right-0 mt-2 w-64 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 overflow-hidden z-[200] animate-in fade-in-0 zoom-in-95 duration-150">
+                <div class="px-3 py-2 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                  <p class="text-sm font-medium text-slate-900 dark:text-white">Bộ lọc nhanh</p>
+                  <button
+                    (click)="saveCurrentPreset()"
+                    class="text-xs text-primary hover:text-primary-hover font-medium"
+                    aria-label="Lưu bộ lọc hiện tại">
+                    Lưu
+                  </button>
+                </div>
+                <div class="max-h-60 overflow-y-auto">
+                  @for (preset of filterPresets(); track preset.name; let i = $index) {
+                    <div class="flex items-center justify-between px-3 py-2 hover:bg-slate-50 dark:hover:bg-slate-700 border-b border-slate-100 dark:border-slate-700/50">
+                      <button
+                        (click)="applyPreset(preset)"
+                        class="flex-1 text-left text-sm text-slate-700 dark:text-slate-200 flex items-center gap-2">
+                        <mat-icon class="w-4 h-4 text-slate-400">filter_alt</mat-icon>
+                        <span class="truncate">{{ preset.name }}</span>
+                      </button>
+                      <button
+                        (click)="deletePreset(i)"
+                        class="p-1 text-slate-400 hover:text-red-500 transition-colors"
+                        aria-label="Xóa bộ lọc">
+                        <mat-icon class="w-4 h-4">close</mat-icon>
+                      </button>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+
+          <!-- Create Product Button -->
+          <button
+            (click)="createProduct()"
+            class="flex items-center gap-2 px-4 py-2 bg-blue-700 text-white rounded-lg hover:bg-blue-800 border border-blue-800 transition-colors font-medium text-sm shadow-lg hover:shadow-xl z-10 relative">
+            <mat-icon class="w-5 h-5">add</mat-icon>
+            <span>Thêm sản phẩm</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Advanced Filter Bar -->
+      <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Search -->
+        <div class="relative">
+          <mat-icon class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400">search</mat-icon>
+          <input
+            type="search"
+            [(ngModel)]="searchTerm"
+            (input)="onSearchChange()"
+            placeholder="Tìm kiếm theo tên, mã SP, danh mục..."
+            class="w-full h-10 pl-10 pr-4 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/30"
+            aria-label="Tìm kiếm sản phẩm">
+        </div>
+
+        <!-- Category Filter -->
+        <div class="relative">
+          <mat-icon class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400">category</mat-icon>
+          <select
+            [(ngModel)]="categoryFilter"
+            (change)="onCategoryChange()"
+            class="w-full h-10 pl-10 pr-10 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/30 appearance-none"
+            aria-label="Lọc theo danh mục">
+            <option value="">Danh mục</option>
+            @for (category of categories(); track category.id) {
+              <option [value]="category.id">{{ category.name }}</option>
+            }
+          </select>
+          <mat-icon class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none">expand_more</mat-icon>
+        </div>
+
+        <!-- Status Filter -->
+        <div class="relative">
+          <mat-icon class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400">toggle_on</mat-icon>
+          <select
+            [(ngModel)]="statusFilter"
+            (change)="applyFilter()"
+            class="w-full h-10 pl-10 pr-10 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/30 appearance-none"
+            aria-label="Lọc theo trạng thái">
+            <option value="all">Tất cả trạng thái</option>
+            <option value="active">Đang hoạt động</option>
+            <option value="inactive">Ngừng hoạt động</option>
+          </select>
+          <mat-icon class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none">expand_more</mat-icon>
+        </div>
+
+        <!-- Clear Filters -->
+        <button
+          (click)="clearFilters()"
+          class="flex items-center justify-center gap-2 px-4 py-2 text-sm text-slate-600 dark:text-slate-400 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+          [disabled]="!searchTerm() && !categoryFilter() && statusFilter() === 'all'"
+          aria-label="Xóa tất cả bộ lọc">
+          <mat-icon class="w-5 h-5">filter_alt_off</mat-icon>
+          <span>Xóa lọc</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bulk Actions Toolbar -->
+  @if (selectedCount() > 0) {
+    <div class="bg-primary/10 dark:bg-primary/20 border-b border-primary/30 px-4 md:px-6 lg:px-8 py-3 sticky top-[72px] z-[85] animate-in slide-down">
+      <div class="max-w-screen-2xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div class="flex items-center gap-3 text-sm font-medium text-primary">
+          <mat-icon class="w-5 h-5">check_circle</mat-icon>
+          <span>{{ selectedCount() }} sản phẩm đã chọn</span>
+        </div>
+        <div class="flex items-center gap-2 flex-wrap">
+          <button
+            (click)="bulkActivate()"
+            class="flex items-center gap-2 px-3 py-1.5 text-sm bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
+            aria-label="Kích hoạt đã chọn">
+            <mat-icon class="w-4 h-4">check_circle</mat-icon>
+            <span>Kích hoạt</span>
+          </button>
+          <button
+            (click)="bulkDeactivate()"
+            class="flex items-center gap-2 px-3 py-1.5 text-sm bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors"
+            aria-label="Khóa đã chọn">
+            <mat-icon class="w-4 h-4">block</mat-icon>
+            <span>Khóa</span>
+          </button>
+          <button
+            (click)="bulkDelete()"
+            class="flex items-center gap-2 px-3 py-1.5 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+            aria-label="Xóa đã chọn">
+            <mat-icon class="w-4 h-4">delete</mat-icon>
+            <span>Xóa</span>
+          </button>
+          <button
+            (click)="selectedProductIds.set([]); selectAll.set(false)"
+            class="flex items-center gap-2 px-3 py-1.5 text-sm text-slate-600 dark:text-slate-400 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+            aria-label="Bỏ chọn tất cả">
+            <mat-icon class="w-4 h-4">close</mat-icon>
+            <span>Bỏ chọn</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Table Container -->
+  <div class="max-w-screen-2xl mx-auto px-4 md:px-6 lg:px-8 py-6">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
+      @if (isLoading()) {
+        <!-- Loading Skeleton -->
+        <div class="overflow-x-auto">
+          <table class="w-full" role="grid">
+            <thead class="bg-slate-50 dark:bg-slate-800/50">
+              <tr class="border-b border-slate-200 dark:border-slate-700">
+                <th class="w-12 px-4 py-3"></th>
+                @for (col of visibleColumns(); track col) {
+                  <th class="px-4 py-3 text-left">
+                    <div class="h-4 w-3/4 bg-slate-200 dark:bg-slate-700 rounded animate-pulse"></div>
+                  </th>
+                }
+              </tr>
+            </thead>
+            <tbody>
+              @for (i of [1,2,3,4,5]; track i) {
+                <tr class="border-b border-slate-100 dark:border-slate-800">
+                  <td class="w-12 px-4 py-3"></td>
+                  @for (col of visibleColumns(); track col) {
+                    <td class="px-4 py-3">
+                      <div class="h-4 w-full bg-slate-200 dark:bg-slate-700 rounded animate-pulse"></div>
+                    </td>
+                  }
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else if (filteredProducts().length === 0) {
+        <!-- Empty State -->
+        <div class="p-12 text-center">
+          <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+            <mat-icon class="w-10 h-10 text-slate-400">inventory_2</mat-icon>
+          </div>
+          <h3 class="text-lg font-medium text-slate-900 dark:text-white mb-2">Không tìm thấy sản phẩm</h3>
+          <p class="text-slate-500 dark:text-slate-400 mb-6">
+            @if (searchTerm() || categoryFilter() || statusFilter() !== 'all') {
+              Thử thay đổi bộ lọc hoặc
+              <button (click)="clearFilters()" class="text-primary hover:underline font-medium">xóa bộ lọc</button>
+            } @else {
+              Hiện chưa có sản phẩm nào trong hệ thống
+            }
+          </p>
+          @if (!searchTerm() && !categoryFilter() && statusFilter() === 'all') {
+            <button
+              (click)="createProduct()"
+              class="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-hover transition-colors">
+              <mat-icon class="w-5 h-5">add</mat-icon>
+              Thêm sản phẩm đầu tiên
+            </button>
+          }
+        </div>
+      } @else {
+        <!-- Data Table -->
+        <div class="overflow-x-auto">
+          <table class="w-full" role="grid" [class.table-compact]="density() === 'compact'" [class.table-spacious]="density() === 'spacious'">
+            <!-- Header -->
+            <thead class="bg-slate-50 dark:bg-slate-800/50 sticky top-0 z-10">
+              <tr class="border-b border-slate-200 dark:border-slate-700">
+                <!-- Selection Column -->
+                <th class="w-12 px-4 py-3">
+                  <input
+                    type="checkbox"
+                    [checked]="selectAll()"
+                    [indeterminate]="selectedCount() > 0 && !selectAll()"
+                    (change)="toggleSelectAll()"
+                    class="w-4 h-4 text-primary border-slate-300 rounded focus:ring-primary/30 cursor-pointer"
+                    aria-label="Chọn tất cả">
+                </th>
+
+                @for (column of columns(); track column.key) {
+                  @if (column.visible) {
+                    <th
+                      class="px-4 py-3 text-left font-medium text-sm text-slate-600 dark:text-slate-300 whitespace-nowrap cursor-pointer select-none"
+                      [style.width]="column.width"
+                      (click)="column.key !== 'actions' && column.key !== 'image' && onSort(column.key)"
+                      [attr.aria-sort]="sortColumn() === column.key ? (sortDirection() === 'asc' ? 'ascending' : 'descending') : 'none'">
+                      <div class="flex items-center gap-2">
+                        <span>{{ column.label }}</span>
+                        @if (column.key !== 'actions' && column.key !== 'image') {
+                          @if (sortColumn() === column.key) {
+                            <mat-icon class="w-4 h-4 text-primary">{{ sortDirection() === 'asc' ? 'arrow_upward' : 'arrow_downward' }}</mat-icon>
+                          } @else {
+                            <mat-icon class="w-4 h-4 text-slate-300 dark:text-slate-600">unfold_more</mat-icon>
+                          }
+                        }
+                      </div>
+                    </th>
+                  }
+                }
+              </tr>
+            </thead>
+
+            <!-- Body -->
+            <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+              @for (product of sortedProducts(); track product.id) {
+                <tr
+                  class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
+                  [class.bg-primary-50/30]="isSelected(product.id)"
+                  [class.dark:bg-primary-900/20]="isSelected(product.id)">
+                  <!-- Checkbox -->
+                  <td class="w-12 px-4 py-3">
+                    <input
+                      type="checkbox"
+                      [checked]="isSelected(product.id)"
+                      (change)="toggleSelectProduct(product.id)"
+                      class="w-4 h-4 text-primary border-slate-300 rounded focus:ring-primary/30 cursor-pointer"
+                      [attr.aria-label]="'Chọn ' + product.name">
+                  </td>
+
+                  @for (columnKey of visibleColumns(); track columnKey) {
+                    <td class="px-4 py-3">
+                      <!-- Image Column -->
+                      @if (columnKey === 'image') {
+                        <div class="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-slate-100 dark:bg-slate-700">
+                          @if (product.image) {
+                            <img [src]="product.image" [alt]="product.name" class="w-full h-full object-cover" loading="lazy">
+                          } @else {
+                            <mat-icon class="w-full h-full text-slate-300 dark:text-slate-600 flex items-center justify-center">inventory_2</mat-icon>
+                          }
+                        </div>
+                      }
+                      <!-- Code Column -->
+                      @else if (columnKey === 'code') {
+                        <span class="font-mono text-sm text-slate-600 dark:text-slate-400">{{ product.code }}</span>
+                      }
+                      <!-- Name Column -->
+                      @else if (columnKey === 'name') {
+                        <div class="font-medium text-slate-900 dark:text-white truncate max-w-[250px]">{{ product.name }}</div>
+                      }
+                      <!-- Category Column -->
+                      @else if (columnKey === 'categoryName') {
+                        <span class="text-slate-600 dark:text-slate-400 truncate max-w-[150px] block">{{ product.categoryName || 'Chưa phân loại' }}</span>
+                      }
+                      <!-- Price Column -->
+                      @else if (columnKey === 'price') {
+                        <div class="font-medium text-slate-900 dark:text-white">{{ formatPrice(product.price) }}</div>
+                      }
+                      <!-- Quantity Column -->
+                      @else if (columnKey === 'quantity') {
+                        <div class="flex items-center gap-2">
+                          <span class="font-mono" [class]="getStockStatusClass(product)">{{ product.quantity }}</span>
+                          <span class="text-xs" [class]="getStockStatusClass(product)">{{ getStockStatusText(product) }}</span>
+                        </div>
+                      }
+                      <!-- Sold Column -->
+                      @else if (columnKey === 'sold') {
+                        <span class="font-mono text-slate-600 dark:text-slate-400">{{ product.sold }}</span>
+                      }
+                      <!-- Status Column -->
+                      @else if (columnKey === 'status') {
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium" [class]="getStatusBadgeClass(product)">
+                          <span class="w-1.5 h-1.5 rounded-full" [class]="getStatusDotClass(product)"></span>
+                          {{ getStatusText(product) }}
+                        </span>
+                      }
+                      <!-- Created At Column -->
+                      @else if (columnKey === 'createdAt') {
+                        <div class="text-slate-600 dark:text-slate-400">{{ formatDate(product.createdAt) }}</div>
+                      }
+                      <!-- Actions Column -->
+                      @else if (columnKey === 'actions') {
+                        <div class="flex items-center gap-1">
+                          <div class="relative">
+                            <button
+                              (click)="$event.stopPropagation(); toggleActionMenu(product)"
+                              class="p-2 rounded-lg text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                              aria-label="Thao tác cho {{ product.name }}"
+                              aria-expanded="false"
+                              aria-haspopup="true">
+                              <mat-icon class="w-5 h-5">more_vert</mat-icon>
+                            </button>
+                            @if (actionMenuOpen() === product.id) {
+                              <div class="absolute right-0 top-full mt-1 w-40 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 py-1 z-[200] animate-in fade-in-0 zoom-in-95 duration-150">
+                                <a
+                                  (click)="viewProduct(product); closeActionMenu()"
+                                  class="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700">
+                                  <mat-icon class="w-4 h-4">visibility</mat-icon>
+                                  Xem chi tiết
+                                </a>
+                                <a
+                                  (click)="editProduct(product); closeActionMenu()"
+                                  class="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700">
+                                  <mat-icon class="w-4 h-4">edit</mat-icon>
+                                  Chỉnh sửa
+                                </a>
+                                <button
+                                  (click)="toggleProductStatus(product); closeActionMenu()"
+                                  class="w-full flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 text-left">
+                                  <mat-icon class="w-4 h-4">{{ product.active ? 'block' : 'check_circle' }}</mat-icon>
+                                  {{ product.active ? 'Ngừng hoạt động' : 'Kích hoạt' }}
+                                </button>
+                                <hr class="my-1 border-slate-200 dark:border-slate-700">
+                                <button
+                                  (click)="deleteProduct(product); closeActionMenu()"
+                                  class="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 text-left">
+                                  <mat-icon class="w-4 h-4">delete</mat-icon>
+                                  Xóa
+                                </button>
+                              </div>
+                            }
+                          </div>
+                        </div>
+                      }
+                    </td>
+                  }
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination Info -->
+        @if (!isLoading() && filteredProducts().length > 0) {
+          <div class="px-4 py-4 border-t border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="text-sm text-slate-600 dark:text-slate-400">
+              Hiển thị <span class="font-medium">{{ filteredProducts().length }}</span> sản phẩm
+            </div>
+          </div>
+        }
+      }
+    </div>
+  </div>
+
+  <!-- Click outside handler for dropdowns -->
+  <div class="fixed inset-0 -z-10" (click)="closeAllDropdowns()" [hidden]="!showColumnPicker() && !showFilterPresets() && actionMenuOpen() === null"></div>
+</div>
