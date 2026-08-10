@@ -30,8 +30,8 @@
     <div class="p-6 space-y-6 max-h-[60vh] overflow-y-auto">
       <!-- Status Badge -->
       <div class="flex items-center gap-2">
-        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium" [class]="getStatusBadgeClass(u)">
-          <span class="w-2 h-2 rounded-full" [class]="getStatusDotClass(u)"></span>
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium" [ngClass]="getStatusBadgeClass(u)">
+          <span class="w-2 h-2 rounded-full" [ngClass]="getStatusDotClass(u)"></span>
           {{ getStatusText(u) }}
         </span>
       </div>

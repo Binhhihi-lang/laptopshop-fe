@@ -1,4 +1,13 @@
-import { Component, OnInit, signal, computed, effect, inject, ViewChild, ElementRef } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  signal,
+  computed,
+  effect,
+  inject,
+  ViewChild,
+  ElementRef,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormControl } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
@@ -63,6 +72,7 @@ export class UsersComponent implements OnInit {
   sortColumn = signal<string>('');
   sortDirection = signal<'asc' | 'desc'>('asc');
   actionMenuOpen = signal<string | null>(null); // Stores user.id of open menu
+  deletingUserId = signal<string | null>(null);
 
   // Column definitions
   columns = signal<Column[]>([
@@ -86,13 +96,17 @@ export class UsersComponent implements OnInit {
   ]);
 
   // Visible columns computed
-  visibleColumns = computed(() => this.columns().filter(c => c.visible).map(c => c.key));
+  visibleColumns = computed(() =>
+    this.columns()
+      .filter((c) => c.visible)
+      .map((c) => c.key),
+  );
 
   // Selected count
   selectedCount = computed(() => this.selectedUserIds().length);
 
   // All visible users IDs
-  visibleUserIds = computed(() => this.filteredUsers().map(u => u.id));
+  visibleUserIds = computed(() => this.filteredUsers().map((u) => u.id));
 
   // Sorting
   sortedUsers = computed(() => {
@@ -164,17 +178,18 @@ export class UsersComponent implements OnInit {
     // Search filter
     const term = this.searchTerm().trim().toLowerCase();
     if (term) {
-      filtered = filtered.filter(user =>
-        (user.fullName || '').toLowerCase().includes(term) ||
-        (user.email || '').toLowerCase().includes(term) ||
-        (user.phone || '').toLowerCase().includes(term),
+      filtered = filtered.filter(
+        (user) =>
+          (user.fullName || '').toLowerCase().includes(term) ||
+          (user.email || '').toLowerCase().includes(term) ||
+          (user.phone || '').toLowerCase().includes(term),
       );
     }
 
     // Role filter (single select)
     const roleId = this.roleFilter();
     if (roleId) {
-      filtered = filtered.filter(user => {
+      filtered = filtered.filter((user) => {
         const userRoleIds = user.roleNames || [];
         return userRoleIds.includes(roleId);
       });
@@ -183,9 +198,9 @@ export class UsersComponent implements OnInit {
     // Status filter
     const status = this.statusFilter();
     if (status !== 'all') {
-      filtered = filtered.filter(user => {
-        if (status === 'active') return (user.isActive ?? true);
-        return !(user.isActive ?? true);
+      filtered = filtered.filter((user) => {
+        if (status === 'active') return user.active ?? true;
+        return !(user.active ?? true);
       });
     }
 
@@ -219,15 +234,15 @@ export class UsersComponent implements OnInit {
   }
 
   toggleColumn(columnKey: string): void {
-    this.columns.update(cols =>
-      cols.map(c => c.key === columnKey ? { ...c, visible: !c.visible } : c)
+    this.columns.update((cols) =>
+      cols.map((c) => (c.key === columnKey ? { ...c, visible: !c.visible } : c)),
     );
   }
 
   // Sorting
   onSort(columnKey: string): void {
     if (this.sortColumn() === columnKey) {
-      this.sortDirection.update(d => d === 'asc' ? 'desc' : 'asc');
+      this.sortDirection.update((d) => (d === 'asc' ? 'desc' : 'asc'));
     } else {
       this.sortColumn.set(columnKey);
       this.sortDirection.set('asc');
@@ -247,8 +262,8 @@ export class UsersComponent implements OnInit {
   }
 
   toggleSelectUser(userId: string): void {
-    this.selectedUserIds.update(ids =>
-      ids.includes(userId) ? ids.filter(id => id !== userId) : [...ids, userId]
+    this.selectedUserIds.update((ids) =>
+      ids.includes(userId) ? ids.filter((id) => id !== userId) : [...ids, userId],
     );
     this.updateSelectAll();
   }
@@ -259,7 +274,9 @@ export class UsersComponent implements OnInit {
 
   updateSelectAll(): void {
     const visibleIds = this.visibleUserIds();
-    this.selectAll.set(visibleIds.length > 0 && visibleIds.every(id => this.selectedUserIds().includes(id)));
+    this.selectAll.set(
+      visibleIds.length > 0 && visibleIds.every((id) => this.selectedUserIds().includes(id)),
+    );
   }
 
   // Bulk actions
@@ -267,17 +284,52 @@ export class UsersComponent implements OnInit {
     if (this.selectedCount() === 0) return;
 
     if (confirm(`Bạn có chắc chắn muốn xóa ${this.selectedCount()} người dùng đã chọn?`)) {
-      this.snackBar.open('Đang xóa...', 'Đóng', { duration: 2000 });
-      // In real app, call bulk delete API
-      this.snackBar.open('Chức năng xóa hàng loạt sẽ được triển khai', 'Đóng', { duration: 3000 });
-      this.selectedUserIds.set([]);
-      this.selectAll.set(false);
+      this.snackBar.open(`Đang xóa ${this.selectedCount()} người dùng...`, 'Đóng', {
+        duration: 2000,
+      });
+
+      const idsToDelete = [...this.selectedUserIds()];
+      let successCount = 0;
+      let errorCount = 0;
+
+      // Delete sequentially to avoid overwhelming the server
+      const deleteNext = (index: number) => {
+        if (index >= idsToDelete.length) {
+          // All done
+          this.snackBar.open(
+            `Xóa hoàn tất: ${successCount} thành công, ${errorCount} thất bại`,
+            'Đóng',
+            { duration: 3000 },
+          );
+          this.loadData();
+          this.selectedUserIds.set([]);
+          this.selectAll.set(false);
+          return;
+        }
+
+        const userId = idsToDelete[index];
+        this.userService.deleteUser(userId).subscribe({
+          next: () => {
+            successCount++;
+            deleteNext(index + 1);
+          },
+          error: (error) => {
+            console.error(`Error deleting user ${userId}:`, error);
+            errorCount++;
+            deleteNext(index + 1);
+          },
+        });
+      };
+
+      deleteNext(0);
     }
   }
 
   bulkActivate(): void {
     if (this.selectedCount() === 0) return;
-    this.snackBar.open('Chức năng kích hoạt hàng loạt sẽ được triển khai', 'Đóng', { duration: 3000 });
+    this.snackBar.open('Chức năng kích hoạt hàng loạt sẽ được triển khai', 'Đóng', {
+      duration: 3000,
+    });
   }
 
   bulkDeactivate(): void {
@@ -303,21 +355,16 @@ export class UsersComponent implements OnInit {
         roleId: this.roleFilter(),
         status: this.statusFilter(),
       };
-      this.filterPresets.update(presets => [preset, ...presets].slice(0, 10));
+      this.filterPresets.update((presets) => [preset, ...presets].slice(0, 10));
     }
   }
 
   deletePreset(index: number): void {
-    this.filterPresets.update(presets => presets.filter((_, i) => i !== index));
+    this.filterPresets.update((presets) => presets.filter((_, i) => i !== index));
   }
 
   toggleFilterPresets(): void {
     this.showFilterPresets.set(!this.showFilterPresets());
-  }
-
-  // Density
-  setDensity(density: 'comfortable' | 'compact' | 'spacious'): void {
-    this.density.set(density);
   }
 
   // Navigation
@@ -345,27 +392,56 @@ export class UsersComponent implements OnInit {
   }
 
   deleteUser(user: UserResponse): void {
-    if (confirm(`Bạn có chắc chắn muốn xóa người dùng ${user.email}? Hành động này không thể hoàn tác.`)) {
+    if (
+      confirm(
+        `Bạn có chắc chắn muốn xóa người dùng ${user.email}? Hành động này không thể hoàn tác.`,
+      )
+    ) {
+      this.deletingUserId.set(user.id);
       this.userService.deleteUser(user.id).subscribe({
         next: () => {
           this.snackBar.open('Xóa người dùng thành công', 'Đóng', { duration: 3000 });
           this.loadData();
+          this.deletingUserId.set(null);
         },
         error: (error) => {
           console.error('Error deleting user:', error);
           this.snackBar.open('Xóa người dùng thất bại', 'Đóng', { duration: 3000 });
+          this.deletingUserId.set(null);
         },
       });
     }
   }
 
   toggleUserStatus(user: UserResponse): void {
-    this.snackBar.open('Chức năng thay đổi trạng thái sẽ được triển khai', 'Đóng', { duration: 3000 });
+    const newActive = !(user.active ?? true);
+    this.snackBar.open(
+      `Đang ${newActive ? 'kích hoạt' : 'khóa'} tài khoản ${user.email}...`,
+      'Đóng',
+      { duration: 2000 },
+    );
+
+    this.userService.updateUser(user.id, { active: newActive }).subscribe({
+      next: () => {
+        this.snackBar.open(`${newActive ? 'Kích hoạt' : 'Khóa'} tài khoản thành công`, 'Đóng', {
+          duration: 3000,
+        });
+        this.loadData();
+      },
+      error: (error) => {
+        console.error('Error toggling user status:', error);
+        this.snackBar.open(
+          error.error?.message || `${newActive ? 'Kích hoạt' : 'Khóa'} tài khoản thất bại`,
+          'Đóng',
+          { duration: 3000 },
+        );
+      },
+    });
   }
 
   // Action menu
   toggleActionMenu(user: UserResponse): void {
-    this.actionMenuOpen.update(current => current === user.id ? null : user.id);
+    this.actionMenuOpen.update((current) => (current === user.id ? null : user.id));
   }
 
   closeActionMenu(): void {
@@ -384,12 +460,12 @@ export class UsersComponent implements OnInit {
   }
 
   getStatusBadgeClass(user: UserResponse): string {
-    const active = user.isActive ?? true;
+    const active = user.active ?? true;
     return active ? 'badge-success' : 'badge-danger';
   }
 
   getStatusText(user: UserResponse): string {
-    return (user.isActive ?? true) ? 'Hoạt động' : 'Ngừng hoạt động';
+    return (user.active ?? true) ? 'Hoạt động' : 'Ngừng hoạt động';
   }
 
   getInitials(fullName: string): string {

@@ -1,6 +1,12 @@
 import { Component, OnInit, signal, computed, inject, effect, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import {
+  FormsModule,
+  ReactiveFormsModule,
+  FormBuilder,
+  FormGroup,
+  Validators,
+} from '@angular/forms';
 import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import { MaterialModule } from '@shared/material.module';
 import { RoleService } from '@core/services/role.service';
@@ -8,7 +14,7 @@ import { UserService } from '@core/services/user.service';
 import { RoleResponse } from '@core/models/role.model';
 import { UserResponse, UserCreationRequest, UserUpdateRequest } from '@core/models/user.model';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { Subject, takeUntil, filter } from 'rxjs';
+import { Subject, takeUntil, filter, forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-user-form',
@@ -46,30 +52,33 @@ export class UserFormComponent implements OnInit, OnDestroy {
     phone: ['', [Validators.pattern(/^[0-9]{10,11}$/)]],
     address: [''],
     roleNames: [[], [Validators.required]],
-    isActive: [true],
+    active: [true],
   });
 
   // Computed
   isEditMode = computed(() => !!this.userId());
-  pageTitle = computed(() => this.isEditMode() ? 'Chỉnh sửa người dùng' : 'Thêm người dùng mới');
-  pageSubtitle = computed(() => this.isEditMode() ? 'Cập nhật thông tin tài khoản người dùng' : 'Điền thông tin để tạo tài khoản người dùng mới');
-  submitButtonText = computed(() => this.isEditMode() ? 'Cập nhật' : 'Tạo người dùng');
+  pageTitle = computed(() => (this.isEditMode() ? 'Chỉnh sửa người dùng' : 'Thêm người dùng mới'));
+  pageSubtitle = computed(() =>
+    this.isEditMode()
+      ? 'Cập nhật thông tin tài khoản người dùng'
+      : 'Điền thông tin để tạo tài khoản người dùng mới',
+  );
+  submitButtonText = computed(() => (this.isEditMode() ? 'Cập nhật' : 'Tạo người dùng'));
 
   ngOnInit(): void {
     // Get userId from route params (handles both initial load and param changes)
-    this.route.params.pipe(
-      filter(params => !!params['id']),
-      takeUntil(this.destroy$)
-    ).subscribe(params => {
-      const id = params['id'];
-      if (id && id !== this.userId()) {
-        this.userId.set(id);
-        this.loadUser();
-        // Edit mode: password không bắt buộc
-        this.userForm.get('password')?.clearValidators();
-        this.userForm.get('password')?.updateValueAndValidity();
-      }
-    });
+    this.route.params
+      .pipe(
+        filter((params) => !!params['id']),
+        takeUntil(this.destroy$),
+      )
+      .subscribe((params) => {
+        const id = params['id'];
+        if (id && id !== this.userId()) {
+          this.userId.set(id);
+          this.loadData();
+        }
+      });
 
     // Also check initial snapshot (for direct navigation)
     const initialId = this.route.snapshot.paramMap.get('id');
@@ -77,11 +86,7 @@ export class UserFormComponent implements OnInit, OnDestroy {
       this.userId.set(initialId);
     }
 
-    this.loadRoles();
-
-    if (this.isEditMode()) {
-      // loadUser will be called via route params subscription above
-    }
+    this.loadData();
   }
 
   ngOnDestroy(): void {
@@ -89,38 +94,55 @@ export class UserFormComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  loadRoles(): void {
-    this.isLoading.set(true);
-    this.roleService.getRoles().subscribe({
-      next: (roles) => {
-        this.roles.set(roles);
-        this.isLoading.set(false);
-      },
-      error: (error) => {
-        console.error('Error loading roles:', error);
-        this.snackBar.open('Không thể tải danh sách vai trò', 'Đóng', { duration: 3000 });
-        this.isLoading.set(false);
-      },
-    });
-  }
+  // Effect to handle password validators based on edit/create mode
+  private readonly passwordEffect = effect(() => {
+    const passwordControl = this.userForm.get('password');
+    if (this.isEditMode()) {
+      // Edit mode: password is optional
+      passwordControl?.clearValidators();
+    } else {
+      // Create mode: password is required with minLength 6
+      passwordControl?.setValidators([Validators.required, Validators.minLength(6)]);
+    }
+    passwordControl?.updateValueAndValidity({ emitEvent: false });
+  });
 
-  loadUser(): void {
-    if (!this.userId()) return;
-
-    this.isLoading.set(true);
-    this.userService.getUserById(this.userId()).subscribe({
-      next: (user) => {
-        this.currentUser.set(user);
-        this.patchForm(user);
-        this.isLoading.set(false);
-      },
-      error: (error) => {
-        console.error('Error loading user:', error);
-        this.snackBar.open('Không thể tải thông tin người dùng', 'Đóng', { duration: 3000 });
-        this.router.navigate(['/admin/users']);
-        this.isLoading.set(false);
-      },
-    });
+  loadData(): void {
+    if (this.isEditMode() && this.userId()) {
+      // Edit mode: load roles and user in parallel using forkJoin
+      this.isLoading.set(true);
+      forkJoin({
+        roles: this.roleService.getRoles(),
+        user: this.userService.getUserById(this.userId()!),
+      }).subscribe({
+        next: ({ roles, user }) => {
+          this.roles.set(roles);
+          this.currentUser.set(user);
+          this.patchForm(user);
+          this.isLoading.set(false);
+        },
+        error: (error) => {
+          console.error('Error loading data:', error);
+          this.snackBar.open('Không thể tải dữ liệu', 'Đóng', { duration: 3000 });
+          this.router.navigate(['/admin/users']);
+          this.isLoading.set(false);
+        },
+      });
+    } else {
+      // Create mode: only load roles
+      this.isLoading.set(true);
+      this.roleService.getRoles().subscribe({
+        next: (roles) => {
+          this.roles.set(roles);
+          this.isLoading.set(false);
+        },
+        error: (error) => {
+          console.error('Error loading roles:', error);
+          this.snackBar.open('Không thể tải danh sách vai trò', 'Đóng', { duration: 3000 });
+          this.isLoading.set(false);
+        },
+      });
+    }
   }
 
   patchForm(user: UserResponse): void {
@@ -130,7 +152,7 @@ export class UserFormComponent implements OnInit, OnDestroy {
       phone: user.phone || '',
       address: user.address || '',
       roleNames: user.roleNames || [],
-      isActive: user.isActive ?? true,
+      active: user.active ?? true,
     });
 
     // Set avatar preview if exists
@@ -183,7 +205,7 @@ export class UserFormComponent implements OnInit, OnDestroy {
         phone: formValue.phone || undefined,
         address: formValue.address || undefined,
         roleNames: formValue.roleNames,
-        isActive: formValue.isActive,
+        active: formValue.active,
         ...(formValue.password ? { password: formValue.password } : {}),
         ...(this.selectedAvatar() ? { avatar: this.selectedAvatar()! } : {}),
       };
@@ -194,7 +216,9 @@ export class UserFormComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           console.error('Error updating user:', error);
-          this.snackBar.open(error.error?.message || 'Cập nhật người dùng thất bại', 'Đóng', { duration: 5000 });
+          this.snackBar.open(error.error?.message || 'Cập nhật người dùng thất bại', 'Đóng', {
+            duration: 5000,
+          });
           this.isSubmitting.set(false);
         },
       });
@@ -206,6 +230,7 @@ export class UserFormComponent implements OnInit, OnDestroy {
         phone: formValue.phone || undefined,
         address: formValue.address || undefined,
         roleNames: formValue.roleNames,
+
         ...(this.selectedAvatar() ? { avatar: this.selectedAvatar()! } : {}),
       };
       this.userService.createUser(userData).subscribe({
@@ -215,7 +240,9 @@ export class UserFormComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           console.error('Error creating user:', error);
-          this.snackBar.open(error.error?.message || 'Tạo người dùng thất bại', 'Đóng', { duration: 5000 });
+          this.snackBar.open(error.error?.message || 'Tạo người dùng thất bại', 'Đóng', {
+            duration: 5000,
+          });
           this.isSubmitting.set(false);
         },
       });
@@ -227,7 +254,7 @@ export class UserFormComponent implements OnInit, OnDestroy {
   }
 
   private markFormGroupTouched(formGroup: FormGroup): void {
-    Object.values(formGroup.controls).forEach(control => {
+    Object.values(formGroup.controls).forEach((control) => {
       control.markAsTouched();
       if (control instanceof FormGroup) {
         this.markFormGroupTouched(control);
@@ -236,11 +263,21 @@ export class UserFormComponent implements OnInit, OnDestroy {
   }
 
   // Helper getters for template
-  get email() { return this.userForm.get('email'); }
-  get password() { return this.userForm.get('password'); }
-  get fullName() { return this.userForm.get('fullName'); }
-  get phone() { return this.userForm.get('phone'); }
-  get roleNames() { return this.userForm.get('roleNames'); }
+  get email() {
+    return this.userForm.get('email');
+  }
+  get password() {
+    return this.userForm.get('password');
+  }
+  get fullName() {
+    return this.userForm.get('fullName');
+  }
+  get phone() {
+    return this.userForm.get('phone');
+  }
+  get roleNames() {
+    return this.userForm.get('roleNames');
+  }
 
   hasError(controlName: string, errorName: string): boolean {
     const control = this.userForm.get(controlName);
@@ -249,6 +286,33 @@ export class UserFormComponent implements OnInit, OnDestroy {
 
   hasFormError(errorName: string): boolean {
     return (this.userForm.touched && this.userForm.hasError(errorName)) ?? false;
+  }
+
+  onRoleToggle(roleName: string, event: Event): void {
+    const checkbox = event.target as HTMLInputElement;
+    const currentRoles = this.userForm.get('roleNames')?.value || [];
+
+    if (checkbox.checked) {
+      if (!currentRoles.includes(roleName)) {
+        this.userForm.patchValue({
+          roleNames: [...currentRoles, roleName],
+        });
+      }
+    } else {
+      this.userForm.patchValue({
+        roleNames: currentRoles.filter((name: string) => name !== roleName),
+      });
+    }
+  }
+
+  isRoleSelected(roleName: string): boolean {
+    const currentRoles = this.userForm.get('roleNames')?.value || [];
+    return currentRoles.includes(roleName);
+  }
+
+  // Helper for template to get roleNames form control
+  get roleNamesControl() {
+    return this.userForm.get('roleNames');
   }
 
   getInitials(fullName: string): string {

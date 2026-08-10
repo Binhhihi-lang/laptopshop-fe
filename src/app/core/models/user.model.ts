@@ -6,7 +6,7 @@ export interface UserResponse {
   address: string;
   avatar: string;
   roleNames: string[];
-  isActive?: boolean;
+  active?: boolean;
   lastLoginAt?: string;
   createdAt?: string;
 }
@@ -19,14 +19,15 @@ export interface UserCreationRequest {
   address?: string;
   roleNames?: string[];
   avatar?: string | File;
+  active?: boolean;
 }
 
-export interface UserUpdateRequest {
+export interface UserUpdateRequest{
   email?: string;
   fullName?: string;
   phone?: string;
   address?: string;
   roleNames?: string[];
-  isActive?: boolean;
+  active?: boolean;
   avatar?: string | File;
 }

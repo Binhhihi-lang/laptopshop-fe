@@ -95,8 +95,12 @@
                   class="input pl-12"
                   placeholder="nguyenvana@example.com"
                   autocomplete="email"
-                  [disabled]="isSubmitting() || isEditMode()"
-                  [class.input-error]="hasError('email', 'required') || hasError('email', 'email')">
+                  [disabled]="isSubmitting()"
+                  [readonly]="isEditMode()"
+                  [class.input-error]="hasError('email', 'required') || hasError('email', 'email')"
+                  [class.cursor-not-allowed]="isEditMode()"
+                  [class.bg-slate-50]="isEditMode()"
+                  [class.dark:bg-slate-800]="isEditMode()">
               </div>
               @if (hasError('email', 'required')) {
                 <p class="input-error-text">Email là bắt buộc</p>
@@ -146,11 +150,11 @@
               <label class="input-label">Trạng thái tài khoản</label>
               <div class="flex items-center gap-4">
                 <label class="relative inline-flex items-center cursor-pointer">
-                  <input type="checkbox" formControlName="isActive" class="sr-only peer" [disabled]="isSubmitting()">
+                  <input type="checkbox" formControlName="active" class="sr-only peer" [disabled]="isSubmitting()">
                   <div class="w-12 h-7 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600 peer-disabled:opacity-50 peer-disabled:cursor-not-allowed"></div>
                 </label>
                 <div>
-                  <p class="font-medium text-slate-900 dark:text-white">{{ userForm.get('isActive')?.value ? 'Đang hoạt động' : 'Ngừng hoạt động' }}</p>
+                  <p class="font-medium text-slate-900 dark:text-white">{{ userForm.get('active')?.value ? 'Đang hoạt động' : 'Ngừng hoạt động' }}</p>
                   <p class="text-sm text-slate-500 dark:text-slate-400">Người dùng {{ userForm.get('isActive')?.value ? 'có thể' : 'không thể' }} đăng nhập vào hệ thống</p>
                 </div>
               </div>
@@ -252,9 +256,10 @@
                     <label class="flex items-center gap-3 p-4 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl cursor-pointer hover:border-primary/50 dark:hover:border-primary/50 transition-colors">
                       <input
                         type="checkbox"
-                        [value]="role.id"
+                        [value]="role.name"
                         class="w-5 h-5 text-primary border-slate-300 rounded focus:ring-primary/30"
-                        formControlName="roleNames"
+                        [checked]="isRoleSelected(role.name)"
+                        (change)="onRoleToggle(role.name, $event)"
                         [disabled]="isSubmitting()">
                       <div class="flex-1">
                         <p class="font-medium text-slate-900 dark:text-white">{{ role.name }}</p>

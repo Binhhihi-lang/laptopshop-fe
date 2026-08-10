@@ -53,16 +53,16 @@ export class UserDetailComponent implements OnInit {
   }
 
   getStatusText(user: UserResponse): string {
-    return (user.isActive ?? true) ? 'Đang hoạt động' : 'Ngừng hoạt động';
+    return (user.active ?? true) ? 'Đang hoạt động' : 'Ngừng hoạt động';
   }
 
   getStatusBadgeClass(user: UserResponse): string {
-    const active = user.isActive ?? true;
+    const active = user.active ?? true;
     return active ? 'badge-success' : 'badge-danger';
   }
 
   getStatusDotClass(user: UserResponse): string {
-    const active = user.isActive ?? true;
+    const active = user.active ?? true;
     return active ? 'bg-emerald-500' : 'bg-red-500';
   }
 }
