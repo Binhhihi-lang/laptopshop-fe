@@ -3,12 +3,12 @@ import { adminGuard } from '@core/guards/admin-guard';
 import { authGuard } from '@core/guards/auth-guard';
 
 // Import layout and page components
-import { AdminLayoutComponent } from "@features/admin/layout/admin-layout/admin-layout.component";
+import { AdminLayoutComponent } from '@features/admin/layout/admin-layout/admin-layout.component';
 import { LoginComponent } from '@features/admin/pages/login/login.component';
 import { DashboardComponent } from '@features/admin/pages/dashboard/dashboard.component';
 import { UsersComponent } from '@features/admin/pages/users/users.component';
 import { UserFormComponent } from '@features/admin/pages/user-form/user-form.component';
-import { UserDetailComponent} from '@features/admin/pages/user-detail/user-detail.component';
+import { UserDetailComponent } from '@features/admin/pages/user-detail/user-detail.component';
 import { ProductsComponent } from '@features/admin/pages/products/products.component';
 import { ProductFormComponent } from '@features/admin/pages/product-form/product-form.component';
 import { ProductDetailComponent } from '@features/admin/pages/product-detail/product-detail.component';
@@ -20,7 +20,7 @@ import { CouponFormComponent } from '@features/admin/pages/coupon-form/coupon-fo
 import { CouponDetailComponent } from '@features/admin/pages/coupon-detail/coupon-detail.component';
 import { RolesComponent } from '@features/admin/pages/roles/roles.component';
 import { RoleFormComponent } from '@features/admin/pages/role-form/role-form.component';
-import { RoleDetailComponent } from '@features/admin/pages/role-detail/role-detail.component';
+// RoleDetailComponent is a dialog, not a route component
 import { PermissionsComponent } from '@features/admin/pages/permissions/permissions.component';
 import { PermissionFormComponent } from '@features/admin/pages/permission-form/permission-form.component';
 import { PermissionDetailComponent } from '@features/admin/pages/permission-detail/permission-detail.component';
@@ -60,12 +60,11 @@ export const routes: Routes = [
       { path: 'roles', component: RolesComponent },
       { path: 'roles/create', component: RoleFormComponent },
       { path: 'roles/:id/edit', component: RoleFormComponent },
-      { path: 'roles/:id', component: RoleDetailComponent },
       { path: 'permissions', component: PermissionsComponent },
       { path: 'permissions/create', component: PermissionFormComponent },
       { path: 'permissions/:id/edit', component: PermissionFormComponent },
-      { path: 'permissions/:id', component: PermissionDetailComponent }
-    ]
+      { path: 'permissions/:id', component: PermissionDetailComponent },
+    ],
   },
 
   // Client routes (public)
@@ -83,5 +82,5 @@ export const routes: Routes = [
   // },
 
   // Wildcard route for 404
-  { path: '**', redirectTo: '' }
+  { path: '**', redirectTo: '' },
 ];

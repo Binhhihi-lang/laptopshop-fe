@@ -1,37 +1,59 @@
 import { Injectable } from '@angular/core';
 import { ApiService } from './api.service';
 import { Router } from '@angular/router';
-import { BehaviorSubject, Observable, tap, throwError } from 'rxjs';
+import {
+  BehaviorSubject,
+  Observable,
+  of,
+  throwError,
+  filter,
+  take,
+  switchMap,
+  catchError,
+  tap,
+} from 'rxjs';
 import { JwtHelper } from '@core/utils/jwt.helper';
 import { API_ENDPOINTS, STORAGE_KEYS } from '@core/utils/constants';
 import { IntrospectResponse, LoginResponse } from '@core/models/auth.model';
 
-
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class AuthService {
   private tokenSubject = new BehaviorSubject<string | null>(this.getToken());
   private refreshTokenSubject = new BehaviorSubject<string | null>(this.getRefreshToken());
-  private isRefreshingSubject = new BehaviorSubject<boolean>(false);
+  private isRefreshingSubject = new BehaviorSubject<boolean>(false); // đang refresh hay không
+  // Subject để emit token mới cho các request đang chờ (single-flight pattern)
+  private refreshResultSubject = new BehaviorSubject<string | null>(null);
 
-  constructor(private api: ApiService, private router: Router, private jwtHelper: JwtHelper) {}
+  constructor(
+    private api: ApiService,
+    private router: Router,
+    private jwtHelper: JwtHelper,
+  ) {}
+
+  // Expose observable cho interceptor subscribe khi đang chờ refresh
+  get refreshToken$(): Observable<string | null> {
+    return this.refreshResultSubject.asObservable();
+  }
 
   login(email: string, password: string): Observable<LoginResponse> {
-    return this.api.post<LoginResponse, { email: string; password: string }>(
-      API_ENDPOINTS.AUTH.LOGIN,
-      { email, password }
-    ).pipe(
-      tap(response => {
-        if (response.authenticated && response.token && response.refreshToken) {
-          this.setToken(response.token);
-          this.setRefreshToken(response.refreshToken);
-          // Decode token and store user info
-          const userInfo = this.buildUserInfo(response.token);
-          this.setUserInfo(userInfo);
-        }
+    return this.api
+      .post<LoginResponse, { email: string; password: string }>(API_ENDPOINTS.AUTH.LOGIN, {
+        email,
+        password,
       })
-    );
+      .pipe(
+        tap((response) => {
+          if (response.authenticated && response.token && response.refreshToken) {
+            this.setToken(response.token);
+            this.setRefreshToken(response.refreshToken);
+            // Decode token and store user info
+            const userInfo = this.buildUserInfo(response.token);
+            this.setUserInfo(userInfo);
+          }
+        }),
+      );
   }
 
   private buildUserInfo(token: string): any {
@@ -39,15 +61,14 @@ export class AuthService {
       userId: this.jwtHelper.getUserIdFromToken(token),
       fullName: this.jwtHelper.getFullNameFromToken(token),
       roleNames: this.jwtHelper.getRoleNamesFromToken(token),
-      permissions: this.jwtHelper.getPermissionsFromToken(token)
+      permissions: this.jwtHelper.getPermissionsFromToken(token),
     };
   }
 
   introspect(token: string): Observable<IntrospectResponse> {
-    return this.api.post<IntrospectResponse, { token: string }>(
-      API_ENDPOINTS.AUTH.INTROSPECT,
-      { token }
-    );
+    return this.api.post<IntrospectResponse, { token: string }>(API_ENDPOINTS.AUTH.INTROSPECT, {
+      token,
+    });
   }
 
   logout(): void {
@@ -56,31 +77,37 @@ export class AuthService {
     this.router.navigate(['/login']);
   }
 
+  /**
+   * Single-flight token refresh pattern:
+   * - Nếu đang refresh: return observable chờ kết quả từ refreshResultSubject
+   * - Nếu chưa refresh: gọi API refresh, emit token mới cho TẤT CẢ waiter
+   * - Thất bại: error cho TẤT CẢ waiter + logout tự động
+   */
   refreshToken(): Observable<LoginResponse> {
-    if (this.getIsRefreshing()) {
-      return new Observable<LoginResponse>();
-    }
-    this.setIsRefreshing(true);
     const refreshToken = this.getRefreshToken();
+
+    // Không có token -> Logout luôn tại đây
     if (!refreshToken) {
-      this.setIsRefreshing(false);
+      this.logout();
       return throwError(() => new Error('No refresh token available'));
     }
-    return this.api.post<LoginResponse, { token: string }>(
-      API_ENDPOINTS.AUTH.REFRESH,
-      { token: refreshToken }
-    ).pipe(
-      tap(response => {
-        if (response.authenticated && response.token && response.refreshToken) {
-          this.setToken(response.token);
-          this.setRefreshToken(response.refreshToken);
-          // Update user info with new token
-          const userInfo = this.buildUserInfo(response.token);
-          this.setUserInfo(userInfo);
-        }
-        this.setIsRefreshing(false);
-      })
-    );
+
+    return this.api
+      .post<LoginResponse, { refreshToken: string }>(API_ENDPOINTS.AUTH.REFRESH, { refreshToken })
+      .pipe(
+        tap((response) => {
+          if (response.authenticated && response.token && response.refreshToken) {
+            this.setToken(response.token);
+            this.setRefreshToken(response.refreshToken);
+            this.setUserInfo(this.buildUserInfo(response.token));
+          }
+        }),
+        catchError((err) => {
+          // NƠI DUY NHẤT XỬ LÝ LOGOUT KHI REFRESH THẤT BẠI
+          this.logout();
+          return throwError(() => err);
+        }),
+      );
   }
 
   private setToken(token: string): void {

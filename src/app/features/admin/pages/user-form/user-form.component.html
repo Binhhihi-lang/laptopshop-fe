@@ -113,37 +113,32 @@
             </div>
 
             <!-- Password -->
-            <div class="form-group">
-              <label for="password" class="input-label">Mật khẩu <span class="text-red-500">*</span></label>
-              <div class="relative">
-                <mat-icon class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400">lock</mat-icon>
-                <input
-                  [type]="showPassword() ? 'text' : 'password'"
-                  id="password"
-                  formControlName="password"
-                  class="input pl-12 pr-12"
-                  placeholder="Nhập mật khẩu"
-                  autocomplete="new-password"
-                  [disabled]="isSubmitting()"
-                  [class.input-error]="hasError('password', 'required') || hasError('password', 'minlength')">
-                <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300" (click)="showPassword.set(!showPassword())" aria-label="Hiện/ẩn mật khẩu">
-                  <mat-icon class="w-5 h-5">{{ showPassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
-                </button>
-              </div>
-              @if (!isEditMode()) {
+            @if (!isEditMode()) {
+              <div class="form-group">
+                <label for="password" class="input-label">Mật khẩu <span class="text-red-500">*</span></label>
+                <div class="relative">
+                  <mat-icon class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400">lock</mat-icon>
+                  <input
+                    [type]="showPassword() ? 'text' : 'password'"
+                    id="password"
+                    formControlName="password"
+                    class="input pl-12 pr-12"
+                    placeholder="Nhập mật khẩu"
+                    autocomplete="new-password"
+                    [disabled]="isSubmitting()"
+                    [class.input-error]="hasError('password', 'required') || hasError('password', 'minlength')">
+                  <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300" (click)="showPassword.set(!showPassword())" aria-label="Hiện/ẩn mật khẩu">
+                    <mat-icon class="w-5 h-5">{{ showPassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
+                  </button>
+                </div>
                 @if (hasError('password', 'required')) {
                   <p class="input-error-text">Mật khẩu là bắt buộc</p>
                 } @else if (hasError('password', 'minlength')) {
                   <p class="input-error-text">Mật khẩu phải có ít nhất 6 ký tự</p>
                 }
                 <p class="input-hint">Tối thiểu 6 ký tự</p>
-              } @else {
-                @if (hasError('password', 'minlength')) {
-                  <p class="input-error-text">Mật khẩu phải có ít nhất 6 ký tự</p>
-                }
-                <p class="input-hint">Để trống nếu không muốn thay đổi mật khẩu</p>
-              }
-            </div>
+              </div>
+            }
 
             <!-- isActive Toggle -->
             <div class="form-group">
