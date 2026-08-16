@@ -2,15 +2,12 @@ export interface ProductResponse {
   id: string;
   code: string;
   name: string;
-  price: number;
-  quantity: number;
-  description: string;
+  price: number; // Long (int64) -> number
   image: string;
-  sold: number;
-  categoryId: string;
-  categoryName: string;
-  detailDesc: string;
   shortDesc: string;
+  detailDesc: string;
+  quantity: number; // Integer (int32) -> number
+  sold: number; // Integer (int32) -> number
   factory: string;
   target: string;
   cpu: string;
@@ -19,22 +16,26 @@ export interface ProductResponse {
   gpu: string;
   screen: string;
   os: string;
-  weight: number;
-  warrantyMonths: number;
+  weight: number; // Double -> number
+  warrantyMonths: number; // Integer (int32) -> number
   active: boolean;
-  createdAt: string;
-  updatedAt: string;
+  categoryId: string;
+  categoryName: string;
+  createdAt: string; // ISO datetime string
+  updatedAt: string; // ISO datetime string
 }
 
 export interface ProductCreationRequest {
-  code?: string;
-  name?: string;
-  price?: number;
-  quantity?: number;
-  description?: string;
-  categoryId?: string;
-  detailDesc?: string;
+  // Required fields (backend validates @NotBlank/@NotNull)
+  code: string;
+  name: string;
+  price: number; // Long
+  categoryId: string;
+
+  // Optional fields
   shortDesc?: string;
+  detailDesc?: string;
+  quantity?: number; // Integer
   factory?: string;
   target?: string;
   cpu?: string;
@@ -43,12 +44,31 @@ export interface ProductCreationRequest {
   gpu?: string;
   screen?: string;
   os?: string;
-  weight?: number;
-  warrantyMonths?: number;
+  weight?: number; // Double
+  warrantyMonths?: number; // Integer
   active?: boolean;
-  // inputFile?: string | File;
 }
 
-export interface ProductUpdateRequest extends ProductCreationRequest {
-  sold?: number;
+export interface ProductUpdateRequest {
+  // Required fields (backend validates @NotBlank/@NotNull)
+  code: string;
+  name: string;
+  price: number; // Long
+  categoryId: string; // String (NOT Category object)
+
+  // Optional fields
+  shortDesc?: string;
+  detailDesc?: string;
+  quantity?: number; // Integer
+  factory?: string;
+  target?: string;
+  cpu?: string;
+  ram?: string;
+  storage?: string;
+  gpu?: string;
+  screen?: string;
+  os?: string;
+  weight?: number; // Double
+  warrantyMonths?: number; // Integer
+  active?: boolean;
 }

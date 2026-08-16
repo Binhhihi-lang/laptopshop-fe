@@ -23,7 +23,7 @@ import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 
 @NgModule({
-  imports: [CommonModule, MatBadgeModule],
+  imports: [CommonModule, MatBadgeModule, MatIconModule],
   exports: [
     CommonModule,
     MatToolbarModule,

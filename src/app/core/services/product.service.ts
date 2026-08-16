@@ -30,7 +30,6 @@ export class ProductService {
   ): FormData {
     const formData = new FormData();
 
-    // Không cần destructure nữa, vì data không còn chứa inputFile
     const productInfoBlob = new Blob([JSON.stringify(data)], {
       type: 'application/json',
     });
@@ -59,5 +58,16 @@ export class ProductService {
 
   deleteProduct(id: string): Observable<void> {
     return this.api.delete<void>(`${this.apiUrl}/${id}`);
+  }
+
+  bulkDeleteProducts(ids: string[]): Observable<void> {
+    return this.api.post<void, { ids: string[] }>(`${this.apiUrl}/bulk-delete`, { ids });
+  }
+
+  bulkUpdateProductStatus(ids: string[], active: boolean): Observable<void> {
+    return this.api.patch<void, { ids: string[]; active: boolean }>(`${this.apiUrl}/bulk-status`, {
+      ids,
+      active,
+    });
   }
 }

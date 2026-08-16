@@ -1,10 +1,384 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Title</title>
-</head>
-<body>
+<div class="form-container min-h-screen bg-slate-50 dark:bg-slate-950">
+  <!-- Header -->
+  <div class="form-header bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-16 z-[90]">
+    <div class="max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-4">
+      <div class="flex items-center gap-4">
+        <button
+          type="button"
+          class="btn-icon p-2 rounded-lg text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800 transition-colors"
+          (click)="onCancel()"
+          aria-label="Quay về danh sách">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+        <div class="header-content ">
+          <h1 class="page-title text-2xl font-semibold text-slate-900 dark:text-white">
+            {{ isEditMode() ? 'Chỉnh sửa sản phẩm' : 'Thêm sản phẩm mới' }}
+          </h1>
+          <p class="page-subtitle text-slate-600 dark:text-slate-400 mt-1">
+            {{ isEditMode() ? 'Cập nhật thông tin sản phẩm' : 'Điền thông tin để tạo sản phẩm mới' }}
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
 
-</body>
-</html>
+  @if (isLoading()) {
+    <div class="loading-overlay fixed inset-0 bg-white/80 dark:bg-slate-950/80 flex items-center justify-center z-50">
+      <app-loading size="xl" text="Đang tải..." />
+    </div>
+  }
+
+  <form [formGroup]="productForm" (ngSubmit)="onSubmit()" class="product-form max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-8 space-y-6">
+    <!-- Image Upload Section -->
+    <section class="form-section">
+      <app-card [padding]="'default'" [variant]="'default'">
+        <div class="flex items-center gap-2 mb-4">
+          <svg class="w-5 h-5 text-primary-600 dark:text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          <h3 class="section-title text-lg font-medium text-slate-900 dark:text-white">Hình ảnh sản phẩm</h3>
+        </div>
+
+        <div class="image-upload-area">
+          <div class="image-preview-container relative" [class.has-image]="imagePreview()">
+            @if (imagePreview()) {
+              <img [src]="imagePreview()" alt="Product preview" class="image-preview w-full max-w-xs h-48 object-cover rounded-lg">
+              <button
+                type="button"
+                class="btn-icon absolute top-2 right-2 p-1.5 rounded-full bg-white/90 dark:bg-slate-800/90 text-slate-500 hover:text-danger-600 dark:hover:text-danger-400 transition-colors shadow-sm"
+                (click)="removeImage()"
+                aria-label="Xóa ảnh">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            } @else {
+              <div class="placeholder-content w-full max-w-xs h-48 rounded-lg border-2 border-dashed border-slate-300 dark:border-slate-600 flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-800/50">
+                <svg class="w-12 h-12 text-slate-400 dark:text-slate-500 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <p class="placeholder-text text-slate-500 dark:text-slate-400 text-center px-4">Chưa có hình ảnh</p>
+              </div>
+            }
+          </div>
+
+          <div class="image-upload-controls mt-4 flex flex-wrap gap-3 items-center">
+            <input
+              type="file"
+              id="imageInput"
+              accept="image/*"
+              (change)="onFileSelected($event)"
+              class="file-input hidden"
+              #fileInput>
+
+            <app-button
+              type="button"
+              variant="outline"
+              icon="cloud_upload"
+              [label]="imagePreview() ? 'Thay đổi ảnh' : 'Chọn ảnh'"
+              [disabled]="isSaving()"
+              (click)="fileInput.click()"
+              class="btn-outline"
+            />
+
+            <span class="upload-hint text-sm text-slate-500 dark:text-slate-400">Chỉ hỗ trợ file ảnh (JPG, PNG, WebP), tối đa 5MB</span>
+          </div>
+        </div>
+      </app-card>
+    </section>
+
+    <!-- Basic Information Section -->
+    <section class="form-section">
+      <app-card [padding]="'default'" [variant]="'default'">
+        <div class="flex items-center gap-2 mb-4">
+          <svg class="w-5 h-5 text-primary-600 dark:text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <h3 class="section-title text-lg font-medium text-slate-900 dark:text-white">Thông tin cơ bản</h3>
+        </div>
+
+        <div class="form-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
+          <app-form-field id="code-field" label="Mã SKU" [required]="true" [error]="f['code'].touched && f['code'].hasError('required') ? 'Mã SKU là bắt buộc' : f['code'].touched && f['code'].hasError('maxlength') ? 'Mã SKU không được vượt quá 50 ký tự' : ''">
+            <app-input
+              id="code"
+              name="code"
+              formControlName="code"
+              placeholder="VD: LP-XPS13"
+              [maxLength]="50"
+              [ariaLabel]="'Mã SKU'">
+            </app-input>
+          </app-form-field>
+
+          <app-form-field id="name-field" label="Tên sản phẩm" [required]="true" [error]="f['name'].touched && f['name'].hasError('required') ? 'Tên sản phẩm là bắt buộc' : f['name'].touched && f['name'].hasError('maxlength') ? 'Tên không được vượt quá 200 ký tự' : ''">
+            <app-input
+              id="name"
+              name="name"
+              formControlName="name"
+              placeholder="VD: Laptop Dell XPS 13"
+              [maxLength]="200"
+              [ariaLabel]="'Tên sản phẩm'">
+            </app-input>
+          </app-form-field>
+
+          <app-form-field id="price-field" label="Giá (VNĐ)" [required]="true" [error]="f['price'].touched && f['price'].hasError('required') ? 'Giá là bắt buộc' : f['price'].touched && f['price'].hasError('min') ? 'Giá phải lớn hơn hoặc bằng 0' : ''">
+            <app-input
+              id="price"
+              name="price"
+              type="number"
+              formControlName="price"
+              placeholder="VD: 25000000"
+              [min]="'0'"
+              [step]="'1000'"
+              [prefix]="'₫ '"
+              [ariaLabel]="'Giá sản phẩm'">
+            </app-input>
+          </app-form-field>
+
+          <app-form-field id="category-field" label="Danh mục" [required]="true" [error]="f['categoryId'].touched && f['categoryId'].hasError('required') ? 'Vui lòng chọn danh mục' : ''">
+            <app-select
+              id="categoryId"
+              name="categoryId"
+              formControlName="categoryId"
+              [options]="categoryOptions()"
+              [placeholder]="'-- Chọn danh mục --'"
+              [disabled]="isLoading()"
+              [ariaLabel]="'Chọn danh mục sản phẩm'">
+            </app-select>
+          </app-form-field>
+
+          <app-form-field id="shortDesc-field" label="Mô tả ngắn" class="md:col-span-2 lg:col-span-2">
+            <app-input
+              id="shortDesc"
+              name="shortDesc"
+              type="textarea"
+              formControlName="shortDesc"
+              [rows]="3"
+              placeholder="Mô tả ngắn gọn về sản phẩm..."
+              [ariaLabel]="'Mô tả ngắn'">
+            </app-input>
+          </app-form-field>
+
+          <app-form-field id="detailDesc-field" label="Mô tả chi tiết" class="md:col-span-2 lg:col-span-2">
+            <app-input
+              id="detailDesc"
+              name="detailDesc"
+              type="textarea"
+              formControlName="detailDesc"
+              [rows]="5"
+              placeholder="Mô tả chi tiết, tính năng, thông số kỹ thuật..."
+              [ariaLabel]="'Mô tả chi tiết'">
+            </app-input>
+          </app-form-field>
+        </div>
+      </app-card>
+    </section>
+
+    <!-- Inventory Section -->
+    <section class="form-section">
+      <app-card [padding]="'default'" [variant]="'default'">
+        <div class="flex items-center gap-2 mb-4">
+          <svg class="w-5 h-5 text-primary-600 dark:text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+          </svg>
+          <h3 class="section-title text-lg font-medium text-slate-900 dark:text-white">Kho & Bảo hành</h3>
+        </div>
+
+        <div class="form-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <app-form-field id="quantity-field" label="Số lượng tồn kho" [error]="f['quantity'].touched && f['quantity'].hasError('min') ? 'Số lượng phải lớn hơn hoặc bằng 0' : ''">
+            <app-input
+              id="quantity"
+              name="quantity"
+              type="number"
+              formControlName="quantity"
+              [min]="'0'"
+              [step]="'1'"
+              [ariaLabel]="'Số lượng tồn kho'">
+            </app-input>
+          </app-form-field>
+
+          <app-form-field id="sold-field" label="Số lượng đã bán" [error]="f['sold'].touched && f['sold'].hasError('min') ? 'Số lượng bán phải lớn hơn hoặc bằng 0' : ''">
+            <app-input
+              id="sold"
+              name="sold"
+              type="number"
+              formControlName="sold"
+              [min]="'0'"
+              [step]="'1'"
+              [ariaLabel]="'Số lượng đã bán'">
+            </app-input>
+          </app-form-field>
+
+          <app-form-field id="warranty-field" label="Bảo hành (tháng)" [error]="f['warrantyMonths'].touched && f['warrantyMonths'].hasError('min') ? 'Số tháng bảo hành phải lớn hơn hoặc bằng 0' : ''">
+            <app-input
+              id="warrantyMonths"
+              name="warrantyMonths"
+              type="number"
+              formControlName="warrantyMonths"
+              [min]="'0'"
+              [step]="'1'"
+              [ariaLabel]="'Thời gian bảo hành'">
+            </app-input>
+          </app-form-field>
+
+          <app-form-field id="factory-field" label="Nhà sản xuất" class="md:col-span-2 lg:col-span-3">
+            <app-input
+              id="factory"
+              name="factory"
+              formControlName="factory"
+              placeholder="VD: Dell, HP, Asus..."
+              [ariaLabel]="'Nhà sản xuất'">
+            </app-input>
+          </app-form-field>
+
+          <app-form-field id="target-field" label="Đối tượng mục tiêu" class="md:col-span-2 lg:col-span-3">
+            <app-input
+              id="target"
+              name="target"
+              formControlName="target"
+              placeholder="VD: Văn phòng, Gaming, Sinh viên..."
+              [ariaLabel]="'Đối tượng mục tiêu'">
+            </app-input>
+          </app-form-field>
+        </div>
+      </app-card>
+    </section>
+
+    <!-- Specifications Section -->
+    <section class="form-section">
+      <app-card [padding]="'default'" [variant]="'default'">
+        <div class="flex items-center gap-2 mb-4">
+          <svg class="w-5 h-5 text-primary-600 dark:text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+          </svg>
+          <h3 class="section-title text-lg font-medium text-slate-900 dark:text-white">Thông số kỹ thuật</h3>
+        </div>
+
+        <div class="form-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 specs-grid">
+          <app-form-field id="cpu-field" label="CPU">
+            <app-input
+              id="cpu"
+              name="cpu"
+              formControlName="cpu"
+              placeholder="VD: Intel Core i7-1360P"
+              [ariaLabel]="'CPU'">
+            </app-input>
+          </app-form-field>
+
+          <app-form-field id="ram-field" label="RAM">
+            <app-input
+              id="ram"
+              name="ram"
+              formControlName="ram"
+              placeholder="VD: 16GB LPDDR5"
+              [ariaLabel]="'RAM'">
+            </app-input>
+          </app-form-field>
+
+          <app-form-field id="storage-field" label="Ổ cứng">
+            <app-input
+              id="storage"
+              name="storage"
+              formControlName="storage"
+              placeholder="VD: 512GB SSD NVMe"
+              [ariaLabel]="'Ổ cứng'">
+            </app-input>
+          </app-form-field>
+
+          <app-form-field id="gpu-field" label="Card màn hình">
+            <app-input
+              id="gpu"
+              name="gpu"
+              formControlName="gpu"
+              placeholder="VD: Intel Iris Xe / RTX 4060"
+              [ariaLabel]="'Card màn hình'">
+            </app-input>
+          </app-form-field>
+
+          <app-form-field id="screen-field" label="Màn hình">
+            <app-input
+              id="screen"
+              name="screen"
+              formControlName="screen"
+              placeholder="VD: 13.4 inch FHD+ Touch"
+              [ariaLabel]="'Màn hình'">
+            </app-input>
+          </app-form-field>
+
+          <app-form-field id="os-field" label="Hệ điều hành">
+            <app-input
+              id="os"
+              name="os"
+              formControlName="os"
+              placeholder="VD: Windows 11 Home"
+              [ariaLabel]="'Hệ điều hành'">
+            </app-input>
+          </app-form-field>
+
+          <app-form-field id="weight-field" label="Trọng lượng (kg)" [error]="f['weight'].touched && f['weight'].hasError('min') ? 'Trọng lượng phải lớn hơn hoặc bằng 0' : ''">
+            <app-input
+              id="weight"
+              name="weight"
+              type="number"
+              formControlName="weight"
+              [min]="'0'"
+              [step]="'0.1'"
+              placeholder="VD: 1.2"
+              [suffix]="'kg'"
+              [ariaLabel]="'Trọng lượng'">
+            </app-input>
+          </app-form-field>
+        </div>
+      </app-card>
+    </section>
+
+    <!-- Status Section -->
+    <section class="form-section status-section">
+      <app-card [padding]="'default'" [variant]="'default'" [compact]="true">
+        <div class="flex items-center gap-2 mb-3">
+          <svg class="w-5 h-5 text-primary-600 dark:text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <h3 class="section-title text-lg font-medium text-slate-900 dark:text-white">Trạng thái</h3>
+        </div>
+
+        <div class="status-toggle flex items-center gap-3">
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              formControlName="active"
+              class="sr-only peer"
+              [attr.aria-label]="'Trạng thái hoạt động'">
+            <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-primary-600"></div>
+          </label>
+          <span class="toggle-label text-sm font-medium text-slate-700 dark:text-slate-300">
+            {{ productForm.get('active')?.value ? 'Đang hoạt động' : 'Ngưng hoạt động' }}
+          </span>
+        </div>
+      </app-card>
+    </section>
+
+    <!-- Form Actions -->
+    <div class="form-actions flex justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-700">
+      <app-button
+        type="button"
+        variant="outline"
+        icon="close"
+        label="Hủy"
+        [disabled]="isSaving()"
+        (click)="onCancel()"
+        size="default">
+      </app-button>
+      <app-button
+        type="submit"
+        variant="primary"
+        [icon]="isSaving() ? '' : (isEditMode() ? 'save' : 'add')"
+        [loading]="isSaving()"
+        [label]="isSaving() ? 'Đang lưu...' : (isEditMode() ? 'Cập nhật' : 'Tạo sản phẩm')"
+        [disabled]="productForm.invalid || isSaving()"
+        size="default">
+      </app-button>
+    </div>
+  </form>
+</div>

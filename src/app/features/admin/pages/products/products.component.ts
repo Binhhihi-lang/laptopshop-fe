@@ -1,48 +1,74 @@
-import { Component, OnInit, signal, computed, effect, inject } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  signal,
+  computed,
+  inject,
+  ViewChild,
+  TemplateRef,
+  AfterViewInit,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule, FormControl } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
-import { MaterialModule } from '@shared/material.module';
+import { forkJoin } from 'rxjs';
 import { ProductService } from '@core/services/product.service';
 import { CategoryService } from '@core/services/category.service';
 import { ProductResponse } from '@core/models/product.model';
 import { CategoryResponse } from '@core/models/category.model';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
-import { forkJoin } from 'rxjs';
+import { MatIconModule } from '@angular/material/icon';
 import { ConfirmDialogComponent } from '@shared/confirm-dialog/confirm-dialog.component';
 
-interface Column {
-  key: string;
-  label: string;
-  visible: boolean;
-  width?: string;
-}
-
-interface FilterPreset {
-  name: string;
-  searchTerm: string;
-  categoryId: string;
-  status: 'all' | 'active' | 'inactive';
-}
+// Shared components
+import { TableComponent, Column, TableAction } from '@shared/components/table/table.component';
+import { CardComponent } from '@shared/components/card/card.component';
+import { BadgeComponent } from '@shared/components/badge/badge.component';
+import { ButtonComponent } from '@shared/components/button/button.component';
+import { InputComponent } from '@shared/components/input/input.component';
+import { SelectComponent, SelectOption } from '@shared/components/select/select.component';
+import {
+  PageHeaderComponent,
+  ColumnPickerComponent,
+  FilterPresetsComponent,
+  FilterPreset,
+  BulkToolbarComponent,
+  BulkToolbarButton,
+} from '@shared/components';
 
 @Component({
   selector: 'app-products',
   standalone: true,
-  imports: [CommonModule, MaterialModule, FormsModule, ReactiveFormsModule, RouterModule],
+  imports: [
+    CommonModule,
+    RouterModule,
+    FormsModule,
+    ReactiveFormsModule,
+    MatIconModule,
+    TableComponent,
+    CardComponent,
+    BadgeComponent,
+    ButtonComponent,
+    InputComponent,
+    SelectComponent,
+    PageHeaderComponent,
+    ColumnPickerComponent,
+    FilterPresetsComponent,
+    BulkToolbarComponent,
+  ],
   templateUrl: './products.html',
   styleUrl: './products.css',
 })
-export class ProductsComponent implements OnInit {
+export class ProductsComponent implements OnInit, AfterViewInit {
   private readonly productService = inject(ProductService);
   private readonly categoryService = inject(CategoryService);
-  private readonly router = inject(Router);
   private readonly snackBar = inject(MatSnackBar);
   private readonly dialog = inject(MatDialog);
+  protected readonly router = inject(Router);
 
   // Data signals
   products = signal<ProductResponse[]>([]);
-  filteredProducts = signal<ProductResponse[]>([]);
   categories = signal<CategoryResponse[]>([]);
 
   // Loading states
@@ -51,84 +77,87 @@ export class ProductsComponent implements OnInit {
 
   // Filter signals
   searchTerm = signal('');
-  categoryFilter = signal<string>('');
   statusFilter = signal<'all' | 'active' | 'inactive'>('all');
+  categoryFilter = signal('');
+  stockFilter = signal<'all' | 'out' | 'low' | 'in'>('all');
 
   // UI state signals
-  showColumnPicker = signal(false);
-  showFilterPresets = signal(false);
-  density = signal<'comfortable' | 'compact' | 'spacious'>('comfortable');
   selectedProductIds = signal<string[]>([]);
-  selectAll = signal(false);
   sortColumn = signal<string>('');
   sortDirection = signal<'asc' | 'desc'>('asc');
-  actionMenuOpen = signal<string | null>(null);
+  deletingProductId = signal<string | null>(null);
 
-  // Column definitions
-  columns = signal<Column[]>([
-    { key: 'image', label: 'Hình ảnh', visible: true, width: '80px' },
-    { key: 'code', label: 'Mã SP', visible: true, width: '120px' },
-    { key: 'name', label: 'Tên sản phẩm', visible: true },
-    { key: 'categoryName', label: 'Danh mục', visible: true, width: '180px' },
-    { key: 'price', label: 'Giá', visible: true, width: '140px' },
-    { key: 'quantity', label: 'Tồn kho', visible: true, width: '100px' },
-    { key: 'sold', label: 'Đã bán', visible: false, width: '100px' },
-    { key: 'status', label: 'Trạng thái', visible: true, width: '140px' },
-    { key: 'createdAt', label: 'Ngày tạo', visible: false },
-    { key: 'actions', label: 'Thao tác', visible: true, width: '120px' },
+  // Column definitions for shared table
+  columns = signal<Column<ProductResponse>[]>([
+    { key: 'image', label: 'Ảnh', visible: true, width: '60px', align: 'center' },
+    { key: 'code', label: 'Mã SKU', visible: true, width: '120px', align: 'left' },
+    { key: 'name', label: 'Tên sản phẩm', visible: true, sortable: true },
+    { key: 'price', label: 'Giá', visible: true, width: '130px', align: 'right', sortable: true },
+    { key: 'quantity', label: 'Tồn kho', visible: true, width: '140px', align: 'left' },
+    {
+      key: 'sold',
+      label: 'Đã bán',
+      visible: true,
+      width: '100px',
+      align: 'center',
+      sortable: true,
+    },
+    { key: 'category', label: 'Danh mục', visible: true, width: '150px', align: 'left' },
+    { key: 'status', label: 'Trạng thái', visible: true, width: '130px', align: 'center' },
   ]);
 
-  // Filter presets
-  filterPresets = signal<FilterPreset[]>([
-    { name: 'Sản phẩm hoạt động', searchTerm: '', categoryId: '', status: 'active' },
-    { name: 'Sản phẩm ngừng hoạt động', searchTerm: '', categoryId: '', status: 'inactive' },
-    { name: 'Hết hàng', searchTerm: '', categoryId: '', status: 'all' },
-    { name: 'Bán chạy', searchTerm: '', categoryId: '', status: 'all' },
-  ]);
-
-  // Visible columns computed
-  visibleColumns = computed(() =>
-    this.columns()
-      .filter((c) => c.visible)
-      .map((c) => c.key),
+  // Category options for select
+  categoryOptions = computed<SelectOption[]>(() =>
+    this.categories().map((c) => ({ value: c.id, label: c.name })),
   );
 
-  // Selected count
-  selectedCount = computed(() => this.selectedProductIds().length);
+  // Filtered products
+  filteredProducts = signal<ProductResponse[]>([]);
 
-  // All visible products IDs
-  visibleProductIds = computed(() => this.filteredProducts().map((p) => p.id));
+  // Table column templates
+  @ViewChild('imageColumn', { static: true }) imageColumn!: TemplateRef<any>;
+  @ViewChild('codeColumn', { static: true }) codeColumn!: TemplateRef<any>;
+  @ViewChild('nameColumn', { static: true }) nameColumn!: TemplateRef<any>;
+  @ViewChild('priceColumn', { static: true }) priceColumn!: TemplateRef<any>;
+  @ViewChild('quantityColumn', { static: true }) quantityColumn!: TemplateRef<any>;
+  @ViewChild('soldColumn', { static: true }) soldColumn!: TemplateRef<any>;
+  @ViewChild('categoryColumn', { static: true }) categoryColumn!: TemplateRef<any>;
+  @ViewChild('statusColumn', { static: true }) statusColumn!: TemplateRef<any>;
 
-  // Sorting
-  sortedProducts = computed(() => {
-    const products = [...this.filteredProducts()];
-    const column = this.sortColumn();
-    const direction = this.sortDirection();
+  // Table actions
+  actions: TableAction<ProductResponse>[] = [
+    {
+      label: 'Xem chi tiết',
+      icon: 'visibility',
+      handler: (row) => this.viewProduct(row),
+      variant: 'ghost',
+    },
+    {
+      label: 'Chỉnh sửa',
+      icon: 'edit',
+      handler: (row) => this.editProduct(row),
+      variant: 'ghost',
+    },
+    {
+      label: 'Xóa',
+      icon: 'delete',
+      handler: (row) => this.deleteProduct(row),
+      variant: 'danger',
+    },
+    {
+      label: 'Kích hoạt/Khóa',
+      icon: 'block',
+      handler: (row) => this.toggleProductStatus(row),
+      variant: 'ghost',
+    },
+  ];
 
-    if (!column) return products;
-
-    return products.sort((a, b) => {
-      const aVal = (a as any)[column];
-      const bVal = (b as any)[column];
-      if (aVal === bVal) return 0;
-      const result = aVal > bVal ? 1 : -1;
-      return direction === 'asc' ? result : -result;
-    });
-  });
-
-  constructor() {
-    // Persist filter presets to localStorage
-    effect(() => {
-      localStorage.setItem('productFilterPresets', JSON.stringify(this.filterPresets()));
-    });
-  }
-
-  ngOnInit(): void {
+  ngOnInit() {
     this.loadData();
     this.loadPresets();
   }
 
-  loadData(): void {
+  loadData() {
     this.isLoading.set(true);
     this.isLoadingCategories.set(true);
 
@@ -152,201 +181,133 @@ export class ProductsComponent implements OnInit {
     });
   }
 
-  loadPresets(): void {
-    const stored = localStorage.getItem('productFilterPresets');
-    if (stored) {
-      try {
-        this.filterPresets.set([...this.filterPresets(), ...JSON.parse(stored)].slice(0, 10));
-      } catch {
-        // ignore
-      }
-    }
-  }
-
-  applyFilter(): void {
+  applyFilter() {
     let filtered = this.products();
 
-    // Search filter
+    // Search by name or code
     const term = this.searchTerm().trim().toLowerCase();
     if (term) {
       filtered = filtered.filter(
         (product) =>
           (product.name || '').toLowerCase().includes(term) ||
-          (product.code || '').toLowerCase().includes(term) ||
-          (product.categoryName || '').toLowerCase().includes(term) ||
-          (product.shortDesc || '').toLowerCase().includes(term),
+          (product.code || '').toLowerCase().includes(term),
       );
     }
 
-    // Category filter
-    const categoryId = this.categoryFilter();
-    if (categoryId) {
-      filtered = filtered.filter((product) => product.categoryId === categoryId);
+    // Filter by category
+    const catId = this.categoryFilter();
+    if (catId) {
+      filtered = filtered.filter((p) => p.categoryId === catId);
     }
 
-    // Status filter
-    const status = this.statusFilter();
-    if (status !== 'all') {
-      filtered = filtered.filter((product) => {
-        if (status === 'active') return product.active;
-        return !product.active;
+    // Filter by status
+    if (this.statusFilter() !== 'all') {
+      if (this.statusFilter() === 'active') {
+        filtered = filtered.filter((product) => product.active);
+      } else if (this.statusFilter() === 'inactive') {
+        filtered = filtered.filter((product) => !product.active);
+      }
+    }
+
+    // Filter by stock
+    const stock = this.stockFilter();
+    if (stock !== 'all') {
+      if (stock === 'out') {
+        filtered = filtered.filter((p) => p.quantity === 0);
+      } else if (stock === 'low') {
+        filtered = filtered.filter((p) => p.quantity > 0 && p.quantity < 5);
+      } else if (stock === 'in') {
+        filtered = filtered.filter((p) => p.quantity >= 5);
+      }
+    }
+
+    // Apply sorting
+    const sortCol = this.sortColumn();
+    const sortDir = this.sortDirection();
+    if (sortCol) {
+      filtered = [...filtered].sort((a, b) => {
+        const aVal = (a as any)[sortCol];
+        const bVal = (b as any)[sortCol];
+        if (aVal === bVal) return 0;
+        const result = aVal > bVal ? 1 : -1;
+        return sortDir === 'asc' ? result : -result;
       });
     }
 
     this.filteredProducts.set(filtered);
-    this.updateSelectAll();
   }
 
-  onSearchChange(): void {
+  onSearchChange() {
     this.applyFilter();
   }
 
-  onCategoryChange(): void {
+  onCategoryChange(value?: string) {
+    if (value !== undefined) {
+      this.categoryFilter.set(value);
+    }
     this.applyFilter();
   }
 
-  setStatusFilter(status: 'all' | 'active' | 'inactive'): void {
-    this.statusFilter.set(status);
-    this.applyFilter();
+  setStatusFilter(status: 'all' | 'active' | 'inactive') {
+    if (this.statusFilter() !== status) {
+      this.statusFilter.set(status);
+      this.applyFilter();
+    }
   }
 
-  clearFilters(): void {
+  clearFilters() {
     this.searchTerm.set('');
-    this.categoryFilter.set('');
     this.statusFilter.set('all');
+    this.categoryFilter.set('');
+    this.stockFilter.set('all');
     this.applyFilter();
   }
 
-  // Column picker
-  toggleColumnPicker(): void {
-    this.showColumnPicker.set(!this.showColumnPicker());
+  hasActiveFilters(): boolean {
+    return (
+      this.searchTerm().trim() !== '' ||
+      this.statusFilter() !== 'all' ||
+      this.categoryFilter() !== '' ||
+      this.stockFilter() !== 'all'
+    );
   }
 
-  toggleColumn(columnKey: string): void {
+  ngAfterViewInit(): void {
+    // Assign templates to columns after view init
     this.columns.update((cols) =>
-      cols.map((c) => (c.key === columnKey ? { ...c, visible: !c.visible } : c)),
+      cols.map((col) => {
+        const templateMap: Record<string, TemplateRef<any>> = {
+          image: this.imageColumn,
+          code: this.codeColumn,
+          name: this.nameColumn,
+          price: this.priceColumn,
+          quantity: this.quantityColumn,
+          sold: this.soldColumn,
+          category: this.categoryColumn,
+          status: this.statusColumn,
+        };
+        if (templateMap[col.key]) {
+          return { ...col, template: templateMap[col.key] };
+        }
+        return col;
+      }),
     );
   }
 
-  // Sorting
-  onSort(columnKey: string): void {
-    if (this.sortColumn() === columnKey) {
-      this.sortDirection.update((d) => (d === 'asc' ? 'desc' : 'asc'));
-    } else {
-      this.sortColumn.set(columnKey);
-      this.sortDirection.set('asc');
-    }
-  }
-
-  // Selection
-  toggleSelectAll(): void {
-    const allSelected = this.selectAll();
-    const ids = this.visibleProductIds();
-    if (!allSelected) {
-      this.selectedProductIds.set([...ids]);
-    } else {
-      this.selectedProductIds.set([]);
-    }
-    this.selectAll.set(!allSelected);
-  }
-
-  toggleSelectProduct(productId: string): void {
-    this.selectedProductIds.update((ids) =>
-      ids.includes(productId) ? ids.filter((id) => id !== productId) : [...ids, productId],
-    );
-    this.updateSelectAll();
-  }
-
-  isSelected(productId: string): boolean {
-    return this.selectedProductIds().includes(productId);
-  }
-
-  updateSelectAll(): void {
-    const visibleIds = this.visibleProductIds();
-    this.selectAll.set(
-      visibleIds.length > 0 && visibleIds.every((id) => this.selectedProductIds().includes(id)),
-    );
-  }
-
-  // Bulk actions
-  bulkDelete(): void {
-    if (this.selectedCount() === 0) return;
-
-    if (confirm(`Bạn có chắc chắn muốn xóa ${this.selectedCount()} sản phẩm đã chọn?`)) {
-      this.snackBar.open('Đang xóa...', 'Đóng', { duration: 2000 });
-      this.snackBar.open('Chức năng xóa hàng loạt sẽ được triển khai', 'Đóng', { duration: 3000 });
-      this.selectedProductIds.set([]);
-      this.selectAll.set(false);
-    }
-  }
-
-  bulkActivate(): void {
-    if (this.selectedCount() === 0) return;
-    this.snackBar.open('Chức năng kích hoạt hàng loạt sẽ được triển khai', 'Đóng', {
-      duration: 3000,
-    });
-  }
-
-  bulkDeactivate(): void {
-    if (this.selectedCount() === 0) return;
-    this.snackBar.open('Chức năng khóa hàng loạt sẽ được triển khai', 'Đóng', { duration: 3000 });
-  }
-
-  // Filter presets
-  applyPreset(preset: FilterPreset): void {
-    this.searchTerm.set(preset.searchTerm);
-    this.categoryFilter.set(preset.categoryId);
-    this.statusFilter.set(preset.status);
-    this.applyFilter();
-    this.showFilterPresets.set(false);
-  }
-
-  saveCurrentPreset(): void {
-    const name = prompt('Nhập tên bộ lọc:');
-    if (name) {
-      const preset: FilterPreset = {
-        name,
-        searchTerm: this.searchTerm(),
-        categoryId: this.categoryFilter(),
-        status: this.statusFilter(),
-      };
-      this.filterPresets.update((presets) => [preset, ...presets].slice(0, 10));
-    }
-  }
-
-  deletePreset(index: number): void {
-    this.filterPresets.update((presets) => presets.filter((_, i) => i !== index));
-  }
-
-  toggleFilterPresets(): void {
-    this.showFilterPresets.set(!this.showFilterPresets());
-  }
-
-  // Density
-  setDensity(density: 'comfortable' | 'compact' | 'spacious'): void {
-    this.density.set(density);
-  }
-
-  // Navigation
-  createProduct(): void {
-    this.router.navigate(['/admin/products/create']);
-  }
-
-  editProduct(product: ProductResponse): void {
-    this.router.navigate(['/admin/products', product.id, 'edit']);
-  }
-
-  viewProduct(product: ProductResponse): void {
+  viewProduct(product: ProductResponse) {
     this.router.navigate(['/admin/products', product.id]);
   }
 
-  deleteProduct(product: ProductResponse): void {
-    this.closeActionMenu();
+  editProduct(product: ProductResponse) {
+    this.router.navigate(['/admin/products', product.id, 'edit']);
+  }
+
+  deleteProduct(product: ProductResponse) {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       width: '300px',
       data: {
         title: 'Xác nhận xóa',
-        message: `Bạn có chắc chắn muốn xóa sản phẩm "${product.name}"? Hành động này không thể hoàn tác.`,
+        message: `Bạn có chắc chắn muốn xóa sản phẩm "${product.name}" (${product.code})? Hành động này không thể hoàn tác.`,
       },
     });
 
@@ -359,93 +320,282 @@ export class ProductsComponent implements OnInit {
           },
           error: (error) => {
             console.error('Error deleting product:', error);
-            this.snackBar.open(error.error?.message || 'Xóa sản phẩm thất bại', 'Đóng', {
-              duration: 5000,
-            });
+            this.snackBar.open('Xóa sản phẩm thất bại', 'Đóng', { duration: 3000 });
           },
         });
       }
     });
   }
 
-  toggleProductStatus(product: ProductResponse): void {
-    this.snackBar.open('Chức năng thay đổi trạng thái sẽ được triển khai', 'Đóng', {
-      duration: 3000,
+  // Column picker
+  toggleColumn(columnKey: string): void {
+    this.columns.update((cols) =>
+      cols.map((c) => (c.key === columnKey ? { ...c, visible: !c.visible } : c)),
+    );
+  }
+
+  // Sorting
+  onSort(sortData: { column: string; direction: 'asc' | 'desc' }): void {
+    this.sortColumn.set(sortData.column);
+    this.sortDirection.set(sortData.direction);
+    this.applyFilter();
+  }
+
+  // Selection
+  selectedProducts = computed(() =>
+    this.products().filter((p) => this.selectedProductIds().includes(p.id)),
+  );
+
+  selectedCount = computed(() => this.selectedProductIds().length);
+
+  onSelectionChange(rows: ProductResponse[]): void {
+    this.selectedProductIds.set(rows.map((r) => r.id));
+  }
+
+  // Bulk toolbar buttons
+  bulkProductButtons = computed<BulkToolbarButton[]>(() => [
+    {
+      label: 'Kích hoạt',
+      icon: 'check_circle',
+      variant: 'success',
+      handler: () => this.bulkActivate(),
+    },
+    {
+      label: 'Khóa',
+      icon: 'block',
+      variant: 'secondary',
+      handler: () => this.bulkDeactivate(),
+    },
+    {
+      label: 'Xóa',
+      icon: 'delete',
+      variant: 'danger',
+      handler: () => this.bulkDelete(),
+      disabled: this.deletingProductId() !== null,
+    },
+  ]);
+
+  // Bulk actions (real via API)
+  bulkDelete(): void {
+    if (this.selectedCount() === 0) return;
+
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '300px',
+      data: {
+        title: 'Xác nhận xóa hàng loạt',
+        message: `Bạn có chắc chắn muốn xóa ${this.selectedCount()} sản phẩm đã chọn? Hành động này không thể hoàn tác.`,
+      },
+    });
+
+    dialogRef.afterClosed().subscribe((result: boolean) => {
+      if (!result) return;
+
+      const idsToDelete = [...this.selectedProductIds()];
+      this.deletingProductId.set(idsToDelete[0] ?? null);
+      this.productService.bulkDeleteProducts(idsToDelete).subscribe({
+        next: () => {
+          this.snackBar.open('Xóa sản phẩm thành công', 'Đóng', { duration: 3000 });
+          this.loadData();
+          this.selectedProductIds.set([]);
+          this.deletingProductId.set(null);
+        },
+        error: (error) => {
+          console.error('Error bulk deleting products:', error);
+          this.snackBar.open('Xóa sản phẩm thất bại', 'Đóng', { duration: 3000 });
+          this.deletingProductId.set(null);
+        },
+      });
     });
   }
 
-  // Action menu
-  toggleActionMenu(product: ProductResponse): void {
-    this.actionMenuOpen.update((current) => (current === product.id ? null : product.id));
+  bulkActivate(): void {
+    if (this.selectedCount() === 0) return;
+    this.updateBulkStatus(true);
   }
 
-  closeActionMenu(): void {
-    this.actionMenuOpen.set(null);
+  bulkDeactivate(): void {
+    if (this.selectedCount() === 0) return;
+    this.updateBulkStatus(false);
   }
 
-  closeAllDropdowns(): void {
-    this.showColumnPicker.set(false);
-    this.showFilterPresets.set(false);
-    this.closeActionMenu();
+  private updateBulkStatus(active: boolean): void {
+    const ids = [...this.selectedProductIds()];
+    const verb = active ? 'kích hoạt' : 'khóa';
+    this.snackBar.open(`Đang ${verb} ${ids.length} sản phẩm...`, 'Đóng', { duration: 2000 });
+    this.productService.bulkUpdateProductStatus(ids, active).subscribe({
+      next: () => {
+        this.snackBar.open(`${active ? 'Kích hoạt' : 'Khóa'} sản phẩm thành công`, 'Đóng', {
+          duration: 3000,
+        });
+        this.loadData();
+        this.selectedProductIds.set([]);
+      },
+      error: (error) => {
+        console.error(`Error bulk ${verb} products:`, error);
+        this.snackBar.open(
+          error.error?.message || `${active ? 'Kích hoạt' : 'Khóa'} sản phẩm thất bại`,
+          'Đóng',
+          { duration: 3000 },
+        );
+      },
+    });
   }
 
-  // Helpers
-  formatPrice(price: number): string {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND',
-      minimumFractionDigits: 0,
-    }).format(price);
+  toggleProductStatus(product: ProductResponse): void {
+    const newActive = !product.active;
+    this.snackBar.open(
+      `Đang ${newActive ? 'kích hoạt' : 'khóa'} sản phẩm ${product.name}...`,
+      'Đóng',
+      { duration: 2000 },
+    );
+
+    this.productService.bulkUpdateProductStatus([product.id], newActive).subscribe({
+      next: () => {
+        this.snackBar.open(`${newActive ? 'Kích hoạt' : 'Khóa'} sản phẩm thành công`, 'Đóng', {
+          duration: 3000,
+        });
+        this.loadData();
+      },
+      error: (error) => {
+        console.error('Error toggling product status:', error);
+        this.snackBar.open(
+          error.error?.message || `${newActive ? 'Kích hoạt' : 'Khóa'} sản phẩm thất bại`,
+          'Đóng',
+          { duration: 3000 },
+        );
+      },
+    });
   }
 
-  getStockStatusClass(product: ProductResponse): string {
-    if (product.quantity === 0) return 'text-red-600 dark:text-red-400 font-medium';
-    if (product.quantity < 10) return 'text-amber-600 dark:text-amber-400 font-medium';
-    return 'text-emerald-600 dark:text-emerald-400';
+  // Filter presets
+  filterPresets = signal<FilterPreset[]>([
+    { name: 'Hết hàng', searchTerm: '', stock: 'out' },
+    { name: 'Sắp hết', searchTerm: '', stock: 'low' },
+    { name: 'Còn hàng', searchTerm: '', stock: 'in' },
+  ]);
+
+  loadPresets(): void {
+    const stored = localStorage.getItem('productFilterPresets');
+    if (stored) {
+      try {
+        const storedPresets = JSON.parse(stored) as FilterPreset[];
+        this.filterPresets.update((presets) => {
+          const knownNames = new Set(presets.map((p) => p.name));
+          const fresh = storedPresets.filter((p) => !knownNames.has(p.name));
+          return [...presets, ...fresh].slice(0, 10);
+        });
+      } catch {
+        // ignore
+      }
+    }
   }
 
-  getStockStatusText(product: ProductResponse): string {
-    if (product.quantity === 0) return 'Hết hàng';
-    if (product.quantity < 10) return 'Sắp hết';
-    return 'Còn hàng';
+  private persistPresets(): void {
+    try {
+      const defaultNames = new Set(['Hết hàng', 'Sắp hết', 'Còn hàng']);
+      const userPresets = this.filterPresets().filter((p) => !defaultNames.has(p.name));
+      localStorage.setItem('productFilterPresets', JSON.stringify(userPresets));
+    } catch {
+      // ignore
+    }
   }
 
-  getStatusBadgeClass(product: ProductResponse): string {
-    const active = product.active;
-    return active
-      ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
-      : 'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-400';
+  applyPreset(preset: FilterPreset): void {
+    this.searchTerm.set(preset['searchTerm'] ?? '');
+    this.categoryFilter.set(preset['categoryId'] ?? '');
+    this.statusFilter.set(preset['status'] ?? 'all');
+    this.stockFilter.set(preset['stock'] ?? 'all');
+    this.applyFilter();
   }
 
-  getStatusDotClass(product: ProductResponse): string {
-    return product.active ? 'bg-emerald-500' : 'bg-red-500';
+  saveCurrentPreset(): void {
+    const name = prompt('Nhập tên bộ lọc:');
+    if (name) {
+      const preset: FilterPreset = {
+        name,
+        searchTerm: this.searchTerm(),
+        categoryId: this.categoryFilter(),
+        status: this.statusFilter(),
+        stock: this.stockFilter(),
+      };
+      this.filterPresets.update((presets) => [preset, ...presets].slice(0, 10));
+      this.persistPresets();
+    }
   }
 
-  getStatusText(product: ProductResponse): string {
+  deletePreset(index: number): void {
+    this.filterPresets.update((presets) => presets.filter((_, i) => i !== index));
+    this.persistPresets();
+  }
+
+  getCategoryName(categoryId: string): string {
+    const cat = this.categories().find((c) => c.id === categoryId);
+    return cat?.name || '—';
+  }
+
+  getStatusColor(product: ProductResponse): 'success' | 'danger' {
+    return product.active ? 'success' : 'danger';
+  }
+
+  getStatusLabel(product: ProductResponse): string {
     return product.active ? 'Đang hoạt động' : 'Ngừng hoạt động';
   }
 
-  formatDate(dateString?: string): string {
-    if (!dateString) return '-';
-    return new Date(dateString).toLocaleDateString('vi-VN', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
+  getStatusIcon(product: ProductResponse): string {
+    return product.active ? 'check_circle' : 'cancel';
   }
 
-  // Track by functions
-  trackByProductId(index: number, product: ProductResponse): string {
+  getStockStatus(product: ProductResponse): {
+    label: string;
+    color: 'success' | 'warning' | 'danger' | 'info' | 'neutral' | 'primary';
+  } {
+    if (product.quantity === 0) {
+      return { label: 'Hết hàng', color: 'danger' };
+    }
+    if (product.quantity < 5) {
+      return { label: 'Sắp hết', color: 'warning' };
+    }
+    return { label: 'Còn hàng', color: 'success' };
+  }
+
+  trackByProductId(product: ProductResponse): string {
     return product.id;
   }
 
-  trackByCategoryId(index: number, category: CategoryResponse): string {
-    return category.id;
+  formatPrice(price: number): string {
+    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
   }
 
-  trackByColumn(index: number, column: Column): string {
-    return column.key;
+  // Template helpers for table
+  getProductImage(product: ProductResponse): string {
+    return product.image || '';
+  }
+
+  getProductCode(product: ProductResponse): string {
+    return product.code || '—';
+  }
+
+  getProductName(product: ProductResponse): string {
+    return product.name || '—';
+  }
+
+  getProductPrice(product: ProductResponse): string {
+    return (product.price || 0).toLocaleString('vi-VN') + ' ₫';
+  }
+
+  getProductQuantity(product: ProductResponse): string {
+    return product.quantity.toString();
+  }
+
+  getProductSold(product: ProductResponse): string {
+    return (product.sold || 0).toString();
+  }
+
+  getProductCategory(product: ProductResponse): string {
+    return this.getCategoryName(product.categoryId);
+  }
+
+  getProductStatus(product: ProductResponse): string {
+    return this.getStatusLabel(product);
   }
 }

@@ -1,0 +1,67 @@
+.form-container {
+  padding: var(--space-4);
+  max-width: var(--container-xl);
+  margin: 0 auto;
+  position: relative;
+}
+
+.header-content {
+  flex: 1;
+}
+
+.page-title {
+  margin: 0 0 var(--space-1);
+  font-size: var(--text-2xl);
+  font-weight: var(--font-semibold);
+  color: var(--color-text-primary);
+}
+
+.page-subtitle {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}
+
+/* Section Styles */
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-5);
+  font-size: var(--text-lg);
+  font-weight: var(--font-semibold);
+  color: var(--color-text-primary);
+}
+
+/* Image Upload */
+.image-upload-area {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.placeholder-text {
+  margin: var(--space-2) 0 0;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+.file-input {
+  display: none;
+}
+
+.upload-hint {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+/* Status Toggle */
+.status-toggle {
+  padding: var(--space-2) 0;
+}
+
+.toggle-label {
+  font-size: var(--text-base);
+  font-weight: var(--font-medium);
+  color: var(--color-text-primary);
+}

@@ -1,10 +1,272 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Title</title>
-</head>
-<body>
+<div class="detail-container min-h-screen bg-slate-50 dark:bg-slate-950">
+  @if (isLoading()) {
+    <div class="fixed inset-0 bg-white/80 dark:bg-slate-950/80 flex items-center justify-center z-50">
+      <app-loading size="xl" text="Đang tải thông tin sản phẩm..." />
+    </div>
+  } @else if (product(); as product) {
+    <!-- Header -->
+    <div class="sticky top-16 z-[90] bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
+      <div class="max-w-screen-2xl mx-auto px-4 md:px-6 lg:px-8 py-4">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div class="flex items-center gap-4">
+            <app-button
+              variant="ghost"
+              icon="arrow_back"
+              label="Quay lại"
+              (click)="goBack()"
+              ariaLabel="Quay về danh sách sản phẩm"
+            />
+            <div class="flex flex-col">
+              <h1 class="text-2xl font-bold text-slate-900 dark:text-white truncate max-w-[400px]">{{ product.name }}</h1>
+              <app-badge
+                [label]="product.code"
+                [variant]="'neutral'"
+                [size]="'sm'"
+              />
+            </div>
+          </div>
 
-</body>
-</html>
+          <div class="flex items-center gap-3 flex-wrap">
+            <app-badge
+              [label]="statusBadge().label"
+              [variant]="statusBadge().variant"
+              [icon]="statusBadge().icon"
+              [size]="'default'"
+            />
+            <app-badge
+              [label]="stockBadge().label"
+              [variant]="stockBadge().variant"
+              [icon]="stockBadge().icon"
+              [size]="'default'"
+            />
+
+            <div class="flex items-center gap-2 sm:ml-auto">
+              <app-button
+                variant="outline"
+                icon="edit"
+                label="Chỉnh sửa"
+                (click)="navigateToEdit()"
+              />
+              <app-button
+                variant="danger"
+                icon="delete"
+                label="Xóa"
+                (click)="deleteProduct()"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="max-w-screen-2xl mx-auto px-4 md:px-6 lg:px-8 py-8">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Image Panel -->
+        <div class="lg:col-span-1">
+          <app-card [variant]="'default'" [padding]="'none'">
+            <div class="aspect-square relative overflow-hidden">
+              @if (product.image) {
+                <img
+                  [src]="product.image"
+                  [alt]="product.name"
+                  loading="lazy"
+                  class="w-full h-full object-cover"
+                />
+              } @else {
+                <div class="w-full h-full flex items-center justify-center bg-slate-100 dark:bg-slate-800">
+                  <mat-icon class="w-16 h-16 text-slate-400 dark:text-slate-500">image_not_supported</mat-icon>
+                </div>
+              }
+            </div>
+          </app-card>
+        </div>
+
+        <!-- Info Panel -->
+        <div class="lg:col-span-2 space-y-6">
+          <!-- Price & Category -->
+          <app-card [padding]="'default'">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div class="flex-1">
+                <span class="text-3xl font-bold text-primary-600 dark:text-primary-400">{{ formatPrice(product.price) }}</span>
+              </div>
+              <div class="flex items-center gap-3 text-slate-600 dark:text-slate-400">
+                <mat-icon class="w-5 h-5">category</mat-icon>
+                <span class="font-medium">{{ product.categoryName || 'Chưa phân loại' }}</span>
+              </div>
+            </div>
+          </app-card>
+
+          <!-- Description -->
+          @if (product.shortDesc) {
+            <app-card [padding]="'default'">
+              <div class="flex items-start gap-3">
+                <mat-icon class="w-5 h-5 text-slate-400 dark:text-slate-500 mt-0.5 flex-shrink-0">description</mat-icon>
+                <div>
+                  <h3 class="text-title font-semibold text-slate-900 dark:text-white mb-2">Mô tả ngắn</h3>
+                  <p class="text-slate-600 dark:text-slate-400">{{ product.shortDesc }}</p>
+                </div>
+              </div>
+            </app-card>
+          }
+
+          @if (product.detailDesc) {
+            <app-card [padding]="'default'">
+              <div class="flex items-start gap-3">
+                <mat-icon class="w-5 h-5 text-slate-400 dark:text-slate-500 mt-0.5 flex-shrink-0">article</mat-icon>
+                <div>
+                  <h3 class="text-title font-semibold text-slate-900 dark:text-white mb-2">Mô tả chi tiết</h3>
+                  <p class="text-slate-600 dark:text-slate-400 whitespace-pre-wrap">{{ product.detailDesc }}</p>
+                </div>
+              </div>
+            </app-card>
+          }
+
+          <!-- Specification Grid -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Stock Info -->
+            <app-card [padding]="'default'">
+              <h3 class="text-title font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                <mat-icon class="w-5 h-5 text-slate-400 dark:text-slate-500">inventory_2</mat-icon>
+                Thông tin kho
+              </h3>
+              <dl class="space-y-3">
+                <div class="flex justify-between">
+                  <dt class="text-slate-500 dark:text-slate-400">Số lượng tồn</dt>
+                  <dd class="font-medium text-slate-900 dark:text-white tabular-nums">{{ product.quantity }}</dd>
+                </div>
+                <div class="flex justify-between">
+                  <dt class="text-slate-500 dark:text-slate-400">Đã bán</dt>
+                  <dd class="font-medium text-slate-900 dark:text-white tabular-nums">{{ product.sold || 0 }}</dd>
+                </div>
+                <div class="flex justify-between">
+                  <dt class="text-slate-500 dark:text-slate-400">Bảo hành</dt>
+                  <dd class="font-medium text-slate-900 dark:text-white">{{ product.warrantyMonths }} tháng</dd>
+                </div>
+              </dl>
+            </app-card>
+
+            <!-- Manufacturing Info -->
+            @if (product.factory || product.target) {
+              <app-card [padding]="'default'">
+                <h3 class="text-title font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                  <mat-icon class="w-5 h-5 text-slate-400 dark:text-slate-500">factory</mat-icon>
+                  Thông tin sản xuất
+                </h3>
+                <dl class="space-y-3">
+                  @if (product.factory) {
+                    <div class="flex justify-between">
+                      <dt class="text-slate-500 dark:text-slate-400">Nhà sản xuất</dt>
+                      <dd class="font-medium text-slate-900 dark:text-white">{{ product.factory }}</dd>
+                    </div>
+                  }
+                  @if (product.target) {
+                    <div class="flex justify-between">
+                      <dt class="text-slate-500 dark:text-slate-400">Đối tượng mục tiêu</dt>
+                      <dd class="font-medium text-slate-900 dark:text-white">{{ product.target }}</dd>
+                    </div>
+                  }
+                </dl>
+              </app-card>
+            }
+
+            <!-- Technical Specs -->
+            <app-card [padding]="'default'" [variant]="'default'" class="md:col-span-2">
+              <h3 class="text-title font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                <mat-icon class="w-5 h-5 text-slate-400 dark:text-slate-500">memory</mat-icon>
+                Thông số kỹ thuật
+              </h3>
+              <dl class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                @if (product.cpu) {
+                  <div class="flex justify-between">
+                    <dt class="text-slate-500 dark:text-slate-400">CPU</dt>
+                    <dd class="font-medium text-slate-900 dark:text-white">{{ product.cpu }}</dd>
+                  </div>
+                }
+                @if (product.ram) {
+                  <div class="flex justify-between">
+                    <dt class="text-slate-500 dark:text-slate-400">RAM</dt>
+                    <dd class="font-medium text-slate-900 dark:text-white">{{ product.ram }}</dd>
+                  </div>
+                }
+                @if (product.storage) {
+                  <div class="flex justify-between">
+                    <dt class="text-slate-500 dark:text-slate-400">Ổ cứng</dt>
+                    <dd class="font-medium text-slate-900 dark:text-white">{{ product.storage }}</dd>
+                  </div>
+                }
+                @if (product.gpu) {
+                  <div class="flex justify-between">
+                    <dt class="text-slate-500 dark:text-slate-400">Card màn hình</dt>
+                    <dd class="font-medium text-slate-900 dark:text-white">{{ product.gpu }}</dd>
+                  </div>
+                }
+                @if (product.screen) {
+                  <div class="flex justify-between">
+                    <dt class="text-slate-500 dark:text-slate-400">Màn hình</dt>
+                    <dd class="font-medium text-slate-900 dark:text-white">{{ product.screen }}</dd>
+                  </div>
+                }
+                @if (product.os) {
+                  <div class="flex justify-between">
+                    <dt class="text-slate-500 dark:text-slate-400">Hệ điều hành</dt>
+                    <dd class="font-medium text-slate-900 dark:text-white">{{ product.os }}</dd>
+                  </div>
+                }
+                @if (product.weight) {
+                  <div class="flex justify-between">
+                    <dt class="text-slate-500 dark:text-slate-400">Trọng lượng</dt>
+                    <dd class="font-medium text-slate-900 dark:text-white">{{ product.weight }} kg</dd>
+                  </div>
+                }
+              </dl>
+            </app-card>
+
+            <!-- Metadata -->
+            <app-card [padding]="'default'" [variant]="'default'" class="md:col-span-2">
+              <h3 class="text-title font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                <mat-icon class="w-5 h-5 text-slate-400 dark:text-slate-500">info</mat-icon>
+                Thông tin hệ thống
+              </h3>
+              <dl class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div class="flex justify-between">
+                  <dt class="text-slate-500 dark:text-slate-400">ID</dt>
+                  <dd class="font-medium text-slate-900 dark:text-white font-mono text-sm">{{ product.id }}</dd>
+                </div>
+                @if (product.categoryId) {
+                  <div class="flex justify-between">
+                    <dt class="text-slate-500 dark:text-slate-400">Category ID</dt>
+                    <dd class="font-medium text-slate-900 dark:text-white font-mono text-sm">{{ product.categoryId }}</dd>
+                  </div>
+                }
+                @if (product.createdAt) {
+                  <div class="flex justify-between">
+                    <dt class="text-slate-500 dark:text-slate-400">Ngày tạo</dt>
+                    <dd class="font-medium text-slate-900 dark:text-white">{{ product.createdAt | date:'dd/MM/yyyy HH:mm' }}</dd>
+                  </div>
+                }
+                @if (product.updatedAt) {
+                  <div class="flex justify-between">
+                    <dt class="text-slate-500 dark:text-slate-400">Cập nhật lần cuối</dt>
+                    <dd class="font-medium text-slate-900 dark:text-white">{{ product.updatedAt | date:'dd/MM/yyyy HH:mm' }}</dd>
+                  </div>
+                }
+              </dl>
+            </app-card>
+          </div>
+        </div>
+      </div>
+    </div>
+  } @else {
+    <app-empty-state
+      variant="no-data"
+      icon="inventory_2"
+      title="Không tìm thấy sản phẩm"
+      description="Sản phẩm này có thể đã bị xóa hoặc không tồn tại."
+      actionLabel="Quay về danh sách"
+      actionIcon="arrow_back"
+      actionVariant="primary"
+      (actionClick)="goBack()"
+    />
+  }
+</div>
