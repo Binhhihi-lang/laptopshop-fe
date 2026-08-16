@@ -6,12 +6,13 @@ import {
   effect,
   inject,
   ViewChild,
-  ElementRef,
+  TemplateRef,
+  AfterViewInit,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule, FormControl } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
-import { MaterialModule } from '@shared/material.module';
+import { MatIconModule } from '@angular/material/icon';
 import { UserService } from '@core/services/user.service';
 import { RoleService } from '@core/services/role.service';
 import { UserResponse } from '@core/models/user.model';
@@ -19,30 +20,50 @@ import { RoleResponse } from '@core/models/role.model';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
 import { forkJoin } from 'rxjs';
-import { UserDetailComponent, UserDetailDialogData } from '../user-detail/user-detail.component';
+import { ConfirmDialogComponent } from '@shared/confirm-dialog/confirm-dialog.component';
 
-interface Column {
-  key: string;
-  label: string;
-  visible: boolean;
-  width?: string;
-}
-
-interface FilterPreset {
-  name: string;
-  searchTerm: string;
-  roleId: string; // Single role ID
-  status: 'all' | 'active' | 'inactive';
-}
+// Shared components
+import { TableComponent, Column, TableAction } from '@shared/components/table/table.component';
+import { CardComponent } from '@shared/components/card/card.component';
+import { BadgeComponent } from '@shared/components/badge/badge.component';
+import { ButtonComponent } from '@shared/components/button/button.component';
+import { InputComponent } from '@shared/components/input/input.component';
+import { SelectComponent, SelectOption } from '@shared/components/select/select.component';
+import {
+  PageHeaderComponent,
+  AvatarComponent,
+  ColumnPickerComponent,
+  FilterPresetsComponent,
+  FilterPreset,
+  BulkToolbarComponent,
+  BulkToolbarButton,
+} from '@shared/components';
 
 @Component({
   selector: 'app-users',
   standalone: true,
-  imports: [CommonModule, MaterialModule, FormsModule, ReactiveFormsModule, RouterModule],
+  imports: [
+    CommonModule,
+    RouterModule,
+    FormsModule,
+    ReactiveFormsModule,
+    MatIconModule,
+    TableComponent,
+    CardComponent,
+    BadgeComponent,
+    ButtonComponent,
+    InputComponent,
+    SelectComponent,
+    PageHeaderComponent,
+    AvatarComponent,
+    ColumnPickerComponent,
+    FilterPresetsComponent,
+    BulkToolbarComponent,
+  ],
   templateUrl: './users.html',
   styleUrl: './users.css',
 })
-export class UsersComponent implements OnInit {
+export class UsersComponent implements OnInit, AfterViewInit {
   private readonly userService = inject(UserService);
   private readonly roleService = inject(RoleService);
   private readonly router = inject(Router);
@@ -51,7 +72,6 @@ export class UsersComponent implements OnInit {
 
   // Data signals
   users = signal<UserResponse[]>([]);
-  filteredUsers = signal<UserResponse[]>([]);
   roles = signal<RoleResponse[]>([]);
 
   // Loading states
@@ -64,80 +84,108 @@ export class UsersComponent implements OnInit {
   statusFilter = signal<'all' | 'active' | 'inactive'>('all');
 
   // UI state signals
-  showColumnPicker = signal(false);
-  showFilterPresets = signal(false);
   density = signal<'comfortable' | 'compact' | 'spacious'>('comfortable');
   selectedUserIds = signal<string[]>([]);
-  selectAll = signal(false);
   sortColumn = signal<string>('');
   sortDirection = signal<'asc' | 'desc'>('asc');
-  actionMenuOpen = signal<string | null>(null); // Stores user.id of open menu
   deletingUserId = signal<string | null>(null);
 
-  // Column definitions
-  columns = signal<Column[]>([
-    { key: 'avatar', label: 'Avatar', visible: true, width: '60px' },
-    { key: 'fullName', label: 'Họ tên', visible: true },
-    { key: 'email', label: 'Email', visible: true },
+  // Column definitions for shared table
+  columns = signal<Column<UserResponse>[]>([
+    { key: 'avatar', label: 'Avatar', visible: true, width: '60px', align: 'center' },
+    { key: 'fullName', label: 'Họ tên', visible: true, sortable: true },
+    { key: 'email', label: 'Email', visible: true, sortable: true },
     { key: 'phone', label: 'Điện thoại', visible: true },
-    { key: 'roles', label: 'Vai trò', visible: true },
-    { key: 'status', label: 'Trạng thái', visible: true, width: '120px' },
-    { key: 'lastLogin', label: 'Đăng nhập cuối', visible: false },
-    { key: 'createdAt', label: 'Ngày tạo', visible: false },
-    { key: 'actions', label: 'Thao tác', visible: true, width: '120px' },
+    { key: 'roles', label: 'Vai trò', visible: true, width: '180px', align: 'left' },
+    { key: 'status', label: 'Trạng thái', visible: true, width: '170px', align: 'center' },
+    { key: 'lastLogin', label: 'Đăng nhập cuối', visible: false, sortable: true, align: 'center' },
+    { key: 'createdAt', label: 'Ngày tạo', visible: false, sortable: true, align: 'center' },
   ]);
 
-  // Filter presets
-  filterPresets = signal<FilterPreset[]>([
-    { name: 'Tất cả Admin', searchTerm: '', roleId: 'ADMIN', status: 'all' },
-    { name: 'Nhân viên hoạt động', searchTerm: '', roleId: 'STAFF', status: 'active' },
-    { name: 'Người dùng mới', searchTerm: '', roleId: 'USER', status: 'active' },
-    { name: 'Tài khoản bị khóa', searchTerm: '', roleId: '', status: 'inactive' },
-  ]);
-
-  // Visible columns computed
-  visibleColumns = computed(() =>
-    this.columns()
-      .filter((c) => c.visible)
-      .map((c) => c.key),
+  // Role options for select
+  roleOptions = computed<SelectOption[]>(() =>
+    this.roles().map((r) => ({ value: r.name, label: r.name })),
   );
 
-  // Selected count
-  selectedCount = computed(() => this.selectedUserIds().length);
+  // Status options for select
+  statusOptions: SelectOption[] = [
+    { value: 'all', label: 'Tất cả trạng thái' },
+    { value: 'active', label: 'Đang hoạt động' },
+    { value: 'inactive', label: 'Ngừng hoạt động' },
+  ];
 
-  // All visible users IDs
-  visibleUserIds = computed(() => this.filteredUsers().map((u) => u.id));
+  // Filtered users
+  filteredUsers = signal<UserResponse[]>([]);
 
-  // Sorting
-  sortedUsers = computed(() => {
-    const users = [...this.filteredUsers()];
-    const column = this.sortColumn();
-    const direction = this.sortDirection();
+  // Table column templates
+  @ViewChild('avatarColumn', { static: true }) avatarColumn!: TemplateRef<any>;
+  @ViewChild('nameColumn', { static: true }) nameColumn!: TemplateRef<any>;
+  @ViewChild('emailColumn', { static: true }) emailColumn!: TemplateRef<any>;
+  @ViewChild('phoneColumn', { static: true }) phoneColumn!: TemplateRef<any>;
+  @ViewChild('rolesColumn', { static: true }) rolesColumn!: TemplateRef<any>;
+  @ViewChild('statusColumn', { static: true }) statusColumn!: TemplateRef<any>;
+  @ViewChild('lastLoginColumn', { static: true }) lastLoginColumn!: TemplateRef<any>;
+  @ViewChild('createdAtColumn', { static: true }) createdAtColumn!: TemplateRef<any>;
 
-    if (!column) return users;
+  // Table actions (using icon buttons)
+  actions: TableAction<UserResponse>[] = [
+    {
+      label: 'Xem chi tiết',
+      icon: 'visibility',
+      handler: (row) => this.viewUser(row),
+      variant: 'ghost',
+    },
+    {
+      label: 'Chỉnh sửa',
+      icon: 'edit',
+      handler: (row) => this.editUser(row),
+      variant: 'ghost',
+    },
+    {
+      label: 'Xóa',
+      icon: 'delete',
+      handler: (row) => this.deleteUser(row),
+      variant: 'danger',
+    },
+    {
+      label: 'Khóa/Kích hoạt',
+      icon: 'block',
+      handler: (row) => this.toggleUserStatus(row),
+      variant: 'ghost',
+    },
+  ];
 
-    return users.sort((a, b) => {
-      const aVal = (a as any)[column];
-      const bVal = (b as any)[column];
-      if (aVal === bVal) return 0;
-      const result = aVal > bVal ? 1 : -1;
-      return direction === 'asc' ? result : -result;
-    });
-  });
+  // Selected users for bulk actions
+  selectedUsers = computed(() => this.users().filter((u) => this.selectedUserIds().includes(u.id)));
 
-  constructor() {
-    // Persist filter presets to localStorage
-    effect(() => {
-      localStorage.setItem('userFilterPresets', JSON.stringify(this.filterPresets()));
-    });
-  }
-
-  ngOnInit(): void {
+  ngOnInit() {
     this.loadData();
     this.loadPresets();
   }
 
-  loadData(): void {
+  ngAfterViewInit(): void {
+    // Assign templates to columns after view init
+    this.columns.update((cols) =>
+      cols.map((col) => {
+        const templateMap: Record<string, TemplateRef<any>> = {
+          avatar: this.avatarColumn,
+          fullName: this.nameColumn,
+          email: this.emailColumn,
+          phone: this.phoneColumn,
+          roles: this.rolesColumn,
+          status: this.statusColumn,
+          lastLogin: this.lastLoginColumn,
+          createdAt: this.createdAtColumn,
+        };
+        if (templateMap[col.key]) {
+          return { ...col, template: templateMap[col.key] };
+        }
+        return col;
+      }),
+    );
+  }
+
+  loadData() {
     this.isLoading.set(true);
     this.isLoadingRoles.set(true);
 
@@ -165,17 +213,17 @@ export class UsersComponent implements OnInit {
     const stored = localStorage.getItem('userFilterPresets');
     if (stored) {
       try {
-        this.filterPresets.set([...this.filterPresets(), ...JSON.parse(stored)].slice(0, 10));
+        this.filterPresets.update((presets) => [...presets, ...JSON.parse(stored)].slice(0, 10));
       } catch {
         // ignore
       }
     }
   }
 
-  applyFilter(): void {
+  applyFilter() {
     let filtered = this.users();
 
-    // Search filter
+    // Search by name, email, phone
     const term = this.searchTerm().trim().toLowerCase();
     if (term) {
       filtered = filtered.filter(
@@ -186,53 +234,69 @@ export class UsersComponent implements OnInit {
       );
     }
 
-    // Role filter (single select)
+    // Filter by role
     const roleId = this.roleFilter();
     if (roleId) {
       filtered = filtered.filter((user) => {
-        const userRoleIds = user.roleNames || [];
-        return userRoleIds.includes(roleId);
+        const userRoleNames = user.roleNames || [];
+        return userRoleNames.includes(roleId);
       });
     }
 
-    // Status filter
-    const status = this.statusFilter();
-    if (status !== 'all') {
-      filtered = filtered.filter((user) => {
-        if (status === 'active') return user.active ?? true;
-        return !(user.active ?? true);
+    // Filter by status
+    if (this.statusFilter() !== 'all') {
+      if (this.statusFilter() === 'active') {
+        filtered = filtered.filter((user) => user.active ?? true);
+      } else if (this.statusFilter() === 'inactive') {
+        filtered = filtered.filter((user) => !(user.active ?? true));
+      }
+    }
+
+    // Apply sorting
+    const sortCol = this.sortColumn();
+    const sortDir = this.sortDirection();
+    if (sortCol) {
+      filtered = [...filtered].sort((a, b) => {
+        const aVal = (a as any)[sortCol];
+        const bVal = (b as any)[sortCol];
+        if (aVal === bVal) return 0;
+        const result = aVal > bVal ? 1 : -1;
+        return sortDir === 'asc' ? result : -result;
       });
     }
 
     this.filteredUsers.set(filtered);
-    this.updateSelectAll();
   }
 
-  onSearchChange(): void {
+  onSearchChange() {
     this.applyFilter();
   }
 
-  onRoleChange(): void {
+  onRoleChange() {
     this.applyFilter();
   }
 
-  setStatusFilter(status: 'all' | 'active' | 'inactive'): void {
-    this.statusFilter.set(status);
-    this.applyFilter();
+  setStatusFilter(status: 'all' | 'active' | 'inactive') {
+    if (this.statusFilter() !== status) {
+      this.statusFilter.set(status);
+      this.applyFilter();
+    }
   }
 
-  clearFilters(): void {
+  clearFilters() {
     this.searchTerm.set('');
     this.roleFilter.set('');
     this.statusFilter.set('all');
     this.applyFilter();
   }
 
-  // Column picker
-  toggleColumnPicker(): void {
-    this.showColumnPicker.set(!this.showColumnPicker());
+  hasActiveFilters(): boolean {
+    return (
+      this.searchTerm().trim() !== '' || this.roleFilter() !== '' || this.statusFilter() !== 'all'
+    );
   }
 
+  // Column picker
   toggleColumn(columnKey: string): void {
     this.columns.update((cols) =>
       cols.map((c) => (c.key === columnKey ? { ...c, visible: !c.visible } : c)),
@@ -240,110 +304,121 @@ export class UsersComponent implements OnInit {
   }
 
   // Sorting
-  onSort(columnKey: string): void {
-    if (this.sortColumn() === columnKey) {
-      this.sortDirection.update((d) => (d === 'asc' ? 'desc' : 'asc'));
-    } else {
-      this.sortColumn.set(columnKey);
-      this.sortDirection.set('asc');
-    }
+  onSort(sortData: { column: string; direction: 'asc' | 'desc' }): void {
+    this.sortColumn.set(sortData.column);
+    this.sortDirection.set(sortData.direction);
+    this.applyFilter();
   }
 
   // Selection
-  toggleSelectAll(): void {
-    const allSelected = this.selectAll();
-    const ids = this.visibleUserIds();
-    if (!allSelected) {
-      this.selectedUserIds.set([...ids]);
-    } else {
-      this.selectedUserIds.set([]);
-    }
-    this.selectAll.set(!allSelected);
+  selectedCount = computed(() => this.selectedUserIds().length);
+
+  onSelectionChange(rows: UserResponse[]): void {
+    this.selectedUserIds.set(rows.map((r) => r.id));
   }
 
-  toggleSelectUser(userId: string): void {
-    this.selectedUserIds.update((ids) =>
-      ids.includes(userId) ? ids.filter((id) => id !== userId) : [...ids, userId],
-    );
-    this.updateSelectAll();
-  }
+  // Bulk toolbar buttons
+  bulkUserButtons = computed<BulkToolbarButton[]>(() => [
+    {
+      label: 'Kích hoạt',
+      icon: 'check_circle',
+      variant: 'success',
+      handler: () => this.bulkActivate(),
+    },
+    {
+      label: 'Khóa',
+      icon: 'block',
+      variant: 'secondary',
+      handler: () => this.bulkDeactivate(),
+    },
+    {
+      label: 'Xóa',
+      icon: 'delete',
+      variant: 'danger',
+      handler: () => this.bulkDelete(),
+      disabled: this.deletingUserId() !== null,
+    },
+  ]);
 
-  isSelected(userId: string): boolean {
-    return this.selectedUserIds().includes(userId);
-  }
-
-  updateSelectAll(): void {
-    const visibleIds = this.visibleUserIds();
-    this.selectAll.set(
-      visibleIds.length > 0 && visibleIds.every((id) => this.selectedUserIds().includes(id)),
-    );
-  }
-
-  // Bulk actions
+  // Bulk actions (real via API)
   bulkDelete(): void {
     if (this.selectedCount() === 0) return;
 
-    if (confirm(`Bạn có chắc chắn muốn xóa ${this.selectedCount()} người dùng đã chọn?`)) {
-      this.snackBar.open(`Đang xóa ${this.selectedCount()} người dùng...`, 'Đóng', {
-        duration: 2000,
-      });
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '300px',
+      data: {
+        title: 'Xác nhận xóa hàng loạt',
+        message: `Bạn có chắc chắn muốn xóa ${this.selectedCount()} người dùng đã chọn? Hành động này không thể hoàn tác.`,
+      },
+    });
+
+    dialogRef.afterClosed().subscribe((result: boolean) => {
+      if (!result) return;
 
       const idsToDelete = [...this.selectedUserIds()];
-      let successCount = 0;
-      let errorCount = 0;
-
-      // Delete sequentially to avoid overwhelming the server
-      const deleteNext = (index: number) => {
-        if (index >= idsToDelete.length) {
-          // All done
-          this.snackBar.open(
-            `Xóa hoàn tất: ${successCount} thành công, ${errorCount} thất bại`,
-            'Đóng',
-            { duration: 3000 },
-          );
+      this.deletingUserId.set(idsToDelete[0] ?? null);
+      this.userService.bulkDeleteUsers(idsToDelete).subscribe({
+        next: () => {
+          this.snackBar.open('Xóa người dùng thành công', 'Đóng', { duration: 3000 });
           this.loadData();
           this.selectedUserIds.set([]);
-          this.selectAll.set(false);
-          return;
-        }
-
-        const userId = idsToDelete[index];
-        this.userService.deleteUser(userId).subscribe({
-          next: () => {
-            successCount++;
-            deleteNext(index + 1);
-          },
-          error: (error) => {
-            console.error(`Error deleting user ${userId}:`, error);
-            errorCount++;
-            deleteNext(index + 1);
-          },
-        });
-      };
-
-      deleteNext(0);
-    }
+          this.deletingUserId.set(null);
+        },
+        error: (error) => {
+          console.error('Error bulk deleting users:', error);
+          this.snackBar.open('Xóa người dùng thất bại', 'Đóng', { duration: 3000 });
+          this.deletingUserId.set(null);
+        },
+      });
+    });
   }
 
   bulkActivate(): void {
     if (this.selectedCount() === 0) return;
-    this.snackBar.open('Chức năng kích hoạt hàng loạt sẽ được triển khai', 'Đóng', {
-      duration: 3000,
-    });
+    this.updateBulkStatus(true);
   }
 
   bulkDeactivate(): void {
     if (this.selectedCount() === 0) return;
-    this.snackBar.open('Chức năng khóa hàng loạt sẽ được triển khai', 'Đóng', { duration: 3000 });
+    this.updateBulkStatus(false);
+  }
+
+  private updateBulkStatus(active: boolean): void {
+    const ids = [...this.selectedUserIds()];
+    const verb = active ? 'kích hoạt' : 'khóa';
+    this.snackBar.open(`Đang ${verb} ${ids.length} người dùng...`, 'Đóng', { duration: 2000 });
+    this.userService.bulkUpdateUserStatus(ids, active).subscribe({
+      next: () => {
+        this.snackBar.open(`${active ? 'Kích hoạt' : 'Khóa'} người dùng thành công`, 'Đóng', {
+          duration: 3000,
+        });
+        this.loadData();
+        this.selectedUserIds.set([]);
+      },
+      error: (error) => {
+        console.error(`Error bulk ${verb} users:`, error);
+        this.snackBar.open(
+          error.error?.message || `${active ? 'Kích hoạt' : 'Khóa'} người dùng thất bại`,
+          'Đóng',
+          { duration: 3000 },
+        );
+      },
+    });
   }
 
   // Filter presets
+  filterPresets = signal<FilterPreset[]>([
+    { name: 'Tất cả Admin', searchTerm: '', roleId: 'ADMIN', status: 'all' },
+    { name: 'Nhân viên hoạt động', searchTerm: '', roleId: 'STAFF', status: 'active' },
+    { name: 'Người dùng mới', searchTerm: '', roleId: 'USER', status: 'active' },
+    { name: 'Tài khoản bị khóa', searchTerm: '', roleId: '', status: 'inactive' },
+  ]);
+
   applyPreset(preset: FilterPreset): void {
-    this.searchTerm.set(preset.searchTerm);
-    this.roleFilter.set(preset.roleId);
-    this.statusFilter.set(preset.status);
+    this.searchTerm.set(preset['searchTerm']);
+    this.roleFilter.set(preset['roleId']);
+    this.statusFilter.set(preset['status']);
     this.applyFilter();
-    this.showFilterPresets.set(false);
   }
 
   saveCurrentPreset(): void {
@@ -363,10 +438,6 @@ export class UsersComponent implements OnInit {
     this.filterPresets.update((presets) => presets.filter((_, i) => i !== index));
   }
 
-  toggleFilterPresets(): void {
-    this.showFilterPresets.set(!this.showFilterPresets());
-  }
-
   // Navigation
   createUser(): void {
     this.router.navigate(['/admin/users/create']);
@@ -377,40 +448,35 @@ export class UsersComponent implements OnInit {
   }
 
   viewUser(user: UserResponse): void {
-    const dialogRef = this.dialog.open(UserDetailComponent, {
-      data: { user } as UserDetailDialogData,
-      width: '580px',
-      maxWidth: '90vw',
-      panelClass: 'custom-dialog-panel',
-    });
-
-    dialogRef.afterClosed().subscribe((result) => {
-      if (result === 'edit') {
-        this.editUser(user);
-      }
-    });
+    this.router.navigate(['/admin/users', user.id]);
   }
 
   deleteUser(user: UserResponse): void {
-    if (
-      confirm(
-        `Bạn có chắc chắn muốn xóa người dùng ${user.email}? Hành động này không thể hoàn tác.`,
-      )
-    ) {
-      this.deletingUserId.set(user.id);
-      this.userService.deleteUser(user.id).subscribe({
-        next: () => {
-          this.snackBar.open('Xóa người dùng thành công', 'Đóng', { duration: 3000 });
-          this.loadData();
-          this.deletingUserId.set(null);
-        },
-        error: (error) => {
-          console.error('Error deleting user:', error);
-          this.snackBar.open('Xóa người dùng thất bại', 'Đóng', { duration: 3000 });
-          this.deletingUserId.set(null);
-        },
-      });
-    }
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '300px',
+      data: {
+        title: 'Xác nhận xóa',
+        message: `Bạn có chắc chắn muốn xóa người dùng ${user.email}? Hành động này không thể hoàn tác.`,
+      },
+    });
+
+    dialogRef.afterClosed().subscribe((result: boolean) => {
+      if (result) {
+        this.deletingUserId.set(user.id);
+        this.userService.deleteUser(user.id).subscribe({
+          next: () => {
+            this.snackBar.open('Xóa người dùng thành công', 'Đóng', { duration: 3000 });
+            this.loadData();
+            this.deletingUserId.set(null);
+          },
+          error: (error) => {
+            console.error('Error deleting user:', error);
+            this.snackBar.open('Xóa người dùng thất bại', 'Đóng', { duration: 3000 });
+            this.deletingUserId.set(null);
+          },
+        });
+      }
+    });
   }
 
   toggleUserStatus(user: UserResponse): void {
@@ -421,7 +487,7 @@ export class UsersComponent implements OnInit {
       { duration: 2000 },
     );
 
-    this.userService.updateUser(user.id, { active: newActive }).subscribe({
+    this.userService.bulkUpdateUserStatus([user.id], newActive).subscribe({
       next: () => {
         this.snackBar.open(`${newActive ? 'Kích hoạt' : 'Khóa'} tài khoản thành công`, 'Đóng', {
           duration: 3000,
@@ -439,35 +505,7 @@ export class UsersComponent implements OnInit {
     });
   }
 
-  // Action menu
-  toggleActionMenu(user: UserResponse): void {
-    this.actionMenuOpen.update((current) => (current === user.id ? null : user.id));
-  }
-
-  closeActionMenu(): void {
-    this.actionMenuOpen.set(null);
-  }
-
-  closeAllDropdowns(): void {
-    this.showColumnPicker.set(false);
-    this.showFilterPresets.set(false);
-    this.closeActionMenu();
-  }
-
   // Helpers
-  getRoleNames(user: UserResponse): string {
-    return (user.roleNames || []).join(', ');
-  }
-
-  getStatusBadgeClass(user: UserResponse): string {
-    const active = user.active ?? true;
-    return active ? 'badge-success' : 'badge-danger';
-  }
-
-  getStatusText(user: UserResponse): string {
-    return (user.active ?? true) ? 'Hoạt động' : 'Ngừng hoạt động';
-  }
-
   getInitials(fullName: string): string {
     if (!fullName) return 'NA';
     const parts = fullName.trim().split(/\s+/);
@@ -476,7 +514,7 @@ export class UsersComponent implements OnInit {
   }
 
   formatDate(dateString?: string): string {
-    if (!dateString) return '-';
+    if (!dateString) return '—';
     return new Date(dateString).toLocaleDateString('vi-VN', {
       day: '2-digit',
       month: '2-digit',
@@ -486,16 +524,27 @@ export class UsersComponent implements OnInit {
     });
   }
 
-  // Track by functions
-  trackByUserId(index: number, user: UserResponse): string {
+  getRoleVariant(
+    roleName: string,
+  ): 'primary' | 'success' | 'warning' | 'danger' | 'info' | 'neutral' {
+    const roleVariants: Record<
+      string,
+      'primary' | 'success' | 'warning' | 'danger' | 'info' | 'neutral'
+    > = {
+      ADMIN: 'danger',
+      STAFF: 'warning',
+      USER: 'primary',
+      MANAGER: 'info',
+      SUPER_ADMIN: 'danger',
+    };
+    return roleVariants[roleName] || 'neutral';
+  }
+
+  trackByUserId(user: UserResponse): string {
     return user.id;
   }
 
-  trackByRoleId(index: number, role: RoleResponse): string {
-    return role.id;
-  }
-
-  trackByColumn(index: number, column: Column): string {
-    return column.key;
+  getStatusText(user: UserResponse): string {
+    return (user.active ?? true) ? 'Đang hoạt động' : 'Ngừng hoạt động';
   }
 }

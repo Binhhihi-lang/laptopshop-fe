@@ -8,7 +8,7 @@ import {
   Validators,
 } from '@angular/forms';
 import { Router, RouterModule, ActivatedRoute } from '@angular/router';
-import { MaterialModule } from '@shared/material.module';
+import { MatIconModule } from '@angular/material/icon';
 import { RoleService } from '@core/services/role.service';
 import { UserService } from '@core/services/user.service';
 import { RoleResponse } from '@core/models/role.model';
@@ -16,10 +16,39 @@ import { UserResponse, UserCreationRequest, UserUpdateRequest } from '@core/mode
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Subject, takeUntil, filter, forkJoin } from 'rxjs';
 
+// Shared components
+import {
+  CardComponent,
+  CardHeaderComponent,
+  BadgeComponent,
+  ButtonComponent,
+  InputComponent,
+  SelectOption,
+  FormFieldComponent,
+  PageHeaderComponent,
+  AvatarComponent,
+  LoadingComponent,
+} from '@shared/components';
+
 @Component({
   selector: 'app-user-form',
   standalone: true,
-  imports: [CommonModule, MaterialModule, FormsModule, ReactiveFormsModule, RouterModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
+    RouterModule,
+    MatIconModule,
+    CardComponent,
+    CardHeaderComponent,
+    BadgeComponent,
+    ButtonComponent,
+    InputComponent,
+    FormFieldComponent,
+    PageHeaderComponent,
+    AvatarComponent,
+    LoadingComponent,
+  ],
   templateUrl: './user-form.component.html',
   styleUrl: './user-form.component.css',
 })
@@ -64,6 +93,11 @@ export class UserFormComponent implements OnInit, OnDestroy {
       : 'Điền thông tin để tạo tài khoản người dùng mới',
   );
   submitButtonText = computed(() => (this.isEditMode() ? 'Cập nhật' : 'Tạo người dùng'));
+
+  // Role options for checkbox display
+  roleOptions = computed<SelectOption[]>(() =>
+    this.roles().map((r) => ({ value: r.name, label: r.name })),
+  );
 
   ngOnInit(): void {
     // Get userId from route params (handles both initial load and param changes)
@@ -230,7 +264,6 @@ export class UserFormComponent implements OnInit, OnDestroy {
         phone: formValue.phone || undefined,
         address: formValue.address || undefined,
         roleNames: formValue.roleNames,
-
         ...(this.selectedAvatar() ? { avatar: this.selectedAvatar()! } : {}),
       };
       this.userService.createUser(userData).subscribe({
@@ -275,17 +308,19 @@ export class UserFormComponent implements OnInit, OnDestroy {
   get phone() {
     return this.userForm.get('phone');
   }
+  get address() {
+    return this.userForm.get('address');
+  }
   get roleNames() {
     return this.userForm.get('roleNames');
+  }
+  get active() {
+    return this.userForm.get('active');
   }
 
   hasError(controlName: string, errorName: string): boolean {
     const control = this.userForm.get(controlName);
     return (control?.touched && control?.hasError(errorName)) ?? false;
-  }
-
-  hasFormError(errorName: string): boolean {
-    return (this.userForm.touched && this.userForm.hasError(errorName)) ?? false;
   }
 
   onRoleToggle(roleName: string, event: Event): void {
@@ -310,9 +345,20 @@ export class UserFormComponent implements OnInit, OnDestroy {
     return currentRoles.includes(roleName);
   }
 
-  // Helper for template to get roleNames form control
-  get roleNamesControl() {
-    return this.userForm.get('roleNames');
+  getRoleVariant(
+    roleName: string,
+  ): 'primary' | 'success' | 'warning' | 'danger' | 'info' | 'neutral' {
+    const roleVariants: Record<
+      string,
+      'primary' | 'success' | 'warning' | 'danger' | 'info' | 'neutral'
+    > = {
+      ADMIN: 'danger',
+      STAFF: 'warning',
+      USER: 'primary',
+      MANAGER: 'info',
+      SUPER_ADMIN: 'danger',
+    };
+    return roleVariants[roleName] || 'neutral';
   }
 
   getInitials(fullName: string): string {

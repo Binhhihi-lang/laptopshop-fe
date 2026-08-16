@@ -1,439 +1,208 @@
-<!-- Users Page - Modern Clean with Tailwind -->
-<div class="min-h-screen bg-slate-50 dark:bg-slate-950">
+<!-- Users Page - Modern Clean with Tailwind using Shared Components -->
+<div class="users-container min-h-screen bg-slate-50 dark:bg-slate-950">
   <!-- Page Header -->
   <div class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-16 z-[90]">
     <div class="max-w-screen-2xl mx-auto px-4 md:px-6 lg:px-8 py-4">
-      <!-- Title & Actions -->
-      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Quản lý người dùng</h1>
-          <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Tìm kiếm, lọc và quản lý tài khoản người dùng</p>
-        </div>
-        <div class="flex items-center gap-3 flex-wrap">
+      <app-page-header
+        title="Quản lý người dùng"
+        [subtitle]="'Tìm kiếm, lọc và quản lý tài khoản người dùng (' + filteredUsers().length + '/' + users().length + ')'"
+        [hasActions]="true"
+      >
+        <app-button
+          variant="primary"
+          icon="person_add"
+          label="Thêm người dùng"
+          (click)="createUser()"
+        />
+      </app-page-header>
+    </div>
+  </div>
 
-
-          <!-- Column Picker -->
-          <div class="relative">
-            <button
-              (click)="toggleColumnPicker()"
-              class="flex items-center gap-2 px-3 py-1.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
-              aria-label="Chọn cột hiển thị"
-              [attr.aria-expanded]="showColumnPicker()">
-              <mat-icon class="w-5 h-5">view_column</mat-icon>
-              <span class="hidden sm:inline">Cột</span>
-            </button>
-            @if (showColumnPicker()) {
-              <div class="absolute right-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 py-1 z-[200] animate-in fade-in-0 zoom-in-95 duration-150">
-                @for (column of columns(); track column.key) {
-                  <label class="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      [checked]="column.visible"
-                      (change)="toggleColumn(column.key)"
-                      class="w-4 h-4 text-primary border-slate-300 rounded focus:ring-primary/30">
-                    <span>{{ column.label }}</span>
-                  </label>
-                }
-              </div>
-            }
-          </div>
-
-          <!-- Filter Presets -->
-          <div class="relative">
-            <button
-              (click)="toggleFilterPresets()"
-              class="flex items-center gap-2 px-3 py-1.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
-              aria-label="Bộ lọc đã lưu"
-              [attr.aria-expanded]="showFilterPresets()">
-              <mat-icon class="w-5 h-5">filter_list</mat-icon>
-              <span class="hidden sm:inline">Bộ lọc</span>
-            </button>
-            @if (showFilterPresets()) {
-              <div class="absolute right-0 mt-2 w-64 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 overflow-hidden z-[200] animate-in fade-in-0 zoom-in-95 duration-150">
-                <div class="px-3 py-2 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
-                  <p class="text-sm font-medium text-slate-900 dark:text-white">Bộ lọc nhanh</p>
-                  <button
-                    (click)="saveCurrentPreset()"
-                    class="text-xs text-primary hover:text-primary-hover font-medium"
-                    aria-label="Lưu bộ lọc hiện tại">
-                    Lưu
-                  </button>
-                </div>
-                <div class="max-h-60 overflow-y-auto">
-                  @for (preset of filterPresets(); track preset.name; let i = $index) {
-                    <div class="flex items-center justify-between px-3 py-2 hover:bg-slate-50 dark:hover:bg-slate-700 border-b border-slate-100 dark:border-slate-700/50">
-                      <button
-                        (click)="applyPreset(preset)"
-                        class="flex-1 text-left text-sm text-slate-700 dark:text-slate-200 flex items-center gap-2">
-                        <mat-icon class="w-4 h-4 text-slate-400">filter_alt</mat-icon>
-                        <span class="truncate">{{ preset.name }}</span>
-                      </button>
-                      <button
-                        (click)="deletePreset(i)"
-                        class="p-1 text-slate-400 hover:text-red-500 transition-colors"
-                        aria-label="Xóa bộ lọc">
-                        <mat-icon class="w-4 h-4">close</mat-icon>
-                      </button>
-                    </div>
-                  }
-                </div>
-              </div>
-            }
-          </div>
-
-          <!-- Create User Button -->
-          <button
-            (click)="createUser()"
-            class="flex items-center gap-2 px-4 py-2 bg-blue-700 text-white rounded-lg hover:bg-blue-800 border border-blue-800 transition-colors font-medium text-sm shadow-lg hover:shadow-xl z-10 relative">
-            <mat-icon class="w-5 h-5">person_add</mat-icon>
-            <span>Thêm người dùng</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- Advanced Filter Bar -->
-      <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+  <!-- Filter Bar -->
+  <div class="max-w-screen-2xl mx-auto px-4 md:px-6 lg:px-8 py-4">
+    <app-card [padding]="'sm'" [compact]="true">
+      <div class="filter-row flex flex-wrap gap-4 items-end">
         <!-- Search -->
-        <div class="relative">
-          <mat-icon class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400">search</mat-icon>
-          <input
-            type="search"
-            [(ngModel)]="searchTerm"
-            (input)="onSearchChange()"
+        <div class="relative flex-1 min-w-[250px] max-w-[400px]">
+          <app-input
+            id="user-search"
+            name="search"
             placeholder="Tìm kiếm theo tên, email, SĐT..."
-            class="w-full h-10 pl-10 pr-4 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/30"
-            aria-label="Tìm kiếm người dùng">
+            [value]="searchTerm()"
+            [icon]="'search'"
+            (valueChange)="searchTerm.set($event); onSearchChange()"
+            [ariaLabel]="'Tìm kiếm người dùng'"
+          />
         </div>
 
         <!-- Role Filter -->
-        <div class="relative">
-          <mat-icon class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400">badge</mat-icon>
-          <select
-            [(ngModel)]="roleFilter"
-            (change)="onRoleChange()"
-            class="w-full h-10 pl-10 pr-10 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/30 appearance-none"
-            aria-label="Lọc theo vai trò">
-            <option value="">Vai trò</option>
-            @for (role of roles(); track role.id) {
-              <option [value]="role.name">{{ role.name }}</option>
-            }
-          </select>
-          <mat-icon class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none">expand_more</mat-icon>
-        </div>
+        @if (!isLoadingRoles()) {
+          <app-select
+            id="role-filter"
+            name="role"
+            [options]="roleOptions()"
+            [placeholder]="'Lọc theo vai trò'"
+            [value]="roleFilter()"
+            (valueChange)="roleFilter.set($event); onRoleChange()"
+            [icon]="'badge'"
+            [ariaLabel]="'Lọc theo vai trò'"
+          />
+        }
 
         <!-- Status Filter -->
-        <div class="relative">
-          <mat-icon class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400">toggle_on</mat-icon>
-          <select
-            [(ngModel)]="statusFilter"
-            (change)="applyFilter()"
-            class="w-full h-10 pl-10 pr-10 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/30 appearance-none"
-            aria-label="Lọc theo trạng thái">
-            <option value="all">Tất cả trạng thái</option>
-            <option value="active">Đang hoạt động</option>
-            <option value="inactive">Ngừng hoạt động</option>
-          </select>
-          <mat-icon class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none">expand_more</mat-icon>
+        <div class="status-filter-group flex items-center gap-2">
+          <span class="filter-label text-sm text-slate-600 dark:text-slate-400 font-medium">Trạng thái:</span>
+          <div class="flex gap-1 bg-slate-100 dark:bg-slate-800 rounded-lg p-1">
+            <button
+              type="button"
+              (click)="setStatusFilter('all')"
+              [class]="statusFilter() === 'all' ? 'bg-white dark:bg-slate-700 shadow-sm text-primary-600 dark:text-primary-400' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'"
+              class="px-3 py-1.5 text-sm rounded-md font-medium transition-colors"
+              [attr.aria-pressed]="statusFilter() === 'all'">
+              Tất cả
+            </button>
+            <button
+              type="button"
+              (click)="setStatusFilter('active')"
+              [class]="statusFilter() === 'active' ? 'bg-white dark:bg-slate-700 shadow-sm text-success-600 dark:text-success-400' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'"
+              class="px-3 py-1.5 text-sm rounded-md font-medium transition-colors flex items-center gap-1.5"
+              [attr.aria-pressed]="statusFilter() === 'active'">
+              <mat-icon class="w-4 h-4">check_circle</mat-icon>
+              Hoạt động
+            </button>
+            <button
+              type="button"
+              (click)="setStatusFilter('inactive')"
+              [class]="statusFilter() === 'inactive' ? 'bg-white dark:bg-slate-700 shadow-sm text-danger-600 dark:text-danger-400' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'"
+              class="px-3 py-1.5 text-sm rounded-md font-medium transition-colors flex items-center gap-1.5"
+              [attr.aria-pressed]="statusFilter() === 'inactive'">
+              <mat-icon class="w-4 h-4">cancel</mat-icon>
+              Ngừng hoạt động
+            </button>
+          </div>
         </div>
 
         <!-- Clear Filters -->
-        <button
-          (click)="clearFilters()"
-          class="flex items-center justify-center gap-2 px-4 py-2 text-sm text-slate-600 dark:text-slate-400 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
-          [disabled]="!searchTerm() && !roleFilter() && statusFilter() === 'all'"
-          aria-label="Xóa tất cả bộ lọc">
-          <mat-icon class="w-5 h-5">filter_alt_off</mat-icon>
-          <span>Xóa lọc</span>
-        </button>
+        @if (hasActiveFilters()) {
+          <app-button
+            variant="outline"
+            icon="filter_alt_off"
+            label="Xóa bộ lọc"
+            (click)="clearFilters()"
+            class="ml-auto"
+          />
+        }
+
+        <!-- Column Picker -->
+        <app-column-picker [columns]="columns()" (toggleColumn)="toggleColumn($event)" />
+
+        <!-- Filter Presets -->
+        <app-filter-presets
+          [presets]="filterPresets()"
+          (apply)="applyPreset($event)"
+          (save)="saveCurrentPreset()"
+          (deleteIndex)="deletePreset($event)"
+        />
       </div>
-    </div>
+    </app-card>
   </div>
 
   <!-- Bulk Actions Toolbar -->
-  @if (selectedCount() > 0) {
-    <div class="bg-primary/10 dark:bg-primary/20 border-b border-primary/30 px-4 md:px-6 lg:px-8 py-3 sticky top-[72px] z-[85] animate-in slide-down">
-      <div class="max-w-screen-2xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div class="flex items-center gap-3 text-sm font-medium text-primary">
-          <mat-icon class="w-5 h-5">check_circle</mat-icon>
-          <span>{{ selectedCount() }} người dùng đã chọn</span>
-        </div>
-        <div class="flex items-center gap-2 flex-wrap">
-          <button
-            (click)="bulkActivate()"
-            class="flex items-center gap-2 px-3 py-1.5 text-sm bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
-            aria-label="Kích hoạt đã chọn">
-            <mat-icon class="w-4 h-4">check_circle</mat-icon>
-            <span>Kích hoạt</span>
-          </button>
-          <button
-            (click)="bulkDeactivate()"
-            class="flex items-center gap-2 px-3 py-1.5 text-sm bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors"
-            aria-label="Khóa đã chọn">
-            <mat-icon class="w-4 h-4">block</mat-icon>
-            <span>Khóa</span>
-          </button>
-          <button
-            (click)="bulkDelete()"
-            class="flex items-center gap-2 px-3 py-1.5 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-            [disabled]="deletingUserId() !== null"
-            [class.opacity-50]="deletingUserId() !== null"
-            [class.cursor-not-allowed]="deletingUserId() !== null"
-            aria-label="Xóa đã chọn">
-            <mat-icon class="w-4 h-4">delete</mat-icon>
-            <span>Xóa</span>
-            @if (deletingUserId() !== null) {
-              <mat-icon class="w-4 h-4 animate-spin">refresh</mat-icon>
+  <app-bulk-toolbar
+    [count]="selectedCount()"
+    itemLabel="người dùng"
+    [buttons]="bulkUserButtons()"
+    (clear)="selectedUserIds.set([])"
+  />
+
+  <!-- Users Table -->
+  <div class="max-w-screen-2xl mx-auto px-4 md:px-6 lg:px-8 pb-8">
+    <app-card [padding]="'none'">
+      <app-table
+        [data]="filteredUsers()"
+        [columns]="columns()"
+        [loading]="isLoading()"
+        [loadingText]="'Đang tải người dùng...'"
+        [actions]="actions"
+        [trackByFn]="trackByUserId"
+        [selectable]="true"
+        [selectedRows]="selectedUsers()"
+        (selectionChange)="onSelectionChange($event)"
+        [emptyIcon]="'people_outline'"
+        [emptyTitle]="'Không tìm thấy người dùng'"
+        [emptyDescription]="'Thử thay đổi bộ lọc hoặc thêm người dùng mới'"
+        [emptyActionLabel]="'Tạo người dùng đầu tiên'"
+        [emptyActionIcon]="'person_add'"
+        (emptyActionClick)="createUser()"
+      >
+        <!-- Avatar Column Template -->
+        <ng-template #avatarColumn let-user>
+          <app-avatar
+            [src]="user.avatar"
+            [alt]="user.fullName || 'Người dùng'"
+            [initials]="getInitials(user.fullName)"
+            size="sm"
+            shape="circle"
+            [shadow]="'sm'"
+            class="mx-auto"
+          />
+        </ng-template>
+
+        <!-- Full Name Column Template -->
+        <ng-template #nameColumn let-user>
+          <div class="font-medium text-slate-900 dark:text-white">{{ user.fullName || '—' }}</div>
+        </ng-template>
+
+        <!-- Email Column Template -->
+        <ng-template #emailColumn let-user>
+          <div class="text-slate-600 dark:text-slate-300 truncate max-w-[200px]">{{ user.email }}</div>
+        </ng-template>
+
+        <!-- Phone Column Template -->
+        <ng-template #phoneColumn let-user>
+          <div class="text-slate-600 dark:text-slate-300">{{ user.phone || '—' }}</div>
+        </ng-template>
+
+        <!-- Roles Column Template -->
+        <ng-template #rolesColumn let-user>
+          <div class="flex flex-wrap gap-1">
+            @for (roleName of (user.roleNames || []); track roleName) {
+              <app-badge
+                [label]="roleName"
+                [variant]="getRoleVariant(roleName)"
+                [size]="'sm'"
+              />
+            } @if (!user.roleNames || user.roleNames.length === 0) {
+              <app-badge
+                label="Chưa có vai trò"
+                variant="neutral"
+                size="sm"
+              />
             }
-          </button>
-          <button
-            (click)="selectedUserIds.set([]); selectAll.set(false)"
-            class="flex items-center gap-2 px-3 py-1.5 text-sm text-slate-600 dark:text-slate-400 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
-            aria-label="Bỏ chọn tất cả">
-            <mat-icon class="w-4 h-4">close</mat-icon>
-            <span>Bỏ chọn</span>
-          </button>
-        </div>
-      </div>
-    </div>
-  }
-
-  <!-- Table Container -->
-  <div class="max-w-screen-2xl mx-auto px-4 md:px-6 lg:px-8 py-6">
-    <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
-      @if (isLoading()) {
-        <!-- Loading Skeleton -->
-        <div class="overflow-x-auto">
-          <table class="w-full" role="grid">
-            <thead class="bg-slate-50 dark:bg-slate-800/50">
-              <tr class="border-b border-slate-200 dark:border-slate-700">
-                <th class="w-12 px-4 py-3"></th>
-                @for (col of visibleColumns(); track col) {
-                  <th class="px-4 py-3 text-left">
-                    <div class="h-4 w-3/4 bg-slate-200 dark:bg-slate-700 rounded animate-pulse"></div>
-                  </th>
-                }
-              </tr>
-            </thead>
-            <tbody>
-              @for (i of [1,2,3,4,5]; track i) {
-                <tr class="border-b border-slate-100 dark:border-slate-800">
-                  <td class="w-12 px-4 py-3"></td>
-                  @for (col of visibleColumns(); track col) {
-                    <td class="px-4 py-3">
-                      <div class="h-4 w-full bg-slate-200 dark:bg-slate-700 rounded animate-pulse"></div>
-                    </td>
-                  }
-                </tr>
-              }
-            </tbody>
-          </table>
-        </div>
-      } @else if (filteredUsers().length === 0) {
-        <!-- Empty State -->
-        <div class="p-12 text-center">
-          <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-            <mat-icon class="w-10 h-10 text-slate-400">people_outline</mat-icon>
           </div>
-          <h3 class="text-lg font-medium text-slate-900 dark:text-white mb-2">Không tìm thấy người dùng</h3>
-          <p class="text-slate-500 dark:text-slate-400 mb-6">
-            @if (searchTerm() || roleFilter() || statusFilter() !== 'all') {
-              Thử thay đổi bộ lọc hoặc
-              <button (click)="clearFilters()" class="text-primary hover:underline font-medium">xóa bộ lọc</button>
-            } @else {
-              Hiện chưa có người dùng nào trong hệ thống
-            }
-          </p>
-          @if (!searchTerm() && !roleFilter() && statusFilter() === 'all') {
-            <button
-              (click)="createUser()"
-              class="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-hover transition-colors">
-              <mat-icon class="w-5 h-5">person_add</mat-icon>
-              Thêm người dùng đầu tiên
-            </button>
-          }
-        </div>
-      } @else {
-        <!-- Data Table -->
-        <div class="overflow-x-auto">
-          <table class="w-full" role="grid" [class.table-compact]="density() === 'compact'" [class.table-spacious]="density() === 'spacious'">
-            <!-- Header -->
-            <thead class="bg-slate-50 dark:bg-slate-800/50 sticky top-0 z-10">
-              <tr class="border-b border-slate-200 dark:border-slate-700">
-                <!-- Selection Column -->
-                <th class="w-12 px-4 py-3">
-                  <input
-                    type="checkbox"
-                    [checked]="selectAll()"
-                    [indeterminate]="selectedCount() > 0 && !selectAll()"
-                    (change)="toggleSelectAll()"
-                    class="w-4 h-4 text-primary border-slate-300 rounded focus:ring-primary/30 cursor-pointer"
-                    aria-label="Chọn tất cả">
-                </th>
+        </ng-template>
 
-                @for (column of columns(); track column.key) {
-                  @if (column.visible) {
-                    <th
-                      class="px-4 py-3 text-left font-medium text-sm text-slate-600 dark:text-slate-300 whitespace-nowrap cursor-pointer select-none"
-                      [style.width]="column.width"
-                      (click)="column.key !== 'actions' && column.key !== 'avatar' && onSort(column.key)"
-                      [attr.aria-sort]="sortColumn() === column.key ? (sortDirection() === 'asc' ? 'ascending' : 'descending') : 'none'">
-                      <div class="flex items-center gap-2">
-                        <span>{{ column.label }}</span>
-                        @if (column.key !== 'actions' && column.key !== 'avatar') {
-                          @if (sortColumn() === column.key) {
-                            <mat-icon class="w-4 h-4 text-primary">{{ sortDirection() === 'asc' ? 'arrow_upward' : 'arrow_downward' }}</mat-icon>
-                          } @else {
-                            <mat-icon class="w-4 h-4 text-slate-300 dark:text-slate-600">unfold_more</mat-icon>
-                          }
-                        }
-                      </div>
-                    </th>
-                  }
-                }
-              </tr>
-            </thead>
+        <!-- Status Column Template -->
+        <ng-template #statusColumn let-user>
+          <app-badge
+            [label]="getStatusText(user)"
+            [variant]="(user.active ?? true) ? 'success' : 'danger'"
+            [icon]="(user.active ?? true) ? 'check_circle' : 'cancel'"
+            [size]="'default'"
+          />
+        </ng-template>
 
-            <!-- Body -->
-            <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-              @for (user of sortedUsers(); track user.id) {
-                <tr
-                  class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
-                  [ngClass]="{ 'bg-primary-50/30 dark:bg-primary-900/20': isSelected(user.id) }">
-                  <!-- Checkbox -->
-                  <td class="w-12 px-4 py-3">
-                    <input
-                      type="checkbox"
-                      [checked]="isSelected(user.id)"
-                      (change)="toggleSelectUser(user.id)"
-                      class="w-4 h-4 text-primary border-slate-300 rounded focus:ring-primary/30 cursor-pointer"
-                      [attr.aria-label]="'Chọn ' + user.email">
-                  </td>
+        <!-- Last Login Column Template -->
+        <ng-template #lastLoginColumn let-user>
+          <div class="text-slate-600 dark:text-slate-400">{{ formatDate(user.lastLoginAt) }}</div>
+        </ng-template>
 
-                  @for (columnKey of visibleColumns(); track columnKey) {
-                    <td class="px-4 py-3">
-                      <!-- Avatar Column -->
-                      @if (columnKey === 'avatar') {
-                        <div class="w-10 h-10 rounded-full overflow-hidden bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shadow-sm">
-                          @if (user.avatar) {
-                            <img [src]="user.avatar" [alt]="user.fullName" class="w-full h-full object-cover">
-                          } @else {
-                            <span class="text-white font-semibold text-sm">{{ getInitials(user.fullName) }}</span>
-                          }
-                        </div>
-                      }
-                      <!-- Full Name Column -->
-                      @else if (columnKey === 'fullName') {
-                        <div class="font-medium text-slate-900 dark:text-white">{{ user.fullName || 'Chưa cập nhật' }}</div>
-                      }
-                      <!-- Email Column -->
-                      @else if (columnKey === 'email') {
-                        <div class="text-slate-600 dark:text-slate-300 truncate max-w-[200px]">{{ user.email }}</div>
-                      }
-                      <!-- Phone Column -->
-                      @else if (columnKey === 'phone') {
-                        <div class="text-slate-600 dark:text-slate-300">{{ user.phone || 'Chưa cập nhật' }}</div>
-                      }
-                      <!-- Roles Column -->
-                      @else if (columnKey === 'roles') {
-                        <div class="flex flex-wrap gap-1">
-                          @for (roleName of (user.roleNames || []); track roleName) {
-                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary">
-                              {{ roleName }}
-                            </span>
-                          } @if (!user.roleNames || user.roleNames.length === 0) {
-                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400">
-                              Chưa có vai trò
-                            </span>
-                          }
-                        </div>
-                      }
-                      <!-- Status Column -->
-                      @else if (columnKey === 'status') {
-                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium" [class]="getStatusBadgeClass(user)">
-                          <span class="w-1.5 h-1.5 rounded-full" [class]="getStatusBadgeClass(user) === 'badge-success' ? 'bg-emerald-500' : 'bg-red-500'"></span>
-                          {{ getStatusText(user) }}
-                        </span>
-                      }
-                      <!-- Last Login Column -->
-                      @else if (columnKey === 'lastLogin') {
-                        <div class="text-slate-600 dark:text-slate-400">{{ formatDate(user.lastLoginAt) }}</div>
-                      }
-                      <!-- Created At Column -->
-                      @else if (columnKey === 'createdAt') {
-                        <div class="text-slate-600 dark:text-slate-400">{{ formatDate(user.createdAt) }}</div>
-                      }
-                      <!-- Actions Column -->
-                      @else if (columnKey === 'actions') {
-                        <div class="flex items-center gap-1">
-                          <div class="relative">
-                            <button
-                              (click)="$event.stopPropagation(); toggleActionMenu(user)"
-                              class="p-2 rounded-lg text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                              aria-label="Thao tác cho {{ user.email }}"
-                              aria-expanded="false"
-                              aria-haspopup="true">
-                              <mat-icon class="w-5 h-5">more_vert</mat-icon>
-                            </button>
-                            @if (actionMenuOpen() === user.id) {
-                              <div class="absolute right-0 top-full mt-1 w-40 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 py-1 z-[200] animate-in fade-in-0 zoom-in-95 duration-150">
-                                <button
-                                  type="button"
-                                  (click)="viewUser(user); closeActionMenu()"
-                                  class="w-full flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 text-left">
-                                  <mat-icon class="w-4 h-4">visibility</mat-icon>
-                                  Xem chi tiết
-                                </button>
-                                <button
-                                  type="button"
-                                  (click)="editUser(user); closeActionMenu()"
-                                  class="w-full flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 text-left">
-                                  <mat-icon class="w-4 h-4">edit</mat-icon>
-                                  Chỉnh sửa
-                                </button>
-                                <button
-                                  (click)="toggleUserStatus(user); closeActionMenu()"
-                                  class="w-full flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 text-left">
-                                  <mat-icon class="w-4 h-4">{{ (user.active ?? true) ? 'block' : 'check_circle' }}</mat-icon>
-                                  {{ (user.active ?? true) ? 'Khóa tài khoản' : 'Kích hoạt' }}
-                                </button>
-                                <hr class="my-1 border-slate-200 dark:border-slate-700" />
-                                <button
-                                  type="button"
-                                  (click)="deleteUser(user); closeActionMenu()"
-                                  class="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 text-left"
-                                  [disabled]="deletingUserId() === user.id"
-                                  [ngClass]="{ 'opacity-50 cursor-not-allowed': deletingUserId() === user.id }">
-                                  <mat-icon class="w-4 h-4">delete</mat-icon>
-                                  Xóa
-                                  @if (deletingUserId() === user.id) {
-                                    <mat-icon class="w-4 h-4 animate-spin">refresh</mat-icon>
-                                  }
-                                </button>
-                              </div>
-                            }
-                          </div>
-                        </div>
-                      }
-                    </td>
-                  }
-                </tr>
-              }
-            </tbody>
-          </table>
-        </div>
+        <!-- Created At Column Template -->
+        <ng-template #createdAtColumn let-user>
+          <div class="text-slate-600 dark:text-slate-400">{{ formatDate(user.createdAt) }}</div>
+        </ng-template>
 
-        <!-- Pagination Info -->
-        @if (!isLoading() && filteredUsers().length > 0) {
-          <div class="px-4 py-4 border-t border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div class="text-sm text-slate-600 dark:text-slate-400">
-              Hiển thị <span class="font-medium">{{ filteredUsers().length }}</span> người dùng
-            </div>
-          </div>
-        }
-      }
-    </div>
+      </app-table>
+    </app-card>
   </div>
-
-  <!-- Click outside handler for dropdowns -->
-  <div class="fixed inset-0 -z-10" (click)="closeAllDropdowns()" [hidden]="!showColumnPicker() && !showFilterPresets() && actionMenuOpen() === null"></div>
 </div>
