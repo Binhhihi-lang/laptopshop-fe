@@ -1,25 +1,17 @@
 import { Injectable } from '@angular/core';
-import {
-  HttpEvent,
-  HttpHandler,
-  HttpInterceptor,
-  HttpRequest,
-} from '@angular/common/http';
-import { Observable, throwError } from 'rxjs';
+import { HttpEvent, HttpHandler, HttpInterceptor, HttpRequest } from '@angular/common/http';
+import { BehaviorSubject, Observable, throwError } from 'rxjs';
 import { switchMap, catchError, filter, take } from 'rxjs/operators';
 import { AuthService } from '@core/services/auth.service';
 
 @Injectable()
 export class JwtInterceptor implements HttpInterceptor {
-  private isRefreshing = false;
-  private refreshTokenSubject: any = null;
+  // Sử dụng BehaviorSubject thay vì any = null để tránh lỗi runtime : lưu giá trị token mới nhất
+  private refreshTokenSubject = new BehaviorSubject<string | null>(null);
 
   constructor(private authService: AuthService) {}
 
-  intercept(
-    req: HttpRequest<any>,
-    next: HttpHandler
-  ): Observable<HttpEvent<any>> {
+  intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     const token = this.authService.getToken();
     if (token) {
       req = this.addToken(req, token);
@@ -35,11 +27,12 @@ export class JwtInterceptor implements HttpInterceptor {
           return this.handle401Error(req, next);
         }
         return throwError(() => error);
-      })
+      }),
     );
   }
 
   private addToken(request: HttpRequest<any>, token: string): HttpRequest<any> {
+    // đính kèm Token cho mỗi request
     return request.clone({
       setHeaders: {
         Authorization: `Bearer ${token}`,
@@ -47,41 +40,43 @@ export class JwtInterceptor implements HttpInterceptor {
     });
   }
 
-  private handle401Error(
-    request: HttpRequest<any>,
-    next: HttpHandler
-  ): Observable<HttpEvent<any>> {
+  /**
+   * Single-flight coordinator pattern:
+   * - NOT refreshing (leader): thực hiện refresh, emit token mới qua subject
+   * - IS refreshing (follower): subscribe chờ token mới từ authService.refreshToken$ , các request khác theo sau lấy token mới
+   * - Refresh fail: AuthService đã logout, chỉ throw error
+   */
+  private handle401Error(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
+    // TH1: LEADER (Request đầu tiên bị 401)
     if (!this.authService.getIsRefreshing()) {
       this.authService.setIsRefreshing(true);
-      this.refreshTokenSubject = null;
+      this.refreshTokenSubject.next(null); // Reset tín hiệu hàng chờ
 
       return this.authService.refreshToken().pipe(
-        switchMap((token: any) => {
-          this.refreshTokenSubject = token.token;
+        switchMap((response) => {
           this.authService.setIsRefreshing(false);
-          return next.handle(this.addToken(request, token.token));
+          // Bắn token mới cho các FOLLOWER đang chờ
+          this.refreshTokenSubject.next(response.token);
+
+          // Thử lại request ban đầu của LEADER
+          return next.handle(this.addToken(request, response.token));
         }),
-        catchError((error) => {
+        catchError((err) => {
+          // AuthService ĐÃ logout ở bên trong rồi, Interceptor KHÔNG gọi logout nữa.
+          // Chỉ cần trả cờ isRefreshing về false và đẩy lỗi tiếp.
           this.authService.setIsRefreshing(false);
-          return throwError(() => error);
-        })
+          return throwError(() => err);
+        }),
       );
-    } else {
-      return this.refreshTokenSubject
-        ? this.refreshTokenSubject.pipe(
-            filter((token: string) => token !== null),
-            take(1),
-            switchMap((token: string) => {
-              return next.handle(this.addToken(request, token));
-            })
-          )
-        : this.authService.refreshToken().pipe(
-            filter(() => false),
-            take(1),
-            switchMap(() => {
-              return next.handle(this.addToken(request, this.authService.getToken()!));
-            })
-          );
     }
+
+    // TH2: FOLLOWER (Các request đến sau, đứng vào hàng chờ)
+    return this.refreshTokenSubject.pipe(
+      filter((token) => token !== null),
+      take(1),
+      switchMap((token) => {
+        return next.handle(this.addToken(request, token!));
+      }),
+    );
   }
 }

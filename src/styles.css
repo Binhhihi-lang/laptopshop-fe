@@ -145,6 +145,7 @@ body {
 .text-body-lg { @apply text-lg leading-relaxed text-slate-700 dark:text-slate-300; }
 .text-body { @apply text-base leading-relaxed text-slate-700 dark:text-slate-300; }
 .text-body-sm { @apply text-sm leading-relaxed text-slate-600 dark:text-slate-400; }
+.text-title { @apply text-base font-semibold text-slate-900 dark:text-white; }
 .text-caption { @apply text-xs leading-normal text-slate-500 dark:text-slate-500; }
 .text-overline { @apply text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-500; }
 
