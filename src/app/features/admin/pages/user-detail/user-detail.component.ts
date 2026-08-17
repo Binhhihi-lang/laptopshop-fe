@@ -14,6 +14,9 @@ import { ButtonComponent } from '@shared/components/button/button.component';
 import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
 import { AvatarComponent } from '@shared/components/avatar/avatar.component';
 import { InfoItemComponent } from '@shared/components/info-item/info-item.component';
+import { SkeletonComponent } from '@shared/components/skeleton/skeleton.component';
+import { SkeletonCardComponent } from '@shared/components/skeleton/skeleton-card.component';
+import { DetailHeaderComponent } from '@shared/components/detail-header/detail-header.component';
 
 @Component({
   selector: 'app-user-detail',
@@ -28,6 +31,9 @@ import { InfoItemComponent } from '@shared/components/info-item/info-item.compon
     EmptyStateComponent,
     AvatarComponent,
     InfoItemComponent,
+    DetailHeaderComponent,
+    SkeletonComponent,
+    SkeletonCardComponent,
   ],
   templateUrl: './user-detail.component.html',
   styleUrl: './user-detail.component.css',

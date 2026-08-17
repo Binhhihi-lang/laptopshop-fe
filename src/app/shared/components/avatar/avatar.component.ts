@@ -9,7 +9,7 @@ const SIZE_CLASSES: Record<AvatarSize, string> = {
   sm: 'w-8 h-8',
   md: 'w-10 h-10',
   lg: 'w-12 h-12',
-  xl: 'w-16 h-16',
+  xl: 'w-20 h-20',
 };
 
 const INITIAL_SIZE_CLASSES: Record<AvatarSize, string> = {
@@ -100,6 +100,7 @@ export class AvatarComponent {
   shape = input<AvatarShape>('rounded');
   shadow = input<AvatarShadow>('none');
 
+  // trạng thái tải
   readonly isLoading = signal(true);
   readonly hasError = signal(false);
 
@@ -110,8 +111,9 @@ export class AvatarComponent {
     this.hasError.set(false);
   });
 
+  // computed() là một Signal đặc biệt, nó tự động nội suy (tính toán) ra một giá trị mới dựa trên các Signals khác.
   containerClass = computed(() => {
-    const shapeClass = this.shape() === 'circle' ? 'rounded-full' : 'rounded-2xl';
+    const shapeClass = this.shape() === 'rounded' ? 'rounded-full' : 'rounded-2xl';
     return [
       'relative overflow-hidden shrink-0 flex items-center justify-center select-none',
       'bg-gradient-to-br from-blue-500 to-blue-700',

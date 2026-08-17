@@ -20,6 +20,8 @@ import { SelectComponent, SelectOption } from '@shared/components/select/select.
 import { ButtonComponent } from '@shared/components/button/button.component';
 import { CardComponent } from '@shared/components/card/card.component';
 import { LoadingComponent } from '@shared/components/loading/loading.component';
+import { PageHeaderComponent } from '@shared/components/page-header/page-header.component';
+import { ImageUploadComponent } from '@shared/components/image-upload/image-upload.component';
 
 @Component({
   selector: 'app-product-form',
@@ -34,6 +36,8 @@ import { LoadingComponent } from '@shared/components/loading/loading.component';
     ButtonComponent,
     CardComponent,
     LoadingComponent,
+    PageHeaderComponent,
+    ImageUploadComponent,
   ],
   templateUrl: './product-form.component.html',
   styleUrl: './product-form.component.css',
@@ -51,15 +55,21 @@ export class ProductFormComponent implements OnInit {
   isSaving = signal(false);
   isEditMode = signal(false);
   productId: string | null = null;
-  imagePreview = signal<string | null>(null);
   existingImage: string | null = null;
   imageFile: File | null = null;
+  imageRemoved = false; // true = người dùng muốn xóa ảnh hiện tại
 
   categories = signal<CategoryResponse[]>([]);
 
   // Category options for select
   categoryOptions = computed<SelectOption[]>(() =>
     this.categories().map((c) => ({ value: c.id, label: c.name })),
+  );
+
+  // Tiêu đề / phụ đề header (dùng chung app-page-header)
+  pageTitle = computed(() => (this.isEditMode() ? 'Chỉnh sửa sản phẩm' : 'Thêm sản phẩm mới'));
+  pageSubtitle = computed(() =>
+    this.isEditMode() ? 'Cập nhật thông tin sản phẩm' : 'Điền thông tin để tạo sản phẩm mới',
   );
 
   constructor() {
@@ -75,7 +85,6 @@ export class ProductFormComponent implements OnInit {
 
       // Inventory
       quantity: [0, [Validators.min(0)]],
-      sold: [0, [Validators.min(0)]],
       warrantyMonths: [12, [Validators.min(0)]],
       factory: [''],
       target: [''],
@@ -160,7 +169,6 @@ export class ProductFormComponent implements OnInit {
       shortDesc: product.shortDesc ?? '',
       detailDesc: product.detailDesc ?? '',
       quantity: product.quantity ?? 0,
-      sold: product.sold ?? 0,
       warrantyMonths: product.warrantyMonths ?? 12,
       factory: product.factory ?? '',
       target: product.target ?? '',
@@ -174,34 +182,10 @@ export class ProductFormComponent implements OnInit {
       active: product.active ?? true,
     });
     this.existingImage = product.image ?? null;
-    this.imagePreview.set(product.image ?? null);
   }
 
-  onFileSelected(event: Event) {
-    const input = event.target as HTMLInputElement;
-    if (input.files && input.files.length > 0) {
-      const file = input.files[0];
-      // Validate file type
-      if (!file.type.startsWith('image/')) {
-        this.snackBar.open('Chỉ chấp nhận file hình ảnh', 'Đóng', { duration: 3000 });
-        return;
-      }
-      // Validate file size (max 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        this.snackBar.open('Kích thước file không được vượt quá 5MB', 'Đóng', { duration: 3000 });
-        return;
-      }
-
-      this.imageFile = file;
-      const reader = new FileReader();
-      reader.onload = () => this.imagePreview.set(reader.result as string);
-      reader.readAsDataURL(this.imageFile);
-    }
-  }
-
-  removeImage() {
-    this.imageFile = null;
-    this.imagePreview.set(this.existingImage); // Show existing image if any
+  onImageFileChange(file: File | null): void {
+    this.imageFile = file;
   }
 
   onSubmit() {
@@ -223,7 +207,6 @@ export class ProductFormComponent implements OnInit {
       shortDesc: formValue.shortDesc || '',
       detailDesc: formValue.detailDesc || '',
       quantity: formValue.quantity,
-      sold: formValue.sold,
       warrantyMonths: formValue.warrantyMonths,
       factory: formValue.factory || '',
       target: formValue.target || '',
@@ -235,6 +218,7 @@ export class ProductFormComponent implements OnInit {
       os: formValue.os || '',
       weight: formValue.weight,
       active: formValue.active,
+      removeImage: this.imageRemoved, // gửi cờ xóa ảnh hiện tại
     };
 
     if (this.isEditMode() && this.productId) {

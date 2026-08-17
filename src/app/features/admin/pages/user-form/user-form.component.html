@@ -27,15 +27,15 @@
   </div>
 
   <!-- Form Container -->
-  <main class="max-w-3xl mx-auto px-4 py-8">
-    <form [formGroup]="userForm" (ngSubmit)="onSubmit()" class="space-y-6" novalidate>
+  <form [formGroup]="userForm" (ngSubmit)="onSubmit()" class="max-w-2xl mx-auto px-4 py-8 space-y-6" novalidate>
       <!-- Avatar Section -->
-      <app-card>
-        <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
-          <h2 class="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-            <mat-icon class="w-5 h-5 text-primary">photo_camera</mat-icon>
-            Ảnh đại diện
-          </h2>
+      <section class="form-section" aria-labelledby="user-avatar-heading">
+        <app-card>
+          <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
+            <h2 id="user-avatar-heading" class="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+              <mat-icon class="w-5 h-5 text-primary">photo_camera</mat-icon>
+              Ảnh đại diện
+            </h2>
         </div>
         <div class="p-6">
           <div class="flex items-center gap-6">
@@ -77,14 +77,16 @@
           </div>
         </div>
       </app-card>
+      </section>
 
       <!-- Account Information -->
-      <app-card>
-        <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
-          <h2 class="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-            <mat-icon class="w-5 h-5 text-primary">badge</mat-icon>
-            Thông tin tài khoản
-          </h2>
+      <section class="form-section" aria-labelledby="user-account-heading">
+        <app-card>
+          <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
+            <h2 id="user-account-heading" class="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+              <mat-icon class="w-5 h-5 text-primary">badge</mat-icon>
+              Thông tin tài khoản
+            </h2>
         </div>
         <div class="p-6 space-y-6">
           <!-- Email -->
@@ -123,35 +125,18 @@
             </app-form-field>
           }
 
-          <!-- Status Toggle -->
-          <app-form-field id="active" label="Trạng thái tài khoản">
-            <div class="flex items-center gap-4">
-              <label class="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  formControlName="active"
-                  id="active"
-                  class="sr-only peer"
-                  [disabled]="isSubmitting()"
-                />
-                <div class="w-12 h-7 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary-600 peer-disabled:opacity-50 peer-disabled:cursor-not-allowed"></div>
-              </label>
-              <div>
-                <p class="font-medium text-slate-900 dark:text-white">{{ userForm.get('active')?.value ? 'Đang hoạt động' : 'Ngừng hoạt động' }}</p>
-                <p class="text-sm text-slate-500 dark:text-slate-400">Người dùng {{ userForm.get('active')?.value ? 'có thể' : 'không thể' }} đăng nhập vào hệ thống</p>
-              </div>
-            </div>
-          </app-form-field>
         </div>
       </app-card>
+      </section>
 
       <!-- Personal Information -->
-      <app-card>
-        <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
-          <h2 class="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-            <mat-icon class="w-5 h-5 text-primary">person</mat-icon>
-            Thông tin cá nhân
-          </h2>
+      <section class="form-section" aria-labelledby="user-personal-heading">
+        <app-card>
+          <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
+            <h2 id="user-personal-heading" class="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+              <mat-icon class="w-5 h-5 text-primary">person</mat-icon>
+              Thông tin cá nhân
+            </h2>
         </div>
         <div class="p-6 space-y-6">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -198,14 +183,16 @@
           </app-form-field>
         </div>
       </app-card>
+      </section>
 
       <!-- Roles & Permissions -->
-      <app-card>
-        <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
-          <h2 class="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-            <mat-icon class="w-5 h-5 text-primary">security</mat-icon>
-            Vai trò & Phân quyền
-          </h2>
+      <section class="form-section" aria-labelledby="user-roles-heading">
+        <app-card>
+          <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
+            <h2 id="user-roles-heading" class="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+              <mat-icon class="w-5 h-5 text-primary">security</mat-icon>
+              Vai trò & Phân quyền
+            </h2>
         </div>
         <div class="p-6 space-y-6">
           <app-form-field id="roleNames" label="Vai trò" [required]="true" [error]="hasError('roleNames', 'required') ? 'Vui lòng chọn ít nhất một vai trò' : ''">
@@ -245,13 +232,44 @@
           </app-form-field>
         </div>
       </app-card>
+      </section>
+
+      <!-- Status Section -->
+      <section class="form-section status-section" aria-labelledby="user-status-heading">
+        <app-card [padding]="'default'" [variant]="'default'" [compact]="true">
+          <div class="flex items-center gap-2 mb-3">
+            <svg class="w-5 h-5 text-primary-600 dark:text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <h2 id="user-status-heading" class="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">Trạng thái</h2>
+          </div>
+
+          <div class="status-toggle flex items-center gap-3">
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                formControlName="active"
+                id="active"
+                class="sr-only peer"
+                [disabled]="isSubmitting()"
+              />
+              <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-primary-600 peer-disabled:opacity-50 peer-disabled:cursor-not-allowed"></div>
+            </label>
+            <div>
+              <p class="font-medium text-slate-900 dark:text-white">{{ userForm.get('active')?.value ? 'Đang hoạt động' : 'Ngừng hoạt động' }}</p>
+              <p class="text-sm text-slate-500 dark:text-slate-400">Người dùng {{ userForm.get('active')?.value ? 'có thể' : 'không thể' }} đăng nhập vào hệ thống</p>
+            </div>
+          </div>
+        </app-card>
+      </section>
 
       <!-- Form Actions -->
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-4 pt-4 border-t border-slate-200 dark:border-slate-700">
         <app-button
+          label="Hủy"
           variant="secondary"
           icon="close"
-          label="Hủy"
+
           (click)="onCancel()"
           [disabled]="isSubmitting()"
         />
@@ -265,5 +283,4 @@
         />
       </div>
     </form>
-  </main>
 </div>

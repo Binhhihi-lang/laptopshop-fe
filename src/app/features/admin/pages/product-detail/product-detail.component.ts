@@ -12,8 +12,10 @@ import { ConfirmDialogComponent } from '@shared/confirm-dialog/confirm-dialog.co
 import { CardComponent } from '@shared/components/card/card.component';
 import { BadgeComponent } from '@shared/components/badge/badge.component';
 import { ButtonComponent } from '@shared/components/button/button.component';
-import { LoadingComponent } from '@shared/components/loading/loading.component';
 import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
+import { SkeletonComponent } from '@shared/components/skeleton/skeleton.component';
+import { SkeletonCardComponent } from '@shared/components/skeleton/skeleton-card.component';
+import { DetailHeaderComponent } from '@shared/components/detail-header/detail-header.component';
 
 @Component({
   selector: 'app-product-detail',
@@ -25,8 +27,10 @@ import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.
     CardComponent,
     BadgeComponent,
     ButtonComponent,
-    LoadingComponent,
     EmptyStateComponent,
+    DetailHeaderComponent,
+    SkeletonComponent,
+    SkeletonCardComponent,
   ],
   templateUrl: './product-detail.component.html',
   styleUrl: './product-detail.component.css',

@@ -1,81 +1,70 @@
 <div class="detail-container min-h-screen bg-slate-50 dark:bg-slate-950">
   @if (isLoading()) {
     <!-- Skeleton loading -->
-    <div class="max-w-5xl mx-auto px-4 md:px-6 lg:px-8 py-8" aria-hidden="true">
+    <div class="max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-8" aria-hidden="true">
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Skeleton identity card -->
         <div>
-          <div class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6 animate-pulse">
+          <app-skeleton-card>
             <div class="flex flex-col items-center text-center space-y-4">
-              <div class="w-16 h-16 rounded-2xl bg-slate-200 dark:bg-slate-700"></div>
-              <div class="h-5 w-40 rounded bg-slate-200 dark:bg-slate-700"></div>
-              <div class="h-6 w-32 rounded-full bg-slate-200 dark:bg-slate-700"></div>
+              <app-skeleton width="w-16" height="h-16" radius="rounded-2xl" />
+              <app-skeleton width="w-40" height="h-5" />
+              <app-skeleton width="w-32" height="h-6" radius="rounded-full" />
               <div class="w-full space-y-3 pt-4">
-                <div class="h-4 w-full rounded bg-slate-200 dark:bg-slate-700"></div>
-                <div class="h-4 w-3/4 rounded bg-slate-200 dark:bg-slate-700"></div>
-                <div class="h-4 w-1/2 rounded bg-slate-200 dark:bg-slate-700"></div>
+                <app-skeleton width="w-full" height="h-4" />
+                <app-skeleton width="w-3/4" height="h-4" />
+                <app-skeleton width="w-1/2" height="h-4" />
               </div>
             </div>
-          </div>
+          </app-skeleton-card>
         </div>
         <!-- Skeleton info cards -->
         <div class="lg:col-span-2 space-y-6">
-          <div class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 animate-pulse">
-            <div class="h-5 w-40 rounded bg-slate-200 dark:bg-slate-700 mb-5"></div>
+          <app-skeleton-card padding="p-5">
+            <app-skeleton width="w-40" height="h-5" class="mb-5" />
             <div class="space-y-3">
-              <div class="h-4 w-full rounded bg-slate-200 dark:bg-slate-700"></div>
-              <div class="h-4 w-5/6 rounded bg-slate-200 dark:bg-slate-700"></div>
-              <div class="h-4 w-2/3 rounded bg-slate-200 dark:bg-slate-700"></div>
+              <app-skeleton width="w-full" height="h-4" />
+              <app-skeleton width="w-5/6" height="h-4" />
+              <app-skeleton width="w-2/3" height="h-4" />
             </div>
-          </div>
-          <div class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 animate-pulse">
-            <div class="h-5 w-40 rounded bg-slate-200 dark:bg-slate-700 mb-5"></div>
+          </app-skeleton-card>
+          <app-skeleton-card padding="p-5">
+            <app-skeleton width="w-40" height="h-5" class="mb-5" />
             <div class="flex gap-2">
-              <div class="h-6 w-24 rounded-full bg-slate-200 dark:bg-slate-700"></div>
-              <div class="h-6 w-16 rounded-full bg-slate-200 dark:bg-slate-700"></div>
+              <app-skeleton width="w-24" height="h-6" radius="rounded-full" />
+              <app-skeleton width="w-16" height="h-6" radius="rounded-full" />
             </div>
-          </div>
+          </app-skeleton-card>
         </div>
       </div>
     </div>
   } @else if (user(); as u) {
-    <!-- Sticky Header -->
-    <div class="sticky top-16 z-[90] bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
-      <div class="max-w-5xl mx-auto px-4 md:px-6 lg:px-8 py-4">
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div class="flex items-center gap-3 min-w-0">
-            <app-button
-              variant="ghost"
-              icon="arrow_back"
-              label="Quay lại"
-              (click)="goBack()"
-              ariaLabel="Quay về danh sách người dùng"
-            />
-            <div class="min-w-0">
-              <h1 class="text-xl font-bold text-slate-900 dark:text-white truncate">Chi tiết người dùng</h1>
-              <p class="text-sm text-slate-500 dark:text-slate-400 truncate">{{ u.fullName || 'Người dùng' }} · {{ u.email }}</p>
-            </div>
-          </div>
-          <div class="flex items-center gap-2 flex-wrap">
-            <app-button
-              variant="primary"
-              icon="edit"
-              label="Chỉnh sửa"
-              (click)="navigateToEdit()"
-            />
-            <app-button
-              variant="danger"
-              icon="delete"
-              label="Xóa"
-              (click)="deleteUser()"
-            />
-          </div>
-        </div>
+    <app-detail-header
+      [title]="'Chi tiết người dùng'"
+      backAriaLabel="Quay về danh sách người dùng"
+      (backClick)="goBack()"
+    >
+      <p headerIdentity class="text-sm text-slate-500 dark:text-slate-400 truncate">
+        {{ u.fullName || 'Người dùng' }} · {{ u.email }}
+      </p>
+      <div headerActions class="flex items-center gap-2 flex-wrap">
+        <app-button
+          variant="primary"
+          icon="edit"
+          label="Chỉnh sửa"
+          (click)="navigateToEdit()"
+        />
+        <app-button
+          variant="danger"
+          icon="delete"
+          label="Xóa"
+          (click)="deleteUser()"
+        />
       </div>
-    </div>
+    </app-detail-header>
 
     <!-- Main Content -->
-    <div class="max-w-5xl mx-auto px-4 md:px-6 lg:px-8 py-8">
+    <div class="max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-8">
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Identity Card -->
         <div>

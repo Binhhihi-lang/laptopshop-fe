@@ -57,6 +57,7 @@ export interface ProductUpdateRequest {
   categoryId: string; // String (NOT Category object)
 
   // Optional fields
+  removeImage?: boolean; // true = xóa ảnh hiện tại khi update (không gửi inputFile)
   shortDesc?: string;
   detailDesc?: string;
   quantity?: number; // Integer

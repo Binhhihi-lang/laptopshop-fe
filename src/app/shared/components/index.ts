@@ -33,6 +33,13 @@ export type { EmptyStateVariant } from './empty-state/empty-state.component';
 
 export { PageHeaderComponent } from './page-header/page-header.component';
 
+export { DetailHeaderComponent } from './detail-header/detail-header.component';
+
+export { SkeletonComponent } from './skeleton/skeleton.component';
+export { SkeletonCardComponent } from './skeleton/skeleton-card.component';
+
+export { ImageUploadComponent } from './image-upload/image-upload.component';
+
 export { AvatarComponent } from './avatar/avatar.component';
 export type { AvatarSize, AvatarShape, AvatarShadow } from './avatar/avatar.component';
 
