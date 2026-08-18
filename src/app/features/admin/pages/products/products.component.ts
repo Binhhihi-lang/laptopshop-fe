@@ -104,6 +104,8 @@ export class ProductsComponent implements OnInit, AfterViewInit {
     },
     { key: 'category', label: 'Danh mục', visible: true, width: '150px', align: 'left' },
     { key: 'status', label: 'Trạng thái', visible: true, width: '130px', align: 'center' },
+    { key: 'createdAt', label: 'Ngày tạo', visible: false, sortable: true, align: 'center' },
+    { key: 'updatedAt', label: 'Ngày sửa', visible: false, sortable: true, align: 'center' },
   ]);
 
   // Category options for select
@@ -123,6 +125,8 @@ export class ProductsComponent implements OnInit, AfterViewInit {
   @ViewChild('soldColumn', { static: true }) soldColumn!: TemplateRef<any>;
   @ViewChild('categoryColumn', { static: true }) categoryColumn!: TemplateRef<any>;
   @ViewChild('statusColumn', { static: true }) statusColumn!: TemplateRef<any>;
+  @ViewChild('createdAtColumn', { static: true }) createdAtColumn!: TemplateRef<any>;
+  @ViewChild('updatedAtColumn', { static: true }) updatedAtColumn!: TemplateRef<any>;
 
   // Table actions
   actions: TableAction<ProductResponse>[] = [
@@ -285,6 +289,8 @@ export class ProductsComponent implements OnInit, AfterViewInit {
           sold: this.soldColumn,
           category: this.categoryColumn,
           status: this.statusColumn,
+          createdAt: this.createdAtColumn,
+          updatedAt: this.updatedAtColumn,
         };
         if (templateMap[col.key]) {
           return { ...col, template: templateMap[col.key] };
@@ -530,7 +536,9 @@ export class ProductsComponent implements OnInit, AfterViewInit {
 
   getCategoryName(categoryId: string): string {
     const cat = this.categories().find((c) => c.id === categoryId);
-    return cat?.name || '—';
+    // Khi category bị xóa mềm (hoặc chưa gán) thì không có trong danh sách
+    // -> categoryId không tìm thấy -> hiển thị "Chưa phân loại" thay vì dấu —
+    return cat?.name || 'Chưa phân loại';
   }
 
   getStatusColor(product: ProductResponse): 'success' | 'danger' {
@@ -595,7 +603,24 @@ export class ProductsComponent implements OnInit, AfterViewInit {
     return this.getCategoryName(product.categoryId);
   }
 
+  // True khi category của product bị khóa (active=false) — dùng hiển thị
+  // badge cảnh báo MỀM "Danh mục khóa" (không chặn, không đổi dữ liệu).
+  isCategoryLocked(product: ProductResponse): boolean {
+    return product.categoryActive === false;
+  }
+
   getProductStatus(product: ProductResponse): string {
     return this.getStatusLabel(product);
+  }
+
+  formatDate(dateString?: string): string {
+    if (!dateString) return '—';
+    return new Date(dateString).toLocaleDateString('vi-VN', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
   }
 }

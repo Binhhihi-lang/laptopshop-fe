@@ -182,7 +182,12 @@
 
         <!-- Category Column Template -->
         <ng-template #categoryColumn let-product>
-          <span class="text-slate-600 dark:text-slate-400">{{ getProductCategory(product) }}</span>
+          <div class="flex flex-col gap-1">
+            <span class="text-slate-600 dark:text-slate-400">{{ getProductCategory(product) }}</span>
+            @if (isCategoryLocked(product)) {
+              <app-badge label="Danh mục khóa" variant="warning" size="sm" />
+            }
+          </div>
         </ng-template>
 
         <!-- Status Column Template -->
@@ -193,6 +198,16 @@
             [icon]="getStatusIcon(product)"
             [size]="'default'"
           />
+        </ng-template>
+
+        <!-- Created At Column Template -->
+        <ng-template #createdAtColumn let-product>
+          <span class="text-slate-600 dark:text-slate-400 whitespace-nowrap">{{ formatDate(product.createdAt) }}</span>
+        </ng-template>
+
+        <!-- Updated At Column Template -->
+        <ng-template #updatedAtColumn let-product>
+          <span class="text-slate-600 dark:text-slate-400 whitespace-nowrap">{{ formatDate(product.updatedAt) }}</span>
         </ng-template>
       </app-table>
     </app-card>

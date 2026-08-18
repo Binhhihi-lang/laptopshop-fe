@@ -1,0 +1,152 @@
+/* ===========================================
+   CATEGORIES LIST PAGE STYLES
+   =========================================== */
+
+/* Table container */
+.table-container {
+  @apply overflow-x-auto;
+}
+
+table {
+  @apply w-full;
+  min-width: 800px;
+}
+
+/* Column Styles */
+.category-image-cell {
+  @apply w-16 px-4 py-3;
+}
+
+.category-image {
+  @apply w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-slate-100 dark:bg-slate-700;
+}
+
+.category-image img {
+  @apply w-full h-full object-cover;
+}
+
+.category-image mat-icon {
+  @apply w-full h-full text-slate-300 dark:text-slate-600 flex items-center justify-center;
+}
+
+.category-name-cell {
+  @apply px-4 py-3;
+}
+
+.category-name {
+  @apply font-medium text-slate-900 dark:text-white truncate max-w-xs;
+}
+
+.display-order-cell {
+  @apply px-4 py-3;
+}
+
+.display-order {
+  @apply text-center text-slate-600 dark:text-slate-400 font-mono;
+}
+
+.status-cell {
+  @apply px-4 py-3;
+}
+
+.status-badge {
+  @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium;
+}
+
+.status-dot {
+  @apply w-1.5 h-1.5 rounded-full;
+}
+
+.status-dot-active {
+  @apply bg-emerald-500;
+}
+
+.status-dot-inactive {
+  @apply bg-red-500;
+}
+
+.actions-cell {
+  @apply w-40 px-4 py-3;
+}
+
+.actions-container {
+  @apply flex items-center justify-end gap-1;
+}
+
+.action-menu-trigger {
+  @apply p-2 rounded-lg text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors;
+}
+
+.action-menu-dropdown {
+  @apply absolute right-0 top-full mt-1 w-40 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 py-1 z-[200];
+}
+
+.action-menu-item {
+  @apply flex items-center gap-2 px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-700;
+}
+
+.action-menu-item-text {
+  @apply text-slate-700 dark:text-slate-200;
+}
+
+.action-menu-divider {
+  @apply my-1 border-slate-200 dark:border-slate-700;
+}
+
+.action-menu-delete {
+  @apply w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20;
+}
+
+/* Empty State */
+.empty-state {
+  @apply p-12 text-center;
+}
+
+.empty-state mat-icon {
+  @apply text-6xl text-slate-300 dark:text-slate-600 mb-4;
+}
+
+.empty-state h3 {
+  @apply text-xl font-semibold text-slate-900 dark:text-white mb-2;
+}
+
+.empty-state p {
+  @apply text-slate-500 dark:text-slate-400 mb-6 max-w-md;
+}
+
+.empty-state a {
+  @apply inline-flex items-center gap-2;
+}
+
+/* Pagination Info */
+.pagination-info {
+  @apply px-4 py-4 border-t border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row items-center justify-between gap-4;
+}
+
+.pagination-count {
+  @apply text-sm text-slate-600 dark:text-slate-400;
+}
+
+/* Dark mode adjustments */
+.dark .action-menu-trigger {
+  @apply text-slate-400 hover:text-slate-200 hover:bg-slate-800;
+}
+
+.dark .action-menu-item {
+  @apply hover:bg-slate-700;
+}
+
+.dark .action-menu-divider {
+  @apply border-slate-700;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .categories-container {
+    @apply p-3;
+  }
+
+  table {
+    min-width: 600px;
+  }
+}

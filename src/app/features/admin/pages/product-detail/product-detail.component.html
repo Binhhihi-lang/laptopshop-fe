@@ -71,6 +71,14 @@
           [icon]="stockBadge().icon"
           [size]="'default'"
         />
+        @if (categoryLocked()) {
+          <app-badge
+            label="Danh mục khóa"
+            variant="warning"
+            icon="lock"
+            [size]="'default'"
+          />
+        }
       </div>
       <div headerActions class="flex items-center gap-2 sm:ml-auto">
         <app-button
@@ -122,6 +130,9 @@
               <div class="flex items-center gap-3 text-slate-600 dark:text-slate-400">
                 <mat-icon class="w-5 h-5">category</mat-icon>
                 <span class="font-medium">{{ product.categoryName || 'Chưa phân loại' }}</span>
+                @if (categoryLocked()) {
+                  <app-badge label="Danh mục khóa" variant="warning" size="sm" />
+                }
               </div>
             </div>
           </app-card>

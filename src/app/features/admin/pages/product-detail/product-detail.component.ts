@@ -73,6 +73,13 @@ export class ProductDetailComponent implements OnInit {
     return { label: 'Còn hàng', variant: 'success' as const, icon: 'check_circle' };
   });
 
+  // True khi category của product bị khóa (active=false) — cảnh báo MỀM
+  // "Danh mục khóa" trên trang chi tiết (không chặn, không đổi dữ liệu).
+  categoryLocked = computed(() => {
+    const currentProduct = this.product();
+    return !!currentProduct && currentProduct.categoryActive === false;
+  });
+
   ngOnInit() {
     this.productId = this.route.snapshot.paramMap.get('id');
     if (this.productId) {

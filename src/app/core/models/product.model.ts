@@ -21,6 +21,7 @@ export interface ProductResponse {
   active: boolean;
   categoryId: string;
   categoryName: string;
+  categoryActive?: boolean; // trạng thái active của Category (undefined nếu category bị xóa mềm)
   createdAt: string; // ISO datetime string
   updatedAt: string; // ISO datetime string
 }

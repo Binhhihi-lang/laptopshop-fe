@@ -1,0 +1,5 @@
+/* Category detail — dùng các shared components + Tailwind (tham khảo product-detail).
+   Toàn bộ style bố cục nằm trong template, chỉ giữ container tối thiểu. */
+.detail-container {
+  @apply max-w-screen-2xl mx-auto;
+}

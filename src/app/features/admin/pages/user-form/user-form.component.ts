@@ -19,7 +19,6 @@ import { Subject, takeUntil, filter, forkJoin } from 'rxjs';
 // Shared components
 import {
   CardComponent,
-  CardHeaderComponent,
   BadgeComponent,
   ButtonComponent,
   InputComponent,
@@ -40,7 +39,6 @@ import {
     RouterModule,
     MatIconModule,
     CardComponent,
-    CardHeaderComponent,
     BadgeComponent,
     ButtonComponent,
     InputComponent,
