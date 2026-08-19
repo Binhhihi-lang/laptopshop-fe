@@ -1,10 +1,213 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Title</title>
-</head>
-<body>
+<div class="detail-container min-h-screen bg-slate-50 dark:bg-slate-950">
+  @if (isLoading()) {
+    <!-- Skeleton loading -->
+    <div class="max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-8" aria-hidden="true">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-1">
+          <app-skeleton-card padding="p-0">
+            <div class="aspect-square w-full bg-slate-200 dark:bg-slate-700 animate-pulse"></div>
+          </app-skeleton-card>
+        </div>
+        <div class="lg:col-span-2 space-y-6">
+          <app-skeleton-card>
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <app-skeleton width="w-48" height="h-8" />
+              <app-skeleton width="w-32" height="h-5" />
+            </div>
+          </app-skeleton-card>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <app-skeleton-card>
+              <app-skeleton width="w-32" height="h-5" class="mb-4" />
+              <div class="space-y-3">
+                <app-skeleton width="w-full" height="h-4" />
+                <app-skeleton width="w-2/3" height="h-4" />
+                <app-skeleton width="w-3/4" height="h-4" />
+              </div>
+            </app-skeleton-card>
+            <app-skeleton-card>
+              <app-skeleton width="w-32" height="h-5" class="mb-4" />
+              <app-skeleton width="w-full" height="h-4" />
+            </app-skeleton-card>
+          </div>
+        </div>
+      </div>
+    </div>
+  } @else if (errorMessage()) {
+    <app-empty-state
+      variant="error"
+      icon="error_outline"
+      title="Không thể tải mã giảm giá"
+      [description]="errorMessage()"
+      actionLabel="Quay về danh sách"
+      actionIcon="arrow_back"
+      actionVariant="primary"
+      (actionClick)="goBack()"
+    />
+  } @else if (coupon(); as coupon) {
+    <app-detail-header
+      [title]="coupon.code"
+      backAriaLabel="Quay về danh sách mã giảm giá"
+      (backClick)="goBack()"
+    >
+      <div headerBadges class="flex items-center gap-3">
+        <app-badge
+          [label]="statusBadge().label"
+          [variant]="statusBadge().variant"
+          [icon]="statusBadge().icon"
+          [size]="'default'"
+        />
+        <app-badge
+          [label]="expiryBadge().label"
+          [variant]="expiryBadge().variant"
+          [size]="'default'"
+        />
+      </div>
+      <div headerActions class="flex items-center gap-2 sm:ml-auto">
+        <app-button
+          variant="primary"
+          icon="edit"
+          label="Chỉnh sửa"
+          (click)="goToEdit()"
+        />
+        <app-button
+          variant="danger"
+          icon="delete"
+          label="Xóa"
+          (click)="deleteCoupon()"
+        />
+      </div>
+    </app-detail-header>
 
-</body>
-</html>
+    <!-- Main Content -->
+    <div class="max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-8">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Image Panel -->
+        <div class="lg:col-span-1">
+          <app-card [variant]="'default'" [padding]="'none'">
+            <div class="aspect-square relative overflow-hidden">
+              @if (coupon.image) {
+                <img
+                  [src]="coupon.image"
+                  [alt]="coupon.code"
+                  loading="lazy"
+                  class="w-full h-full object-cover"
+                />
+              } @else {
+                <div class="w-full h-full flex items-center justify-center bg-slate-100 dark:bg-slate-800">
+                  <mat-icon class="w-16 h-16 text-slate-400 dark:text-slate-500">image_not_supported</mat-icon>
+                </div>
+              }
+            </div>
+          </app-card>
+        </div>
+
+        <!-- Info Panel -->
+        <div class="lg:col-span-2 space-y-6">
+          <!-- Discount Info -->
+          <app-card [padding]="'default'">
+            <h3 class="text-title font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+              <mat-icon class="w-5 h-5 text-slate-400 dark:text-slate-500">sell</mat-icon>
+              Thông tin giảm giá
+            </h3>
+            <dl class="space-y-3">
+              <div class="flex justify-between">
+                <dt class="text-slate-500 dark:text-slate-400">Mã giảm giá</dt>
+                <dd class="font-medium text-slate-900 dark:text-white font-mono">{{ coupon.code }}</dd>
+              </div>
+              <div class="flex justify-between">
+                <dt class="text-slate-500 dark:text-slate-400">Loại giảm giá</dt>
+                <dd class="font-medium text-slate-900 dark:text-white text-right">{{ discountTypeLabel(coupon) }}</dd>
+              </div>
+              <div class="flex justify-between">
+                <dt class="text-slate-500 dark:text-slate-400">Giá trị giảm</dt>
+                <dd class="font-medium text-primary-600 dark:text-primary-400 text-right">{{ discountLabel(coupon) }}</dd>
+              </div>
+              <div class="flex justify-between">
+                <dt class="text-slate-500 dark:text-slate-400">Trạng thái</dt>
+                <dd>
+                  <app-badge
+                    [label]="statusBadge().label"
+                    [variant]="statusBadge().variant"
+                    [icon]="statusBadge().icon"
+                    [size]="'default'"
+                  />
+                </dd>
+              </div>
+            </dl>
+          </app-card>
+
+          <!-- Usage Info -->
+          <app-card [padding]="'default'">
+            <h3 class="text-title font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+              <mat-icon class="w-5 h-5 text-slate-400 dark:text-slate-500">bar_chart</mat-icon>
+              Thông tin sử dụng
+            </h3>
+            <dl class="space-y-3">
+              <div class="flex justify-between">
+                <dt class="text-slate-500 dark:text-slate-400">Đã sử dụng</dt>
+                <dd class="font-medium text-slate-900 dark:text-white tabular-nums">{{ coupon.usedCount }}</dd>
+              </div>
+              <div class="flex justify-between">
+                <dt class="text-slate-500 dark:text-slate-400">Giới hạn</dt>
+                <dd class="font-medium text-slate-900 dark:text-white text-right">
+                  @if (coupon.usageLimit > 0) {
+                    {{ coupon.usageLimit }}
+                  } @else {
+                    Không giới hạn
+                  }
+                </dd>
+              </div>
+              <div class="flex justify-between">
+                <dt class="text-slate-500 dark:text-slate-400">Ngày hết hạn</dt>
+                <dd class="font-medium text-slate-900 dark:text-white text-right">{{ formatDate(coupon.expiryDate) }}</dd>
+              </div>
+              <div class="flex justify-between">
+                <dt class="text-slate-500 dark:text-slate-400">Hạn sử dụng</dt>
+                <dd>
+                  <app-badge
+                    [label]="expiryBadge().label"
+                    [variant]="expiryBadge().variant"
+                    [size]="'sm'"
+                  />
+                </dd>
+              </div>
+            </dl>
+          </app-card>
+
+          <!-- System Metadata -->
+          <app-card [padding]="'default'" class="md:col-span-2">
+            <h3 class="text-title font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+              <mat-icon class="w-5 h-5 text-slate-400 dark:text-slate-500">history</mat-icon>
+              Thông tin hệ thống
+            </h3>
+            <dl class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div class="flex justify-between">
+                <dt class="text-slate-500 dark:text-slate-400">ID</dt>
+                <dd class="font-medium text-slate-900 dark:text-white font-mono text-sm">{{ coupon.id }}</dd>
+              </div>
+              <div class="flex justify-between">
+                <dt class="text-slate-500 dark:text-slate-400">Ngày tạo</dt>
+                <dd class="font-medium text-slate-900 dark:text-white">{{ formatDate(coupon.createdAt) }}</dd>
+              </div>
+              <div class="flex justify-between">
+                <dt class="text-slate-500 dark:text-slate-400">Cập nhật lần cuối</dt>
+                <dd class="font-medium text-slate-900 dark:text-white">{{ formatDate(coupon.updatedAt) }}</dd>
+              </div>
+            </dl>
+          </app-card>
+        </div>
+      </div>
+    </div>
+  } @else {
+    <app-empty-state
+      variant="no-data"
+      icon="local_offer"
+      title="Không tìm thấy mã giảm giá"
+      description="Mã giảm giá này có thể đã bị xóa hoặc không tồn tại."
+      actionLabel="Quay về danh sách"
+      actionIcon="arrow_back"
+      actionVariant="primary"
+      (actionClick)="goBack()"
+    />
+  }
+</div>
