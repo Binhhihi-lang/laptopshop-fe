@@ -20,6 +20,7 @@
 ## 4. Data Mapping & Backend Integration (Spring Boot)
 - **Model Mapping:** NEVER map Angular interfaces directly to Java Database Entities.
 - **DTO Strictness:** Angular Models MUST map 1-1 with Backend Request/Response DTOs (`@RequestBody`, `@ModelAttribute`, `@RequestPart`).
+- http://localhost:8080/swagger-ui/index.html see APIs backend
 
 ## 5. Compound Engineering & Self-Healing Loop
 - **Auto-Verification:** After writing or transpiling ANY TypeScript or HTML file, you MUST automatically run `ng build`.

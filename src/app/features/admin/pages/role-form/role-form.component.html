@@ -1,10 +1,157 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Title</title>
-</head>
-<body>
+<div class="form-container min-h-screen bg-slate-50 dark:bg-slate-950">
+  <!-- Loading -->
+  @if (isLoading()) {
+    <div class="loading-overlay fixed inset-0 bg-white/80 dark:bg-slate-950/80 flex items-center justify-center z-50">
+      <app-loading size="xl" text="Đang tải..." />
+    </div>
+  }
 
-</body>
-</html>
+  <!-- Header -->
+  <div class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-16 z-[90]">
+    <div class="max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-4">
+      <app-page-header
+        [title]="pageTitle()"
+        [subtitle]="pageSubtitle()"
+        [hasActions]="true"
+      >
+        <app-button
+          variant="ghost"
+          icon="arrow_back"
+          label="Quay lại"
+          (click)="onCancel()"
+          [disabled]="isSubmitting()"
+        />
+      </app-page-header>
+    </div>
+  </div>
+
+  <form [formGroup]="roleForm" (ngSubmit)="onSubmit()" class="role-form max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-8 space-y-6">
+    <!-- Basic Information Section -->
+    <section class="form-section">
+      <app-card [padding]="'default'" [variant]="'default'">
+        <div class="flex items-center gap-2 mb-4">
+          <mat-icon class="w-5 h-5 text-primary-600 dark:text-primary-400">badge</mat-icon>
+          <h3 class="section-title text-lg font-medium text-slate-900 dark:text-white">Thông tin cơ bản</h3>
+        </div>
+
+        <div class="form-grid grid grid-cols-1 md:grid-cols-2 gap-4">
+          <app-form-field
+            id="name-field"
+            label="Tên vai trò"
+            [required]="true"
+            [error]="hasError('name', 'required') ? 'Tên vai trò là bắt buộc' : hasError('name', 'minlength') ? 'Tên vai trò phải có ít nhất 2 ký tự' : hasError('name', 'maxlength') ? 'Tên vai trò không quá 50 ký tự' : ''"
+          >
+            <app-input
+              id="name"
+              name="name"
+              formControlName="name"
+              placeholder="VD: ADMIN, MANAGER, STAFF"
+              [maxLength]="50"
+              [ariaLabel]="'Tên vai trò'"
+            />
+          </app-form-field>
+
+          <app-form-field
+            id="description-field"
+            label="Mô tả"
+            class="md:col-span-2"
+            [error]="hasError('description', 'maxlength') ? 'Mô tả không quá 255 ký tự' : ''"
+          >
+            <app-input
+              id="description"
+              name="description"
+              type="textarea"
+              formControlName="description"
+              [rows]="4"
+              placeholder="Mô tả vai trò (tùy chọn)"
+              [ariaLabel]="'Mô tả'"
+            />
+          </app-form-field>
+        </div>
+      </app-card>
+    </section>
+
+    <!-- Permissions Section -->
+    <section class="form-section">
+      <app-card [padding]="'default'" [variant]="'default'">
+        <div class="flex items-center gap-2 mb-4">
+          <mat-icon class="w-5 h-5 text-primary-600 dark:text-primary-400">security</mat-icon>
+          <h3 class="section-title text-lg font-medium text-slate-900 dark:text-white">Quyền hạn</h3>
+        </div>
+
+        <app-form-field
+          id="permissions-field"
+          label="Quyền hạn"
+          [required]="true"
+          [error]="hasError('permissionNames', 'required') ? 'Vui lòng chọn ít nhất một quyền hạn' : ''"
+        >
+          <div class="space-y-2">
+            @for (permission of permissions(); track permission.id) {
+              <label class="flex items-center gap-3 p-4 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl cursor-pointer hover:border-primary/50 dark:hover:border-primary/50 transition-colors">
+                <input
+                  type="checkbox"
+                  [value]="permission.name"
+                  class="w-5 h-5 text-primary border-slate-300 rounded focus:ring-primary/30"
+                  [checked]="isPermissionSelected(permission.name)"
+                  (change)="onPermissionChange(permission.name, $event)"
+                  [disabled]="isSubmitting()">
+                <div class="flex-1">
+                  <p class="font-medium text-slate-900 dark:text-white">{{ permission.name }}</p>
+                  @if (permission.description) {
+                    <p class="text-sm text-slate-500 dark:text-slate-400">{{ permission.description }}</p>
+                  }
+                </div>
+              </label>
+            }
+          </div>
+        </app-form-field>
+      </app-card>
+    </section>
+
+    <!-- Status Section -->
+    <section class="form-section status-section">
+      <app-card [padding]="'default'" [variant]="'default'" [compact]="true">
+        <div class="flex items-center gap-2 mb-3">
+          <mat-icon class="w-5 h-5 text-primary-600 dark:text-primary-400">toggle_on</mat-icon>
+          <h3 class="section-title text-lg font-medium text-slate-900 dark:text-white">Trạng thái</h3>
+        </div>
+
+        <div class="status-toggle flex items-center gap-3">
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              formControlName="active"
+              class="sr-only peer"
+              [attr.aria-label]="'Trạng thái hoạt động'">
+            <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-primary-600"></div>
+          </label>
+          <span class="toggle-label text-sm font-medium text-slate-700 dark:text-slate-300">
+            {{ roleForm.get('active')?.value ? 'Đang hoạt động' : 'Ngưng hoạt động' }}
+          </span>
+        </div>
+      </app-card>
+    </section>
+
+    <!-- Form Actions -->
+    <div class="form-actions flex justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-700">
+      <app-button
+        type="button"
+        variant="outline"
+        icon="close"
+        label="Hủy"
+        [disabled]="isSubmitting()"
+        (click)="onCancel()"
+        size="default">
+      </app-button>
+      <app-button
+        type="submit"
+        variant="primary"
+        [icon]="isSubmitting() ? '' : (isEditMode() ? 'save' : 'person_add')"
+        [loading]="isSubmitting()"
+        [label]="isSubmitting() ? 'Đang lưu...' : submitButtonText()"
+        [disabled]="roleForm.invalid || isSubmitting()"
+        size="default">
+      </app-button>
+    </div>
+  </form>
+</div>

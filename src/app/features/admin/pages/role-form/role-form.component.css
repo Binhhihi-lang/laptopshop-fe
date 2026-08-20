@@ -1,0 +1,4 @@
+/* Role Form page styles - Using Tailwind utility classes globally */
+:host {
+  display: block;
+}

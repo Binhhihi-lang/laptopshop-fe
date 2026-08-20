@@ -38,7 +38,7 @@
 
   <!-- Navigation -->
   <nav class="flex-1 overflow-y-auto py-4 px-2 space-y-1" aria-label="Main navigation">
-    @for (item of nav; track item.path) {
+    @for (item of nav(); track item.path) {
       <a
         [routerLink]="item.path"
         routerLinkActive="sidebar-link-active"

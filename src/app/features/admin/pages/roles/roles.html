@@ -1,1 +1,159 @@
-<p>roles works!</p>
+<div class="roles-container min-h-screen bg-slate-50 dark:bg-slate-950">
+  <!-- Page Header -->
+  <div class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-16 z-[90]">
+    <div class="max-w-screen-2xl mx-auto px-4 md:px-6 lg:px-8 py-4">
+      <app-page-header
+        title="Quản lý vai trò"
+        [subtitle]="'Tìm kiếm, lọc và quản lý danh sách vai trò (' + filteredRoles().length + '/' + roles().length + ')'"
+        [hasActions]="true"
+      >
+        <app-button variant="primary" icon="add" label="Thêm vai trò" (click)="createRole()" />
+      </app-page-header>
+    </div>
+  </div>
+
+  <!-- Filter Bar -->
+  <div class="max-w-screen-2xl mx-auto px-4 md:px-6 lg:px-8 py-4">
+    <app-card [padding]="'sm'" [compact]="true">
+      <div class="filter-row flex flex-wrap gap-4 items-end">
+        <!-- Search -->
+        <div class="relative flex-1 min-w-[250px] max-w-[400px]">
+          <app-input
+            id="role-search"
+            name="search"
+            placeholder="Tìm kiếm theo tên, mô tả hoặc quyền hạn..."
+            [value]="searchTerm()"
+            [icon]="'search'"
+            (valueChange)="searchTerm.set($event); onSearchChange()"
+            [ariaLabel]="'Tìm kiếm vai trò'"
+          />
+        </div>
+
+        <!-- Status Filter -->
+        <div class="status-filter-group flex items-center gap-2">
+          <span class="filter-label text-sm text-slate-600 dark:text-slate-400 font-medium">Trạng thái:</span>
+          <div class="flex gap-1 bg-slate-100 dark:bg-slate-800 rounded-lg p-1">
+            <button
+              type="button"
+              (click)="setStatusFilter('all')"
+              [class]="statusFilter() === 'all' ? 'bg-white dark:bg-slate-700 shadow-sm text-primary-600 dark:text-primary-400' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'"
+              class="px-3 py-1.5 text-sm rounded-md font-medium transition-colors"
+              [attr.aria-pressed]="statusFilter() === 'all'">
+              Tất cả
+            </button>
+            <button
+              type="button"
+              (click)="setStatusFilter('active')"
+              [class]="statusFilter() === 'active' ? 'bg-white dark:bg-slate-700 shadow-sm text-success-600 dark:text-success-400' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'"
+              class="px-3 py-1.5 text-sm rounded-md font-medium transition-colors flex items-center gap-1.5"
+              [attr.aria-pressed]="statusFilter() === 'active'">
+              <mat-icon class="w-4 h-4">check_circle</mat-icon>
+              Hoạt động
+            </button>
+            <button
+              type="button"
+              (click)="setStatusFilter('inactive')"
+              [class]="statusFilter() === 'inactive' ? 'bg-white dark:bg-slate-700 shadow-sm text-danger-600 dark:text-danger-400' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'"
+              class="px-3 py-1.5 text-sm rounded-md font-medium transition-colors flex items-center gap-1.5"
+              [attr.aria-pressed]="statusFilter() === 'inactive'">
+              <mat-icon class="w-4 h-4">cancel</mat-icon>
+              Ngừng
+            </button>
+          </div>
+        </div>
+
+        <!-- Clear Filters -->
+        @if (hasActiveFilters()) {
+          <app-button
+            variant="outline"
+            icon="filter_alt_off"
+            label="Xóa bộ lọc"
+            (click)="clearFilters()"
+            class="ml-auto"
+          />
+        }
+
+        <!-- Column Picker -->
+        <app-column-picker [columns]="columns()" (toggleColumn)="toggleColumn($event)" />
+      </div>
+    </app-card>
+  </div>
+
+  <!-- Bulk Actions Toolbar -->
+  <app-bulk-toolbar
+    [count]="selectedCount()"
+    itemLabel="vai trò"
+    [buttons]="bulkButtons()"
+    (clear)="selectedRoleIds.set([])"
+  />
+
+  <!-- Roles Table -->
+  <div class="max-w-screen-2xl mx-auto px-4 md:px-6 lg:px-8 pb-8">
+    <app-card [padding]="'none'">
+      <app-table
+        [data]="filteredRoles()"
+        [columns]="columns()"
+        [loading]="isLoading()"
+        [loadingText]="'Đang tải vai trò...'"
+        [actions]="actions"
+        [trackByFn]="trackByRoleId"
+        [selectable]="true"
+        [selectedRows]="selectedRoles()"
+        (selectionChange)="onSelectionChange($event)"
+        [sortColumn]="sortColumn()"
+        [sortDirection]="sortDirection()"
+        (sortChange)="onSort($event)"
+        [emptyIcon]="'security'"
+        [emptyTitle]="'Không tìm thấy vai trò'"
+        [emptyDescription]="'Thử thay đổi bộ lọc hoặc thêm vai trò mới'"
+        [emptyActionLabel]="'Tạo vai trò đầu tiên'"
+        [emptyActionIcon]="'add'"
+        (emptyActionClick)="createRole()"
+      >
+        <!-- Name Column Template -->
+        <ng-template #nameColumn let-role>
+          <span class="font-medium text-slate-900 dark:text-white">{{ role.name }}</span>
+        </ng-template>
+
+        <!-- Permission Column Template -->
+        <ng-template #permissionColumn let-role>
+          @if ((role.permissionNames || []).length === 0) {
+            <span class="text-slate-400 dark:text-slate-500">—</span>
+          } @else {
+            <div class="flex flex-wrap gap-1">
+              @for (perm of (role.permissionNames || []).slice(0, 3); track perm) {
+                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary">
+                  {{ perm }}
+                </span>
+              }
+              @if ((role.permissionNames || []).length > 3) {
+                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+                  +{{ (role.permissionNames || []).length - 3 }}
+                </span>
+              }
+            </div>
+          }
+        </ng-template>
+
+        <!-- Status Column Template -->
+        <ng-template #statusColumn let-role>
+          <app-badge
+            [label]="getStatusBadge(role).label"
+            [variant]="getStatusBadge(role).variant"
+            [size]="'default'"
+          />
+        </ng-template>
+
+        <!-- Created At Column Template -->
+        <ng-template #createdAtColumn let-role>
+          <span class="text-slate-600 dark:text-slate-400 whitespace-nowrap">{{ formatDate(role.createdAt) }}</span>
+        </ng-template>
+
+        <!-- Updated At Column Template -->
+        <ng-template #updatedAtColumn let-role>
+          <span class="text-slate-600 dark:text-slate-400 whitespace-nowrap">{{ formatDate(role.updatedAt) }}</span>
+        </ng-template>
+      </app-table>
+    </app-card>
+  </div>
+</div>

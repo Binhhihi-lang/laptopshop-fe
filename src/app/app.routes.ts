@@ -20,7 +20,7 @@ import { CouponFormComponent } from '@features/admin/pages/coupon-form/coupon-fo
 import { CouponDetailComponent } from '@features/admin/pages/coupon-detail/coupon-detail.component';
 import { RolesComponent } from '@features/admin/pages/roles/roles.component';
 import { RoleFormComponent } from '@features/admin/pages/role-form/role-form.component';
-// RoleDetailComponent is a dialog, not a route component
+import { RoleDetailComponent } from '@features/admin/pages/role-detail/role-detail.component';
 import { PermissionsComponent } from '@features/admin/pages/permissions/permissions.component';
 import { PermissionFormComponent } from '@features/admin/pages/permission-form/permission-form.component';
 import { PermissionDetailComponent } from '@features/admin/pages/permission-detail/permission-detail.component';
@@ -59,6 +59,7 @@ export const routes: Routes = [
       { path: 'coupons/:id', component: CouponDetailComponent },
       { path: 'roles', component: RolesComponent },
       { path: 'roles/create', component: RoleFormComponent },
+      { path: 'roles/:id', component: RoleDetailComponent },
       { path: 'roles/:id/edit', component: RoleFormComponent },
       { path: 'permissions', component: PermissionsComponent },
       { path: 'permissions/create', component: PermissionFormComponent },

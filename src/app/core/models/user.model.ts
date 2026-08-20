@@ -9,6 +9,7 @@ export interface UserResponse {
   active?: boolean;
   lastLoginAt?: string;
   createdAt?: string;
+  roleLocked?: boolean;
 }
 
 export interface UserCreationRequest {
@@ -22,7 +23,7 @@ export interface UserCreationRequest {
   active?: boolean;
 }
 
-export interface UserUpdateRequest{
+export interface UserUpdateRequest {
   email?: string;
   fullName?: string;
   phone?: string;

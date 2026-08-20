@@ -25,8 +25,8 @@ export class JwtHelper {
 
   getPermissionsFromToken(token: string): string[] {
     const decoded = this.decodeToken(token);
-    const permissions = decoded?.permissions ?? '';
-    return permissions.split(' ').filter(Boolean);
+    const scope = decoded?.scope ?? '';
+    return scope.split(' ').filter((s: string) => s && !s.startsWith('ROLE_'));
   }
 
   isTokenExpired(token: string): boolean {

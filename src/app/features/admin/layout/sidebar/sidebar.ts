@@ -1,4 +1,4 @@
-import { Component, input, output, effect, signal, inject } from '@angular/core';
+import { Component, input, output, effect, signal, computed, inject } from '@angular/core';
 import { MaterialModule } from '@shared/material.module';
 import { RouterModule, Router } from '@angular/router';
 import { AuthService } from '@core/services/auth.service';
@@ -32,15 +32,21 @@ export class Sidebar {
   readonly collapsed = this.collapsedSignal.asReadonly();
   readonly mobileOpen = this.mobileOpenInput;
 
-  readonly nav: NavItem[] = [
-    { path: '/admin/dashboard', label: 'Dashboard', icon: 'dashboard', badge: 'new' },
-    { path: '/admin/users', label: 'Người dùng', icon: 'people' },
-    { path: '/admin/products', label: 'Sản phẩm', icon: 'inventory_2' },
-    { path: '/admin/categories', label: 'Danh mục', icon: 'category' },
-    { path: '/admin/coupons', label: 'Mã giảm giá', icon: 'local_offer' },
-    { path: '/admin/roles', label: 'Vai trò', icon: 'shield' },
-    { path: '/admin/permissions', label: 'Quyền', icon: 'key' },
-  ];
+  // Nav items: ẩn Vai trò/Quyền với role thiếu quyền MANAGE_ROLES_PERMISSIONS
+  readonly nav = computed<NavItem[]>(() => {
+    const canManage = this.authService.hasPermission('MANAGE_ROLES_PERMISSIONS');
+    const all: NavItem[] = [
+      { path: '/admin/dashboard', label: 'Dashboard', icon: 'dashboard', badge: 'new' },
+      { path: '/admin/users', label: 'Người dùng', icon: 'people' },
+      { path: '/admin/products', label: 'Sản phẩm', icon: 'inventory_2' },
+      { path: '/admin/categories', label: 'Danh mục', icon: 'category' },
+      { path: '/admin/coupons', label: 'Mã giảm giá', icon: 'local_offer' },
+      { path: '/admin/roles', label: 'Vai trò', icon: 'shield' },
+      { path: '/admin/permissions', label: 'Quyền', icon: 'key' },
+    ];
+    if (canManage) return all;
+    return all.filter((item) => item.path !== '/admin/roles' && item.path !== '/admin/permissions');
+  });
 
   constructor() {
     // Sync input signal to internal signal

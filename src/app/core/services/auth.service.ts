@@ -185,8 +185,9 @@ export class AuthService {
     try {
       const payload = token.split('.')[1];
       const decoded = JSON.parse(atob(payload));
-      const permissions = decoded.permissions || '';
-      return permissions.split(' ').includes(permission);
+      const scope = decoded?.scope ?? '';
+      const permissions = scope.split(' ').filter((s: string) => s && !s.startsWith('ROLE_'));
+      return permissions.includes(permission);
     } catch (e) {
       // If token is invalid, treat as not having the permission
       return false;

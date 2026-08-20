@@ -1,10 +1,129 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Title</title>
-</head>
-<body>
+<div class="detail-container min-h-screen bg-slate-50 dark:bg-slate-950">
+  @if (isLoading()) {
+    <!-- Skeleton loading -->
+    <div class="max-w-4xl mx-auto px-4 md:px-6 lg:px-8 py-8" aria-hidden="true">
+      <div class="space-y-6">
+        <app-skeleton-card>
+          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <app-skeleton width="w-48" height="h-8" />
+            <app-skeleton width="w-32" height="h-5" />
+          </div>
+        </app-skeleton-card>
+        <app-skeleton-card>
+          <app-skeleton width="w-32" height="h-5" class="mb-4" />
+          <div class="space-y-3">
+            <app-skeleton width="w-full" height="h-4" />
+            <app-skeleton width="w-2/3" height="h-4" />
+            <app-skeleton width="w-3/4" height="h-4" />
+          </div>
+        </app-skeleton-card>
+        <app-skeleton-card>
+          <app-skeleton width="w-32" height="h-5" class="mb-4" />
+          <app-skeleton width="w-full" height="h-4" />
+        </app-skeleton-card>
+      </div>
+    </div>
+  } @else if (errorMessage()) {
+    <app-empty-state
+      variant="error"
+      icon="error_outline"
+      title="Không thể tải vai trò"
+      [description]="errorMessage()"
+      actionLabel="Quay về danh sách"
+      actionIcon="arrow_back"
+      actionVariant="primary"
+      (actionClick)="goBack()"
+    />
+  } @else if (role(); as r) {
+    <app-detail-header
+      [title]="r.name"
+      backAriaLabel="Quay về danh sách vai trò"
+      (backClick)="goBack()"
+    >
+      <div headerBadges class="flex items-center gap-3">
+        <app-badge
+          [label]="statusBadge().label"
+          [variant]="statusBadge().variant"
+          [size]="'default'"
+        />
+      </div>
+      <div headerActions class="flex items-center gap-2 sm:ml-auto">
+        <app-button
+          variant="primary"
+          icon="edit"
+          label="Chỉnh sửa"
+          (click)="goToEdit()"
+        />
+        <app-button
+          variant="danger"
+          icon="delete"
+          label="Xóa"
+          (click)="deleteRole()"
+        />
+      </div>
+    </app-detail-header>
 
-</body>
-</html>
+    <!-- Main Content -->
+    <div class="max-w-4xl mx-auto px-4 md:px-6 lg:px-8 py-8 space-y-6">
+      <!-- Basic Info -->
+      <app-card [padding]="'default'">
+        <h3 class="text-title font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+          <mat-icon class="w-5 h-5 text-slate-400 dark:text-slate-500">badge</mat-icon>
+          Thông tin cơ bản
+        </h3>
+        <dl class="space-y-1">
+          <app-info-item label="Tên vai trò" [value]="r.name" icon="badge" />
+          <app-info-item label="Mô tả" [value]="r.description" icon="description" />
+          <app-info-item
+            label="Trạng thái"
+            [value]="r.active ? 'Đang hoạt động' : 'Đã khóa'"
+            icon="toggle_on"
+          />
+        </dl>
+      </app-card>
+
+      <!-- Permissions -->
+      <app-card [padding]="'default'">
+        <h3 class="text-title font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+          <mat-icon class="w-5 h-5 text-slate-400 dark:text-slate-500">security</mat-icon>
+          Quyền hạn ({{ (r.permissionNames || []).length }})
+        </h3>
+        @if ((r.permissionNames || []).length === 0) {
+          <span class="text-sm text-slate-500 dark:text-slate-400">Vai trò này chưa có quyền hạn nào</span>
+        } @else {
+          <div class="flex flex-wrap gap-2">
+            @for (perm of r.permissionNames; track perm) {
+              <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary">
+                {{ perm }}
+              </span>
+            }
+          </div>
+        }
+      </app-card>
+
+      <!-- System Metadata -->
+      <app-card [padding]="'default'">
+        <h3 class="text-title font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+          <mat-icon class="w-5 h-5 text-slate-400 dark:text-slate-500">history</mat-icon>
+          Thông tin hệ thống
+        </h3>
+        <dl class="grid grid-cols-1 sm:grid-cols-2 gap-1">
+          <app-info-item label="ID" [value]="r.id" icon="tag" [mono]="true" />
+          <app-info-item label="Ngày tạo" [value]="formatDate(r.createdAt)" icon="event" />
+          <app-info-item label="Cập nhật lần cuối" [value]="formatDate(r.updatedAt)" icon="update" />
+        </dl>
+      </app-card>
+    </div>
+  } @else {
+    <app-empty-state
+      variant="no-data"
+      icon="security"
+      title="Không tìm thấy vai trò"
+      description="Vai trò này có thể đã bị xóa hoặc không tồn tại."
+      actionLabel="Quay về danh sách"
+      actionIcon="arrow_back"
+      actionVariant="primary"
+      (actionClick)="goBack()"
+    />
+  }
+</div>

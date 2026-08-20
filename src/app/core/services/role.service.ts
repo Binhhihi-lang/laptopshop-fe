@@ -2,10 +2,16 @@ import { Injectable } from '@angular/core';
 import { ApiService } from './api.service';
 import { API_ENDPOINTS } from '@core/utils/constants';
 import { Observable } from 'rxjs';
-import { RoleResponse, RoleCreationRequest } from '@core/models/role.model';
+import {
+  RoleResponse,
+  RoleCreationRequest,
+  RoleUpdateRequest,
+  RoleBulkDeleteRequest,
+  RoleBulkStatusRequest,
+} from '@core/models/role.model';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class RoleService {
   private apiUrl = `${API_ENDPOINTS.ROLES}`;
@@ -16,7 +22,7 @@ export class RoleService {
     return this.api.get<RoleResponse[]>(this.apiUrl);
   }
 
-  getRoleById(id: number): Observable<RoleResponse> {
+  getRoleById(id: string): Observable<RoleResponse> {
     return this.api.get<RoleResponse>(`${this.apiUrl}/${id}`);
   }
 
@@ -24,11 +30,22 @@ export class RoleService {
     return this.api.post<RoleResponse, RoleCreationRequest>(this.apiUrl, data);
   }
 
-  updateRole(id: number, data: RoleCreationRequest): Observable<RoleResponse> {
-    return this.api.put<RoleResponse, RoleCreationRequest>(`${this.apiUrl}/${id}`, data);
+  updateRole(id: string, data: RoleUpdateRequest): Observable<RoleResponse> {
+    return this.api.put<RoleResponse, RoleUpdateRequest>(`${this.apiUrl}/${id}`, data);
   }
 
-  deleteRole(id: number): Observable<void> {
+  deleteRole(id: string): Observable<void> {
     return this.api.delete<void>(`${this.apiUrl}/${id}`);
+  }
+
+  bulkDeleteRoles(ids: string[]): Observable<void> {
+    return this.api.post<void, RoleBulkDeleteRequest>(`${this.apiUrl}/bulk-delete`, { ids });
+  }
+
+  bulkUpdateRoleStatus(ids: string[], active: boolean): Observable<void> {
+    return this.api.patch<void, RoleBulkStatusRequest>(`${this.apiUrl}/bulk-status`, {
+      ids,
+      active,
+    });
   }
 }

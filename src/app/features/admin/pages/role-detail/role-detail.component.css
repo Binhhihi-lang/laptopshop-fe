@@ -1,0 +1,4 @@
+/* Role Detail Dialog - Using Tailwind utility classes globally */
+:host {
+  display: block;
+}
