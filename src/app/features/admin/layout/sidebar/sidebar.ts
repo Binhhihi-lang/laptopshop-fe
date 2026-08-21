@@ -32,9 +32,15 @@ export class Sidebar {
   readonly collapsed = this.collapsedSignal.asReadonly();
   readonly mobileOpen = this.mobileOpenInput;
 
-  // Nav items: ẩn Vai trò/Quyền với role thiếu quyền MANAGE_ROLES_PERMISSIONS
+  // Nav items:
+  // - Vai trò/Quyền: chỉ hiện khi có MANAGE_ROLES_PERMISSIONS (STAFF không có → ẩn).
+  // - Người dùng (Quản lý người dùng): chỉ hiện khi có READ_USER. STAFF THIẾU
+  //   READ_USER (xem DataInitializer) nên menu này bị ẩn hoàn toàn với STAFF,
+  //   tương tự như Vai trò/Quyền. STAFF chỉ truy cập được "Hồ sơ cá nhân"
+  //   (/admin/profile) để xem/sửa thông tin của chính mình.
   readonly nav = computed<NavItem[]>(() => {
     const canManage = this.authService.hasPermission('MANAGE_ROLES_PERMISSIONS');
+    const canViewUsers = this.authService.hasPermission('READ_USER');
     const all: NavItem[] = [
       { path: '/admin/dashboard', label: 'Dashboard', icon: 'dashboard', badge: 'new' },
       { path: '/admin/users', label: 'Người dùng', icon: 'people' },
@@ -44,8 +50,15 @@ export class Sidebar {
       { path: '/admin/roles', label: 'Vai trò', icon: 'shield' },
       { path: '/admin/permissions', label: 'Quyền', icon: 'key' },
     ];
-    if (canManage) return all;
-    return all.filter((item) => item.path !== '/admin/roles' && item.path !== '/admin/permissions');
+    return all.filter((item) => {
+      if (item.path === '/admin/roles' || item.path === '/admin/permissions') {
+        return canManage;
+      }
+      if (item.path === '/admin/users') {
+        return canViewUsers;
+      }
+      return true;
+    });
   });
 
   constructor() {

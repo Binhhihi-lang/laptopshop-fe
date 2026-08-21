@@ -5,6 +5,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ProductService } from '@core/services/product.service';
+import { AuthService } from '@core/services/auth.service';
 import { ProductResponse } from '@core/models/product.model';
 import { ConfirmDialogComponent } from '@shared/confirm-dialog/confirm-dialog.component';
 
@@ -41,6 +42,9 @@ export class ProductDetailComponent implements OnInit {
   private readonly productService = inject(ProductService);
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(MatSnackBar);
+  private readonly authService = inject(AuthService);
+
+  canDeleteProduct = computed(() => this.authService.hasPermission('DELETE_PRODUCT'));
 
   product = signal<ProductResponse | null>(null);
   isLoading = signal(false);

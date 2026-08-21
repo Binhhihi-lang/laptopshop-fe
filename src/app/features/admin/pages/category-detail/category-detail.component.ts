@@ -5,6 +5,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { CategoryService } from '@core/services/category.service';
+import { AuthService } from '@core/services/auth.service';
 import { CategoryDetailResponse } from '@core/models/category.model';
 import { ConfirmDialogComponent } from '@shared/confirm-dialog/confirm-dialog.component';
 
@@ -40,6 +41,9 @@ export class CategoryDetailComponent implements OnInit {
   private readonly categoryService = inject(CategoryService);
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(MatSnackBar);
+  private readonly authService = inject(AuthService);
+
+  canDeleteCategory = computed(() => this.authService.hasPermission('DELETE_CATEGORY'));
 
   isLoading = signal(false);
   category = signal<CategoryDetailResponse | null>(null);

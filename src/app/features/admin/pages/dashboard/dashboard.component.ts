@@ -1,13 +1,17 @@
-import { Component, OnInit, ChangeDetectorRef, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
-import { forkJoin } from 'rxjs';
+import {
+  Component,
+  OnInit,
+  ChangeDetectorRef,
+  ViewChild,
+  ElementRef,
+  AfterViewInit,
+} from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { MaterialModule } from '@shared/material.module';
 
-import { UserService } from '@core/services/user.service';
-import { ProductService } from '@core/services/product.service';
-import { CategoryService } from '@core/services/category.service';
-import { CouponService } from '@core/services/coupon.service';
+import { DashboardService } from '@core/services/dashboard.service';
+import { DashboardStats } from '@core/models/dashboard.model';
 
 interface LowStockProduct {
   id: string;
@@ -67,11 +71,8 @@ export class DashboardComponent implements OnInit, AfterViewInit {
   @ViewChild('revenueChart') revenueChartRef!: ElementRef<HTMLCanvasElement>;
 
   constructor(
-    private userService: UserService,
-    private productService: ProductService,
-    private categoryService: CategoryService,
-    private couponService: CouponService,
-    private cdr: ChangeDetectorRef
+    private dashboardService: DashboardService,
+    private cdr: ChangeDetectorRef,
   ) {}
 
   ngOnInit(): void {
@@ -87,31 +88,18 @@ export class DashboardComponent implements OnInit, AfterViewInit {
     this.loading = true;
     this.errorMessage = '';
 
-    forkJoin({
-      users: this.userService.getUsers(),
-      products: this.productService.getProducts(),
-      categories: this.categoryService.getCategories(),
-      coupons: this.couponService.getCoupons(),
-    }).subscribe({
-      next: ({ users, products, categories, coupons }) => {
-        this.userCount = users.length;
-        this.productCount = products.length;
-        this.categoryCount = categories.length;
-        this.couponCount = coupons.length;
+    this.dashboardService.getStats().subscribe({
+      next: (stats: DashboardStats) => {
+        this.userCount = stats.userCount;
+        this.activeUsers = stats.activeUserCount;
+        this.productCount = stats.productCount;
+        this.categoryCount = stats.categoryCount;
+        this.couponCount = stats.couponCount;
 
-        this.activeUsers = users.length;
-
-        this.lowStockProducts = products
-          .filter((p) => p.quantity < 5)
-          .slice(0, 5)
-          .map((p) => ({
-            id: p.id,
-            code:p.code,
-            name: p.name,
-            quantity: p.quantity,
-            image: p.image,
-          }));
-        this.lowStockCount = this.lowStockProducts.length;
+        // lowStockProducts đã được backend tính sẵn (top 5, quantity < 5),
+        // shape id/code/name/quantity/image khớp nguyên với template.
+        this.lowStockProducts = stats.lowStockProducts;
+        this.lowStockCount = stats.lowStockCount;
 
         this.kpis = [
           {
@@ -125,7 +113,8 @@ export class DashboardComponent implements OnInit, AfterViewInit {
             label: 'Tổng sản phẩm',
             value: this.productCount.toString(),
             icon: 'inventory_2',
-            iconClass: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400',
+            iconClass:
+              'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400',
             trend: { up: true, text: `${this.productCount - this.lowStockCount} còn hàng` },
           },
           {
@@ -194,7 +183,8 @@ export class DashboardComponent implements OnInit, AfterViewInit {
             description: 'Trần Thị B đăng ký với vai trò STAFF',
             time: '1 giờ trước',
             icon: 'person_add',
-            iconClass: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400',
+            iconClass:
+              'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400',
           },
           {
             id: '4',

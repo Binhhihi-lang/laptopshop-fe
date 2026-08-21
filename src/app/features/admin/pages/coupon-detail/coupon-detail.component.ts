@@ -5,6 +5,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { CouponService } from '@core/services/coupon.service';
+import { AuthService } from '@core/services/auth.service';
 import { CouponResponse } from '@core/models/coupon.model';
 import { ConfirmDialogComponent } from '@shared/confirm-dialog/confirm-dialog.component';
 
@@ -40,6 +41,9 @@ export class CouponDetailComponent implements OnInit {
   private readonly couponService = inject(CouponService);
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(MatSnackBar);
+  private readonly authService = inject(AuthService);
+
+  canDeleteCoupon = computed(() => this.authService.hasPermission('DELETE_COUPON'));
 
   isLoading = signal(false);
   coupon = signal<CouponResponse | null>(null);

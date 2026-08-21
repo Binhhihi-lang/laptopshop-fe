@@ -14,6 +14,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { CouponService } from '@core/services/coupon.service';
+import { AuthService } from '@core/services/auth.service';
 import { CouponResponse } from '@core/models/coupon.model';
 import { TableComponent, Column, TableAction } from '@shared/components/table/table.component';
 import { ConfirmDialogComponent } from '@shared/confirm-dialog/confirm-dialog.component';
@@ -53,6 +54,9 @@ export class CouponsComponent implements OnInit, AfterViewInit {
   private readonly router = inject(Router);
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(MatSnackBar);
+  private readonly authService = inject(AuthService);
+
+  canDeleteCoupon = computed(() => this.authService.hasPermission('DELETE_COUPON'));
 
   coupons = signal<CouponResponse[]>([]);
   isLoading = signal(false);
@@ -101,12 +105,16 @@ export class CouponsComponent implements OnInit, AfterViewInit {
       handler: (row) => this.editCoupon(row),
       variant: 'ghost',
     },
-    {
-      label: 'Xóa',
-      icon: 'delete',
-      handler: (row) => this.deleteCoupon(row),
-      variant: 'danger',
-    },
+    ...(this.authService.hasPermission('DELETE_COUPON')
+      ? [
+          {
+            label: 'Xóa',
+            icon: 'delete',
+            handler: (row) => this.deleteCoupon(row),
+            variant: 'danger',
+          } as TableAction<CouponResponse>,
+        ]
+      : []),
     {
       label: 'Kích hoạt/Khóa',
       icon: 'block',
@@ -283,27 +291,27 @@ export class CouponsComponent implements OnInit, AfterViewInit {
     this.selectedCouponIds.set(rows.map((r) => r.id));
   }
 
-  bulkButtons = computed<BulkToolbarButton[]>(() => [
-    {
-      label: 'Kích hoạt',
-      icon: 'check_circle',
-      variant: 'success',
-      handler: () => this.bulkActivate(),
-    },
-    {
-      label: 'Khóa',
-      icon: 'block',
-      variant: 'secondary',
-      handler: () => this.bulkDeactivate(),
-    },
-    {
-      label: 'Xóa',
-      icon: 'delete',
-      variant: 'danger',
-      handler: () => this.bulkDelete(),
-      disabled: this.isBulkDeleting(),
-    },
-  ]);
+  bulkButtons = computed<BulkToolbarButton[]>(() => {
+    const buttons: BulkToolbarButton[] = [
+      {
+        label: 'Kích hoạt',
+        icon: 'check_circle',
+        variant: 'success',
+        handler: () => this.bulkActivate(),
+      },
+      { label: 'Khóa', icon: 'block', variant: 'secondary', handler: () => this.bulkDeactivate() },
+    ];
+    if (this.canDeleteCoupon()) {
+      buttons.push({
+        label: 'Xóa',
+        icon: 'delete',
+        variant: 'danger',
+        handler: () => this.bulkDelete(),
+        disabled: this.isBulkDeleting(),
+      });
+    }
+    return buttons;
+  });
 
   bulkDelete(): void {
     if (this.selectedCount() === 0) return;

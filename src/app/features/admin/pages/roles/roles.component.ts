@@ -15,6 +15,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { RoleService } from '@core/services/role.service';
 import { RoleResponse } from '@core/models/role.model';
+import { AuthService } from '@core/services/auth.service';
 import { TableComponent, Column, TableAction } from '@shared/components/table/table.component';
 import { ConfirmDialogComponent } from '@shared/confirm-dialog/confirm-dialog.component';
 import { CardComponent } from '@shared/components/card/card.component';
@@ -49,6 +50,7 @@ import {
 })
 export class RolesComponent implements OnInit, AfterViewInit {
   private readonly roleService = inject(RoleService);
+  private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(MatSnackBar);
@@ -80,33 +82,40 @@ export class RolesComponent implements OnInit, AfterViewInit {
   @ViewChild('createdAtColumn', { static: true }) createdAtColumn!: TemplateRef<any>;
   @ViewChild('updatedAtColumn', { static: true }) updatedAtColumn!: TemplateRef<any>;
 
-  actions: TableAction<RoleResponse>[] = [
-    {
-      label: 'Xem chi tiết',
-      icon: 'visibility',
-      handler: (row) => this.viewRole(row),
-      variant: 'ghost',
-    },
-    {
-      label: 'Chỉnh sửa',
-      icon: 'edit',
-      handler: (row) => this.editRole(row),
-      variant: 'ghost',
-    },
-    {
-      label: 'Xóa',
-      icon: 'delete',
-      handler: (row) => this.deleteRole(row),
-      variant: 'danger',
-    },
-    {
-      label: 'Kích hoạt/Khóa',
-      icon: 'block',
-      handler: (row) => this.toggleStatus(row),
-      variant: 'ghost',
-      disabled: (row) => row.name === 'ADMIN' && row.active,
-    },
-  ];
+  // Ẩn toàn bộ hành động với role thiếu MANAGE_ROLES_PERMISSIONS (module chỉ ADMIN quản lý)
+  canManage = computed(() => this.authService.hasPermission('MANAGE_ROLES_PERMISSIONS'));
+
+  actions = computed<TableAction<RoleResponse>[]>(() => {
+    if (!this.canManage()) return [];
+    const base: TableAction<RoleResponse>[] = [
+      {
+        label: 'Xem chi tiết',
+        icon: 'visibility',
+        handler: (row) => this.viewRole(row),
+        variant: 'ghost',
+      },
+      {
+        label: 'Chỉnh sửa',
+        icon: 'edit',
+        handler: (row) => this.editRole(row),
+        variant: 'ghost',
+      },
+      {
+        label: 'Xóa',
+        icon: 'delete',
+        handler: (row) => this.deleteRole(row),
+        variant: 'danger',
+      },
+      {
+        label: 'Kích hoạt/Khóa',
+        icon: 'block',
+        handler: (row) => this.toggleStatus(row),
+        variant: 'ghost',
+        disabled: (row) => row.name === 'ADMIN' && row.active,
+      },
+    ];
+    return base;
+  });
 
   ngOnInit(): void {
     this.loadData();
@@ -252,26 +261,29 @@ export class RolesComponent implements OnInit, AfterViewInit {
     this.selectedRoleIds.set(rows.map((r) => r.id));
   }
 
-  bulkButtons = computed<BulkToolbarButton[]>(() => [
-    {
-      label: 'Kích hoạt',
-      icon: 'check_circle',
-      variant: 'success',
-      handler: () => this.bulkActivate(),
-    },
-    {
-      label: 'Khóa',
-      icon: 'block',
-      variant: 'secondary',
-      handler: () => this.bulkDeactivate(),
-    },
-    {
-      label: 'Xóa',
-      icon: 'delete',
-      variant: 'danger',
-      handler: () => this.bulkDelete(),
-    },
-  ]);
+  bulkButtons = computed<BulkToolbarButton[]>(() => {
+    if (!this.canManage()) return [];
+    return [
+      {
+        label: 'Kích hoạt',
+        icon: 'check_circle',
+        variant: 'success',
+        handler: () => this.bulkActivate(),
+      },
+      {
+        label: 'Khóa',
+        icon: 'block',
+        variant: 'secondary',
+        handler: () => this.bulkDeactivate(),
+      },
+      {
+        label: 'Xóa',
+        icon: 'delete',
+        variant: 'danger',
+        handler: () => this.bulkDelete(),
+      },
+    ];
+  });
 
   bulkDelete(): void {
     if (this.selectedCount() === 0) return;

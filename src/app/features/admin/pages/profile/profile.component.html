@@ -1,0 +1,199 @@
+<!-- Hồ sơ cá nhân - Modern Clean with Tailwind using Shared Components -->
+<div class="profile-container min-h-screen bg-slate-50 dark:bg-slate-950">
+  @if (isLoading()) {
+    <!-- Loading Overlay -->
+    <div class="fixed inset-0 bg-white/80 dark:bg-slate-950/80 flex items-center justify-center z-50">
+      <app-loading size="xl" text="Đang tải hồ sơ..." />
+    </div>
+  }
+
+  <!-- Page Header -->
+  <div class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-16 z-[90]">
+    <div class="max-w-3xl mx-auto px-4 py-4">
+      <app-page-header
+        title="Hồ sơ cá nhân"
+        subtitle="Xem và cập nhật thông tin tài khoản của bạn"
+        [hasActions]="true"
+      >
+        <app-button
+          variant="ghost"
+          icon="arrow_back"
+          label="Quay lại"
+          (click)="onCancel()"
+          [disabled]="isSubmitting()"
+        />
+      </app-page-header>
+    </div>
+  </div>
+
+  <!-- Form Container -->
+  <form [formGroup]="profileForm" (ngSubmit)="onSubmit()" class="max-w-2xl mx-auto px-4 py-8 space-y-6" novalidate>
+    <!-- Avatar Section -->
+    <section class="form-section" aria-labelledby="profile-avatar-heading">
+      <app-card>
+        <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
+          <h2 id="profile-avatar-heading" class="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+            <mat-icon class="w-5 h-5 text-primary">photo_camera</mat-icon>
+            Ảnh đại diện
+          </h2>
+        </div>
+        <div class="p-6">
+          <div class="flex items-center gap-6">
+            <!-- Avatar Preview (shared app-avatar: loading / error / loaded) -->
+            <div class="relative shrink-0">
+              <app-avatar
+                [src]="avatarPreview() ?? ''"
+                [initials]="getInitials(profileForm.get('fullName')?.value || '')"
+                [size]="'xl'"
+                shape="rounded"
+                shadow="lg"
+              />
+              <label class="absolute bottom-0 right-0 w-8 h-8 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center cursor-pointer border border-slate-200 dark:border-slate-700 shadow-md hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors z-10">
+                <input
+                  type="file"
+                  accept="image/*"
+                  (change)="onAvatarSelected($event)"
+                  class="sr-only"
+                  id="profileAvatarInput"
+                  [disabled]="isSubmitting()"
+                />
+                <mat-icon class="w-4 h-4 text-slate-600 dark:text-slate-400">camera_alt</mat-icon>
+              </label>
+              @if (avatarPreview()) {
+                <button
+                  type="button"
+                  (click)="removeAvatar()"
+                  class="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-danger-500 text-white flex items-center justify-center shadow-lg hover:bg-danger-600 transition-colors z-10"
+                  aria-label="Xóa ảnh"
+                >
+                  <mat-icon class="w-4 h-4">close</mat-icon>
+                </button>
+              }
+            </div>
+            <!-- Avatar Info -->
+            <div class="flex-1 min-w-0">
+              <p class="text-sm text-slate-600 dark:text-slate-400">Tải lên ảnh đại diện của bạn (tùy chọn)</p>
+              <p class="text-xs text-slate-500 dark:text-slate-500 mt-1">Hỗ trợ JPG, PNG. Kích thước tối đa 2MB. Tỷ lệ khuyến nghị: 1:1</p>
+            </div>
+          </div>
+        </div>
+      </app-card>
+    </section>
+
+    <!-- Account Information -->
+    <section class="form-section" aria-labelledby="profile-account-heading">
+      <app-card>
+        <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
+          <h2 id="profile-account-heading" class="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+            <mat-icon class="w-5 h-5 text-primary">badge</mat-icon>
+            Thông tin tài khoản
+          </h2>
+        </div>
+        <div class="p-6 space-y-6">
+          <!-- Email (chỉ đọc, không cho đổi) -->
+          <app-form-field id="email" label="Email" [required]="true">
+            <app-input
+              id="email"
+              [value]="currentUser()?.email ?? ''"
+              type="email"
+              icon="email"
+              [readonly]="true"
+              [disabled]="isSubmitting()"
+              hint="Email không thể thay đổi từ trang này"
+            />
+          </app-form-field>
+
+          <!-- Vai trò (chỉ đọc) -->
+          <app-form-field id="roles" label="Vai trò">
+            <div class="flex flex-wrap gap-2 py-1">
+              @for (role of currentUser()?.roleNames ?? []; track role) {
+                <app-badge
+                  [label]="role"
+                  [variant]="getRoleVariant(role)"
+                  [size]="'sm'"
+                />
+              } @empty {
+                <span class="text-sm text-slate-500 dark:text-slate-400">Chưa có vai trò</span>
+              }
+            </div>
+          </app-form-field>
+        </div>
+      </app-card>
+    </section>
+
+    <!-- Personal Information -->
+    <section class="form-section" aria-labelledby="profile-personal-heading">
+      <app-card>
+        <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
+          <h2 id="profile-personal-heading" class="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+            <mat-icon class="w-5 h-5 text-primary">person</mat-icon>
+            Thông tin cá nhân
+          </h2>
+        </div>
+        <div class="p-6 space-y-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Full Name -->
+            <app-form-field id="fullName" label="Họ tên" [required]="true">
+              <app-input
+                id="fullName"
+                formControlName="fullName"
+                type="text"
+                placeholder="Nguyễn Văn A"
+                autocomplete="name"
+                icon="person_outline"
+                [disabled]="isSubmitting()"
+                [error]="hasError('fullName', 'required') ? 'Họ tên là bắt buộc' : hasError('fullName', 'minlength') ? 'Họ tên phải có ít nhất 2 ký tự' : ''"
+              />
+            </app-form-field>
+
+            <!-- Phone -->
+            <app-form-field id="phone" label="Số điện thoại">
+              <app-input
+                id="phone"
+                formControlName="phone"
+                type="tel"
+                placeholder="0901234567"
+                autocomplete="tel"
+                icon="phone"
+                [disabled]="isSubmitting()"
+                [error]="hasError('phone', 'pattern') ? 'Số điện thoại không hợp lệ (10-11 số)' : ''"
+              />
+            </app-form-field>
+          </div>
+
+          <!-- Address -->
+          <app-form-field id="address" label="Địa chỉ">
+            <app-input
+              id="address"
+              formControlName="address"
+              type="textarea"
+              placeholder="Số nhà, đường, phường, quận, thành phố"
+              [rows]="3"
+              icon="location_on"
+              [disabled]="isSubmitting()"
+            />
+          </app-form-field>
+        </div>
+      </app-card>
+    </section>
+
+    <!-- Form Actions -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+      <app-button
+        label="Hủy"
+        variant="secondary"
+        icon="close"
+        (click)="onCancel()"
+        [disabled]="isSubmitting()"
+      />
+      <app-button
+        variant="primary"
+        icon="save"
+        label="Lưu thay đổi"
+        type="submit"
+        [disabled]="isSubmitting()"
+        [loading]="isSubmitting()"
+      />
+    </div>
+  </form>
+</div>

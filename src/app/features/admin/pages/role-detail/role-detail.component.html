@@ -54,12 +54,14 @@
           label="Chỉnh sửa"
           (click)="goToEdit()"
         />
-        <app-button
-          variant="danger"
-          icon="delete"
-          label="Xóa"
-          (click)="deleteRole()"
-        />
+        @if (canManage()) {
+          <app-button
+            variant="danger"
+            icon="delete"
+            label="Xóa"
+            (click)="deleteRole()"
+          />
+        }
       </div>
     </app-detail-header>
 

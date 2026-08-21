@@ -32,3 +32,13 @@ export interface UserUpdateRequest {
   active?: boolean;
   avatar?: string | File;
 }
+
+// Chỉ các trường cho phép cập nhật ở trang "Hồ sơ cá nhân" (/admin/profile).
+// KHÔNG có email / roleNames / active / password — bảo vệ không cho user tự
+// đổi email hay vai trò của chính mình.
+export interface UserProfileUpdateRequest {
+  fullName?: string;
+  phone?: string;
+  address?: string;
+  avatar?: string | File;
+}

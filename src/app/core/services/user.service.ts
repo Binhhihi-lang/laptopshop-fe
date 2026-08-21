@@ -2,7 +2,12 @@ import { Injectable } from '@angular/core';
 import { ApiService } from './api.service';
 import { API_ENDPOINTS } from '@core/utils/constants';
 import { Observable } from 'rxjs';
-import { UserCreationRequest, UserResponse, UserUpdateRequest } from '@core/models/user.model';
+import {
+  UserCreationRequest,
+  UserProfileUpdateRequest,
+  UserResponse,
+  UserUpdateRequest,
+} from '@core/models/user.model';
 
 @Injectable({
   providedIn: 'root',
@@ -67,5 +72,31 @@ export class UserService {
       ids,
       active,
     });
+  }
+
+  // Lấy hồ sơ cá nhân của chính user đang đăng nhập (gọi GET /admin/users/me)
+  getMyProfile(): Observable<UserResponse> {
+    return this.api.get<UserResponse>(`${this.apiUrl}/me`);
+  }
+
+  // Cập nhật hồ sơ cá nhân (gọi PUT /admin/users/me). Chỉ gửi fullName/phone/
+  // address/avatar lên backend — KHÔNG gửi email/role/active/password.
+  updateMyProfile(data: UserProfileUpdateRequest): Observable<UserResponse> {
+    return this.api.put<UserResponse, FormData>(
+      `${this.apiUrl}/me`,
+      this.buildProfileFormData(data),
+    );
+  }
+
+  private buildProfileFormData(data: UserProfileUpdateRequest): FormData {
+    const formData = new FormData();
+    if (data.fullName !== undefined) formData.append('fullName', data.fullName);
+    if (data.phone !== undefined) formData.append('phone', data.phone);
+    if (data.address !== undefined) formData.append('address', data.address);
+    // Đọc file trực tiếp từ data.avatar, khớp tên field backend đang chờ (inputFile)
+    if (data.avatar instanceof File) {
+      formData.append('inputFile', data.avatar);
+    }
+    return formData;
   }
 }

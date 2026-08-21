@@ -9,6 +9,7 @@ import { DashboardComponent } from '@features/admin/pages/dashboard/dashboard.co
 import { UsersComponent } from '@features/admin/pages/users/users.component';
 import { UserFormComponent } from '@features/admin/pages/user-form/user-form.component';
 import { UserDetailComponent } from '@features/admin/pages/user-detail/user-detail.component';
+import { ProfileComponent } from '@features/admin/pages/profile/profile.component';
 import { ProductsComponent } from '@features/admin/pages/products/products.component';
 import { ProductFormComponent } from '@features/admin/pages/product-form/product-form.component';
 import { ProductDetailComponent } from '@features/admin/pages/product-detail/product-detail.component';
@@ -41,10 +42,29 @@ export const routes: Routes = [
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       { path: 'dashboard', component: DashboardComponent },
-      { path: 'users', component: UsersComponent },
-      { path: 'users/create', component: UserFormComponent },
-      { path: 'users/:id/edit', component: UserFormComponent },
-      { path: 'users/:id', component: UserDetailComponent },
+      {
+        path: 'users',
+        component: UsersComponent,
+        data: { permissions: ['READ_USER'] },
+      },
+      {
+        path: 'users/create',
+        component: UserFormComponent,
+        data: { permissions: ['READ_USER'] },
+      },
+      {
+        path: 'users/:id/edit',
+        component: UserFormComponent,
+        data: { permissions: ['READ_USER'] },
+      },
+      {
+        path: 'users/:id',
+        component: UserDetailComponent,
+        data: { permissions: ['READ_USER'] },
+      },
+      // Hồ sơ cá nhân: bất kỳ tài khoản hợp lệ nào (kể cả STAFF) đều vào được,
+      // KHÔNG yêu cầu READ_USER — khác với Quản lý người dùng ở trên.
+      { path: 'profile', component: ProfileComponent },
       { path: 'products', component: ProductsComponent },
       { path: 'products/create', component: ProductFormComponent },
       { path: 'products/:id/edit', component: ProductFormComponent },
@@ -57,14 +77,46 @@ export const routes: Routes = [
       { path: 'coupons/create', component: CouponFormComponent },
       { path: 'coupons/:id/edit', component: CouponFormComponent },
       { path: 'coupons/:id', component: CouponDetailComponent },
-      { path: 'roles', component: RolesComponent },
-      { path: 'roles/create', component: RoleFormComponent },
-      { path: 'roles/:id', component: RoleDetailComponent },
-      { path: 'roles/:id/edit', component: RoleFormComponent },
-      { path: 'permissions', component: PermissionsComponent },
-      { path: 'permissions/create', component: PermissionFormComponent },
-      { path: 'permissions/:id/edit', component: PermissionFormComponent },
-      { path: 'permissions/:id', component: PermissionDetailComponent },
+      {
+        path: 'roles',
+        component: RolesComponent,
+        data: { permissions: ['MANAGE_ROLES_PERMISSIONS'] },
+      },
+      {
+        path: 'roles/create',
+        component: RoleFormComponent,
+        data: { permissions: ['MANAGE_ROLES_PERMISSIONS'] },
+      },
+      {
+        path: 'roles/:id',
+        component: RoleDetailComponent,
+        data: { permissions: ['MANAGE_ROLES_PERMISSIONS'] },
+      },
+      {
+        path: 'roles/:id/edit',
+        component: RoleFormComponent,
+        data: { permissions: ['MANAGE_ROLES_PERMISSIONS'] },
+      },
+      {
+        path: 'permissions',
+        component: PermissionsComponent,
+        data: { permissions: ['MANAGE_ROLES_PERMISSIONS'] },
+      },
+      {
+        path: 'permissions/create',
+        component: PermissionFormComponent,
+        data: { permissions: ['MANAGE_ROLES_PERMISSIONS'] },
+      },
+      {
+        path: 'permissions/:id/edit',
+        component: PermissionFormComponent,
+        data: { permissions: ['MANAGE_ROLES_PERMISSIONS'] },
+      },
+      {
+        path: 'permissions/:id',
+        component: PermissionDetailComponent,
+        data: { permissions: ['MANAGE_ROLES_PERMISSIONS'] },
+      },
     ],
   },
 

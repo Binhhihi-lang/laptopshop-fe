@@ -69,12 +69,14 @@
           label="Chỉnh sửa"
           (click)="goToEdit()"
         />
-        <app-button
-          variant="danger"
-          icon="delete"
-          label="Xóa"
-          (click)="deleteCoupon()"
-        />
+        @if (canDeleteCoupon()) {
+          <app-button
+            variant="danger"
+            icon="delete"
+            label="Xóa"
+            (click)="deleteCoupon()"
+          />
+        }
       </div>
     </app-detail-header>
 

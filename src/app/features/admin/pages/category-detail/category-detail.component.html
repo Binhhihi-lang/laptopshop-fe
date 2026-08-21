@@ -72,12 +72,14 @@
           label="Chỉnh sửa"
           (click)="goToEdit()"
         />
-        <app-button
-          variant="danger"
-          icon="delete"
-          label="Xóa"
-          (click)="deleteCategory()"
-        />
+        @if (canDeleteCategory()) {
+          <app-button
+            variant="danger"
+            icon="delete"
+            label="Xóa"
+            (click)="deleteCategory()"
+          />
+        }
       </div>
     </app-detail-header>
 

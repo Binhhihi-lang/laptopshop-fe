@@ -5,6 +5,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { UserService } from '@core/services/user.service';
 import { UserResponse } from '@core/models/user.model';
+import { AuthService } from '@core/services/auth.service';
 import { ConfirmDialogComponent } from '@shared/confirm-dialog/confirm-dialog.component';
 
 // Shared components
@@ -42,12 +43,16 @@ export class UserDetailComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly userService = inject(UserService);
+  private readonly authService = inject(AuthService);
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(MatSnackBar);
 
   user = signal<UserResponse | null>(null);
   isLoading = signal(false);
   userId: string | null = null;
+
+  // Ẩn nút "Xóa" với role thiếu quyền DELETE_USER
+  canDeleteUser = computed(() => this.authService.hasPermission('DELETE_USER'));
 
   // Computed helpers for badges
   statusBadge = computed(() => {

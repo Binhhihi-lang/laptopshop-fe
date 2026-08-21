@@ -14,6 +14,7 @@ import { Router, RouterModule } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { ProductService } from '@core/services/product.service';
 import { CategoryService } from '@core/services/category.service';
+import { AuthService } from '@core/services/auth.service';
 import { ProductResponse } from '@core/models/product.model';
 import { CategoryResponse } from '@core/models/category.model';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -66,6 +67,9 @@ export class ProductsComponent implements OnInit, AfterViewInit {
   private readonly snackBar = inject(MatSnackBar);
   private readonly dialog = inject(MatDialog);
   protected readonly router = inject(Router);
+  private readonly authService = inject(AuthService);
+
+  canDeleteProduct = computed(() => this.authService.hasPermission('DELETE_PRODUCT'));
 
   // Data signals
   products = signal<ProductResponse[]>([]);
@@ -142,12 +146,16 @@ export class ProductsComponent implements OnInit, AfterViewInit {
       handler: (row) => this.editProduct(row),
       variant: 'ghost',
     },
-    {
-      label: 'Xóa',
-      icon: 'delete',
-      handler: (row) => this.deleteProduct(row),
-      variant: 'danger',
-    },
+    ...(this.authService.hasPermission('DELETE_PRODUCT')
+      ? [
+          {
+            label: 'Xóa',
+            icon: 'delete',
+            handler: (row) => this.deleteProduct(row),
+            variant: 'danger',
+          } as TableAction<ProductResponse>,
+        ]
+      : []),
     {
       label: 'Kích hoạt/Khóa',
       icon: 'block',
@@ -359,27 +367,27 @@ export class ProductsComponent implements OnInit, AfterViewInit {
   }
 
   // Bulk toolbar buttons
-  bulkProductButtons = computed<BulkToolbarButton[]>(() => [
-    {
-      label: 'Kích hoạt',
-      icon: 'check_circle',
-      variant: 'success',
-      handler: () => this.bulkActivate(),
-    },
-    {
-      label: 'Khóa',
-      icon: 'block',
-      variant: 'secondary',
-      handler: () => this.bulkDeactivate(),
-    },
-    {
-      label: 'Xóa',
-      icon: 'delete',
-      variant: 'danger',
-      handler: () => this.bulkDelete(),
-      disabled: this.deletingProductId() !== null,
-    },
-  ]);
+  bulkProductButtons = computed<BulkToolbarButton[]>(() => {
+    const buttons: BulkToolbarButton[] = [
+      {
+        label: 'Kích hoạt',
+        icon: 'check_circle',
+        variant: 'success',
+        handler: () => this.bulkActivate(),
+      },
+      { label: 'Khóa', icon: 'block', variant: 'secondary', handler: () => this.bulkDeactivate() },
+    ];
+    if (this.canDeleteProduct()) {
+      buttons.push({
+        label: 'Xóa',
+        icon: 'delete',
+        variant: 'danger',
+        handler: () => this.bulkDelete(),
+        disabled: this.deletingProductId() !== null,
+      });
+    }
+    return buttons;
+  });
 
   // Bulk actions (real via API)
   bulkDelete(): void {

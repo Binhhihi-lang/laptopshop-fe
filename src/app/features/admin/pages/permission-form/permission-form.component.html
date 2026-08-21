@@ -1,10 +1,97 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Title</title>
-</head>
-<body>
+<div class="form-container min-h-screen bg-slate-50 dark:bg-slate-950">
+  <!-- Loading -->
+  @if (isLoading()) {
+    <div class="loading-overlay fixed inset-0 bg-white/80 dark:bg-slate-950/80 flex items-center justify-center z-50">
+      <app-loading size="xl" text="Đang tải..." />
+    </div>
+  }
 
-</body>
-</html>
+  <!-- Header -->
+  <div class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-16 z-[90]">
+    <div class="max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-4">
+      <app-page-header
+        [title]="pageTitle()"
+        [subtitle]="'Điền thông tin quyền hạn'"
+        [hasActions]="true"
+      >
+        <app-button
+          variant="ghost"
+          icon="arrow_back"
+          label="Quay lại"
+          (click)="onCancel()"
+          [disabled]="isSubmitting()"
+        />
+      </app-page-header>
+    </div>
+  </div>
+
+  <form [formGroup]="permissionForm" (ngSubmit)="onSubmit()" class="permission-form max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-8 space-y-6">
+    <!-- Basic Information Section -->
+    <section class="form-section">
+      <app-card [padding]="'default'" [variant]="'default'">
+        <div class="flex items-center gap-2 mb-4">
+          <mat-icon class="w-5 h-5 text-primary-600 dark:text-primary-400">security</mat-icon>
+          <h3 class="section-title text-lg font-medium text-slate-900 dark:text-white">Thông tin quyền hạn</h3>
+        </div>
+
+        <div class="form-grid grid grid-cols-1 md:grid-cols-2 gap-4">
+          <app-form-field
+            id="name-field"
+            label="Tên quyền"
+            [required]="true"
+            [error]="hasError('name', 'required') ? 'Tên quyền là bắt buộc' : hasError('name', 'pattern') ? 'Tên quyền chỉ gồm chữ hoa và dấu gạch dưới (VD: READ_PRODUCT)' : hasError('name', 'maxlength') ? 'Tên quyền không quá 100 ký tự' : ''"
+          >
+            <app-input
+              id="name"
+              name="name"
+              formControlName="name"
+              placeholder="VD: READ_PRODUCT, MANAGE_USERS"
+              [maxLength]="100"
+              [ariaLabel]="'Tên quyền'"
+            />
+          </app-form-field>
+
+          <app-form-field
+            id="description-field"
+            label="Mô tả"
+            [required]="true"
+            class="md:col-span-2"
+            [error]="hasError('description', 'required') ? 'Mô tả là bắt buộc' : hasError('description', 'maxlength') ? 'Mô tả không quá 255 ký tự' : ''"
+          >
+            <app-input
+              id="description"
+              name="description"
+              type="textarea"
+              formControlName="description"
+              [rows]="4"
+              placeholder="Mô tả quyền hạn (VD: Cho phép xem danh sách sản phẩm)"
+              [ariaLabel]="'Mô tả'"
+            />
+          </app-form-field>
+        </div>
+      </app-card>
+    </section>
+
+    <!-- Form Actions -->
+    <div class="form-actions flex justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-700">
+      <app-button
+        type="button"
+        variant="outline"
+        icon="close"
+        label="Hủy"
+        [disabled]="isSubmitting()"
+        (click)="onCancel()"
+        size="default">
+      </app-button>
+      <app-button
+        type="submit"
+        variant="primary"
+        [icon]="isSubmitting() ? '' : (isEditMode() ? 'save' : 'add')"
+        [loading]="isSubmitting()"
+        [label]="isSubmitting() ? 'Đang lưu...' : submitButtonText()"
+        [disabled]="permissionForm.invalid || isSubmitting()"
+        size="default">
+      </app-button>
+    </div>
+  </form>
+</div>

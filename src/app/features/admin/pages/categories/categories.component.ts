@@ -14,6 +14,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
 import { CategoryService } from '@core/services/category.service';
+import { AuthService } from '@core/services/auth.service';
 import { CategoryResponse } from '@core/models/category.model';
 import { ConfirmDialogComponent } from '@shared/confirm-dialog/confirm-dialog.component';
 
@@ -54,6 +55,9 @@ export class CategoriesComponent implements OnInit, AfterViewInit {
   protected readonly router = inject(Router);
   private readonly snackBar = inject(MatSnackBar);
   private readonly dialog = inject(MatDialog);
+  private readonly authService = inject(AuthService);
+
+  canDeleteCategory = computed(() => this.authService.hasPermission('DELETE_CATEGORY'));
 
   // Data signals
   categories = signal<CategoryResponse[]>([]);
@@ -124,12 +128,16 @@ export class CategoriesComponent implements OnInit, AfterViewInit {
       handler: (row) => this.editCategory(row),
       variant: 'ghost',
     },
-    {
-      label: 'Xóa',
-      icon: 'delete',
-      handler: (row) => this.deleteCategory(row),
-      variant: 'danger',
-    },
+    ...(this.authService.hasPermission('DELETE_CATEGORY')
+      ? [
+          {
+            label: 'Xóa',
+            icon: 'delete',
+            handler: (row) => this.deleteCategory(row),
+            variant: 'danger',
+          } as TableAction<CategoryResponse>,
+        ]
+      : []),
     {
       label: 'Kích hoạt/Khóa',
       icon: 'block',
@@ -292,27 +300,27 @@ export class CategoriesComponent implements OnInit, AfterViewInit {
   }
 
   // Bulk toolbar buttons
-  bulkCategoryButtons = computed<BulkToolbarButton[]>(() => [
-    {
-      label: 'Kích hoạt',
-      icon: 'check_circle',
-      variant: 'success',
-      handler: () => this.bulkActivate(),
-    },
-    {
-      label: 'Khóa',
-      icon: 'block',
-      variant: 'secondary',
-      handler: () => this.bulkDeactivate(),
-    },
-    {
-      label: 'Xóa',
-      icon: 'delete',
-      variant: 'danger',
-      handler: () => this.bulkDelete(),
-      disabled: this.deletingCategoryId() !== null,
-    },
-  ]);
+  bulkCategoryButtons = computed<BulkToolbarButton[]>(() => {
+    const buttons: BulkToolbarButton[] = [
+      {
+        label: 'Kích hoạt',
+        icon: 'check_circle',
+        variant: 'success',
+        handler: () => this.bulkActivate(),
+      },
+      { label: 'Khóa', icon: 'block', variant: 'secondary', handler: () => this.bulkDeactivate() },
+    ];
+    if (this.canDeleteCategory()) {
+      buttons.push({
+        label: 'Xóa',
+        icon: 'delete',
+        variant: 'danger',
+        handler: () => this.bulkDelete(),
+        disabled: this.deletingCategoryId() !== null,
+      });
+    }
+    return buttons;
+  });
 
   bulkDelete(): void {
     if (this.selectedCount() === 0) return;

@@ -15,11 +15,12 @@ import { Router, RouterModule } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { UserService } from '@core/services/user.service';
 import { RoleService } from '@core/services/role.service';
+import { AuthService } from '@core/services/auth.service';
 import { UserResponse } from '@core/models/user.model';
 import { RoleResponse } from '@core/models/role.model';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
-import { forkJoin } from 'rxjs';
+import { forkJoin, catchError, of } from 'rxjs';
 import { ConfirmDialogComponent } from '@shared/confirm-dialog/confirm-dialog.component';
 
 // Shared components
@@ -66,6 +67,7 @@ import {
 export class UsersComponent implements OnInit, AfterViewInit {
   private readonly userService = inject(UserService);
   private readonly roleService = inject(RoleService);
+  private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   private readonly snackBar = inject(MatSnackBar);
   private readonly dialog = inject(MatDialog);
@@ -128,32 +130,39 @@ export class UsersComponent implements OnInit, AfterViewInit {
   @ViewChild('createdAtColumn', { static: true }) createdAtColumn!: TemplateRef<any>;
 
   // Table actions (using icon buttons)
-  actions: TableAction<UserResponse>[] = [
-    {
-      label: 'Xem chi tiết',
-      icon: 'visibility',
-      handler: (row) => this.viewUser(row),
-      variant: 'ghost',
-    },
-    {
-      label: 'Chỉnh sửa',
-      icon: 'edit',
-      handler: (row) => this.editUser(row),
-      variant: 'ghost',
-    },
-    {
-      label: 'Xóa',
-      icon: 'delete',
-      handler: (row) => this.deleteUser(row),
-      variant: 'danger',
-    },
-    {
-      label: 'Khóa/Kích hoạt',
-      icon: 'block',
-      handler: (row) => this.toggleUserStatus(row),
-      variant: 'ghost',
-    },
-  ];
+  // Ẩn nút "Xóa" với role thiếu quyền DELETE_USER (giữ Xem/Sửa/Khóa)
+  canDeleteUser = computed(() => this.authService.hasPermission('DELETE_USER'));
+
+  actions = computed<TableAction<UserResponse>[]>(() => {
+    const base: TableAction<UserResponse>[] = [
+      {
+        label: 'Xem chi tiết',
+        icon: 'visibility',
+        handler: (row) => this.viewUser(row),
+        variant: 'ghost',
+      },
+      {
+        label: 'Chỉnh sửa',
+        icon: 'edit',
+        handler: (row) => this.editUser(row),
+        variant: 'ghost',
+      },
+      {
+        label: 'Xóa',
+        icon: 'delete',
+        handler: (row) => this.deleteUser(row),
+        variant: 'danger',
+      },
+      {
+        label: 'Khóa/Kích hoạt',
+        icon: 'block',
+        handler: (row) => this.toggleUserStatus(row),
+        variant: 'ghost',
+      },
+    ];
+    if (this.canDeleteUser()) return base;
+    return base.filter((a) => a.label !== 'Xóa');
+  });
 
   // Selected users for bulk actions
   selectedUsers = computed(() => this.users().filter((u) => this.selectedUserIds().includes(u.id)));
@@ -191,7 +200,9 @@ export class UsersComponent implements OnInit, AfterViewInit {
 
     forkJoin({
       users: this.userService.getUsers(),
-      roles: this.roleService.getRoles(),
+      // STAFF thiếu MANAGE_ROLES_PERMISSIONS → getRoles() sẽ 403.
+      // Bắt lỗi để danh sách user vẫn load được (chỉ thiếu bộ lọc vai trò).
+      roles: this.roleService.getRoles().pipe(catchError(() => of([] as RoleResponse[]))),
     }).subscribe({
       next: ({ users, roles }) => {
         this.users.set(users);
@@ -317,28 +328,32 @@ export class UsersComponent implements OnInit, AfterViewInit {
     this.selectedUserIds.set(rows.map((r) => r.id));
   }
 
-  // Bulk toolbar buttons
-  bulkUserButtons = computed<BulkToolbarButton[]>(() => [
-    {
-      label: 'Kích hoạt',
-      icon: 'check_circle',
-      variant: 'success',
-      handler: () => this.bulkActivate(),
-    },
-    {
-      label: 'Khóa',
-      icon: 'block',
-      variant: 'secondary',
-      handler: () => this.bulkDeactivate(),
-    },
-    {
-      label: 'Xóa',
-      icon: 'delete',
-      variant: 'danger',
-      handler: () => this.bulkDelete(),
-      disabled: this.deletingUserId() !== null,
-    },
-  ]);
+  // Bulk toolbar buttons (ẩn "Xóa" nếu thiếu DELETE_USER)
+  bulkUserButtons = computed<BulkToolbarButton[]>(() => {
+    const buttons: BulkToolbarButton[] = [
+      {
+        label: 'Kích hoạt',
+        icon: 'check_circle',
+        variant: 'success',
+        handler: () => this.bulkActivate(),
+      },
+      {
+        label: 'Khóa',
+        icon: 'block',
+        variant: 'secondary',
+        handler: () => this.bulkDeactivate(),
+      },
+      {
+        label: 'Xóa',
+        icon: 'delete',
+        variant: 'danger',
+        handler: () => this.bulkDelete(),
+        disabled: this.deletingUserId() !== null,
+      },
+    ];
+    if (this.canDeleteUser()) return buttons;
+    return buttons.filter((b) => b.label !== 'Xóa');
+  });
 
   // Bulk actions (real via API)
   bulkDelete(): void {

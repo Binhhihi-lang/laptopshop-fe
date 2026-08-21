@@ -6,6 +6,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { RoleService } from '@core/services/role.service';
 import { RoleResponse } from '@core/models/role.model';
+import { AuthService } from '@core/services/auth.service';
 import { ConfirmDialogComponent } from '@shared/confirm-dialog/confirm-dialog.component';
 
 // Shared components
@@ -41,12 +42,16 @@ export class RoleDetailComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly roleService = inject(RoleService);
+  private readonly authService = inject(AuthService);
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(MatSnackBar);
 
   isLoading = signal(false);
   role = signal<RoleResponse | null>(null);
   errorMessage = signal('');
+
+  // Ẩn nút "Xóa" với role thiếu MANAGE_ROLES_PERMISSIONS
+  canManage = computed(() => this.authService.hasPermission('MANAGE_ROLES_PERMISSIONS'));
 
   statusBadge = computed(() => {
     const r = this.role();
