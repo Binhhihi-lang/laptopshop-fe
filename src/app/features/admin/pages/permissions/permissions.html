@@ -5,10 +5,8 @@
       <app-page-header
         title="Quản lý quyền hạn"
         [subtitle]="'Tìm kiếm và quản lý danh sách quyền hạn (' + filteredPermissions().length + '/' + permissions().length + ')'"
-        [hasActions]="true"
-      >
-        <app-button variant="primary" icon="add" label="Thêm quyền" (click)="createPermission()" />
-      </app-page-header>
+        [hasActions]="false"
+      />
     </div>
   </div>
 
@@ -29,6 +27,39 @@
           />
         </div>
 
+        <!-- Status Filter (bộ lọc nhanh theo trạng thái) -->
+        <div class="status-filter-group flex items-center gap-2">
+          <span class="filter-label text-sm text-slate-600 dark:text-slate-400 font-medium">Trạng thái:</span>
+          <div class="flex gap-1 bg-slate-100 dark:bg-slate-800 rounded-lg p-1">
+            <button
+              type="button"
+              (click)="setStatusFilter('all')"
+              [class]="statusFilter() === 'all' ? 'bg-white dark:bg-slate-700 shadow-sm text-primary-600 dark:text-primary-400' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'"
+              class="px-3 py-1.5 text-sm rounded-md font-medium transition-colors"
+              [attr.aria-pressed]="statusFilter() === 'all'">
+              Tất cả
+            </button>
+            <button
+              type="button"
+              (click)="setStatusFilter('active')"
+              [class]="statusFilter() === 'active' ? 'bg-white dark:bg-slate-700 shadow-sm text-success-600 dark:text-success-400' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'"
+              class="px-3 py-1.5 text-sm rounded-md font-medium transition-colors flex items-center gap-1.5"
+              [attr.aria-pressed]="statusFilter() === 'active'">
+              <mat-icon class="w-4 h-4">check_circle</mat-icon>
+              Hoạt động
+            </button>
+            <button
+              type="button"
+              (click)="setStatusFilter('inactive')"
+              [class]="statusFilter() === 'inactive' ? 'bg-white dark:bg-slate-700 shadow-sm text-danger-600 dark:text-danger-400' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'"
+              class="px-3 py-1.5 text-sm rounded-md font-medium transition-colors flex items-center gap-1.5"
+              [attr.aria-pressed]="statusFilter() === 'inactive'">
+              <mat-icon class="w-4 h-4">cancel</mat-icon>
+              Ngừng
+            </button>
+          </div>
+        </div>
+
         <!-- Clear Filters -->
         @if (hasActiveFilters()) {
           <app-button
@@ -46,6 +77,14 @@
     </app-card>
   </div>
 
+  <!-- Bulk Actions Toolbar -->
+  <app-bulk-toolbar
+    [count]="selectedCount()"
+    itemLabel="quyền hạn"
+    [buttons]="bulkButtons()"
+    (clear)="selectedPermissionIds.set([])"
+  />
+
   <!-- Permissions Table -->
   <div class="max-w-screen-2xl mx-auto px-4 md:px-6 lg:px-8 pb-8">
     <app-card [padding]="'none'">
@@ -56,19 +95,28 @@
         [loadingText]="'Đang tải quyền hạn...'"
         [actions]="actions()"
         [trackByFn]="trackByPermissionId"
+        [selectable]="true"
+        [selectedRows]="selectedPermissions()"
+        (selectionChange)="onSelectionChange($event)"
         [sortColumn]="sortColumn()"
         [sortDirection]="sortDirection()"
         (sortChange)="onSort($event)"
         [emptyIcon]="'security'"
         [emptyTitle]="'Không tìm thấy quyền hạn'"
-        [emptyDescription]="'Thử thay đổi bộ lọc hoặc thêm quyền hạn mới'"
-        [emptyActionLabel]="'Tạo quyền hạn đầu tiên'"
-        [emptyActionIcon]="'add'"
-        (emptyActionClick)="createPermission()"
+        [emptyDescription]="'Thử thay đổi bộ lọc tìm kiếm'"
       >
         <!-- Name Column Template -->
         <ng-template #nameColumn let-permission>
           <span class="font-mono font-medium text-slate-900 dark:text-white">{{ permission.name }}</span>
+        </ng-template>
+
+        <!-- Status Column Template -->
+        <ng-template #statusColumn let-permission>
+          <app-badge
+            [label]="getStatusBadge(permission).label"
+            [variant]="getStatusBadge(permission).variant"
+            [size]="'default'"
+          />
         </ng-template>
       </app-table>
     </app-card>

@@ -2,11 +2,7 @@ import { Injectable } from '@angular/core';
 import { ApiService } from './api.service';
 import { API_ENDPOINTS } from '@core/utils/constants';
 import { Observable } from 'rxjs';
-import {
-  PermissionResponse,
-  PermissionCreationRequest,
-  PermissionUpdateRequest,
-} from '@core/models/permission.model';
+import { PermissionResponse } from '@core/models/permission.model';
 
 @Injectable({
   providedIn: 'root',
@@ -16,23 +12,17 @@ export class PermissionService {
 
   constructor(private api: ApiService) {}
 
+  // Chỉ giữ GET danh sách + khóa/kích hoạt hàng loạt. Tên permission là hằng số
+  // do code sở hữu (seed + @PreAuthorize) nên KHÔNG tạo/sửa/xóa tên qua UI —
+  // tránh sinh "quyền chết" (permission không có @PreAuthorize tương ứng).
   getPermissions(): Observable<PermissionResponse[]> {
     return this.api.get<PermissionResponse[]>(this.apiUrl);
   }
 
-  getPermissionById(id: string): Observable<PermissionResponse> {
-    return this.api.get<PermissionResponse>(`${this.apiUrl}/${id}`);
-  }
-
-  createPermission(data: PermissionCreationRequest): Observable<PermissionResponse> {
-    return this.api.post<PermissionResponse, PermissionCreationRequest>(this.apiUrl, data);
-  }
-
-  updatePermission(id: string, data: PermissionUpdateRequest): Observable<PermissionResponse> {
-    return this.api.put<PermissionResponse, PermissionUpdateRequest>(`${this.apiUrl}/${id}`, data);
-  }
-
-  deletePermission(id: string): Observable<void> {
-    return this.api.delete<void>(`${this.apiUrl}/${id}`);
+  bulkUpdatePermissionStatus(ids: string[], active: boolean): Observable<void> {
+    return this.api.patch<void, { ids: string[]; active: boolean }>(`${this.apiUrl}/bulk-status`, {
+      ids,
+      active,
+    });
   }
 }

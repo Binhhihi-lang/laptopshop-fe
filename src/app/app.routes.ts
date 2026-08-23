@@ -23,8 +23,6 @@ import { RolesComponent } from '@features/admin/pages/roles/roles.component';
 import { RoleFormComponent } from '@features/admin/pages/role-form/role-form.component';
 import { RoleDetailComponent } from '@features/admin/pages/role-detail/role-detail.component';
 import { PermissionsComponent } from '@features/admin/pages/permissions/permissions.component';
-import { PermissionFormComponent } from '@features/admin/pages/permission-form/permission-form.component';
-import { PermissionDetailComponent } from '@features/admin/pages/permission-detail/permission-detail.component';
 
 // import { HomeComponent } from './features/client/pages/home/home.component';
 // import { ProductDetailComponent } from './features/client/pages/product-detail/product-detail.component';
@@ -100,21 +98,6 @@ export const routes: Routes = [
       {
         path: 'permissions',
         component: PermissionsComponent,
-        data: { permissions: ['MANAGE_ROLES_PERMISSIONS'] },
-      },
-      {
-        path: 'permissions/create',
-        component: PermissionFormComponent,
-        data: { permissions: ['MANAGE_ROLES_PERMISSIONS'] },
-      },
-      {
-        path: 'permissions/:id/edit',
-        component: PermissionFormComponent,
-        data: { permissions: ['MANAGE_ROLES_PERMISSIONS'] },
-      },
-      {
-        path: 'permissions/:id',
-        component: PermissionDetailComponent,
         data: { permissions: ['MANAGE_ROLES_PERMISSIONS'] },
       },
     ],

@@ -2,6 +2,7 @@ export interface PermissionResponse {
   id: string;
   name: string;
   description: string;
+  active: boolean;
 }
 
 export interface PermissionCreationRequest {
@@ -12,4 +13,13 @@ export interface PermissionCreationRequest {
 export interface PermissionUpdateRequest {
   name?: string;
   description?: string;
+}
+
+export interface PermissionBulkDeleteRequest {
+  ids: string[];
+}
+
+export interface PermissionBulkStatusRequest {
+  ids: string[];
+  active: boolean;
 }
