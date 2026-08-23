@@ -422,3 +422,28 @@ body {
   .card { box-shadow: none !important; border: 1px solid #e2e8f0 !important; }
   .btn { display: none !important; }
 }
+
+/* ===========================================
+   SNACKBAR SEVERITY (panelClass từ NotificationService)
+   Toast lỗi 403 nổi bật, khớp thiết kế warning/danger.
+   =========================================== */
+.app-snackbar-error {
+  --mat-snack-bar-container-color: var(--color-danger);
+  --mat-snack-bar-supporting-text-color: #ffffff;
+  --mat-snack-bar-button-color: #ffffff;
+}
+.app-snackbar-success {
+  --mat-snack-bar-container-color: var(--color-success);
+  --mat-snack-bar-supporting-text-color: #ffffff;
+  --mat-snack-bar-button-color: #ffffff;
+}
+.app-snackbar-warn {
+  --mat-snack-bar-container-color: var(--color-warning);
+  --mat-snack-bar-supporting-text-color: #ffffff;
+  --mat-snack-bar-button-color: #ffffff;
+}
+.app-snackbar-info {
+  --mat-snack-bar-container-color: var(--color-info);
+  --mat-snack-bar-supporting-text-color: #ffffff;
+  --mat-snack-bar-button-color: #ffffff;
+}

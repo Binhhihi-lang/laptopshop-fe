@@ -1,9 +1,10 @@
 import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialog } from '@angular/material/dialog';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { NotificationService } from '@core/services/notification.service';
 import { CategoryService } from '@core/services/category.service';
 import { AuthService } from '@core/services/auth.service';
 import { CategoryDetailResponse } from '@core/models/category.model';
@@ -40,13 +41,14 @@ export class CategoryDetailComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly categoryService = inject(CategoryService);
   private readonly dialog = inject(MatDialog);
-  private readonly snackBar = inject(MatSnackBar);
+  private readonly notification = inject(NotificationService);
   private readonly authService = inject(AuthService);
 
   canDeleteCategory = computed(() => this.authService.hasPermission('DELETE_CATEGORY'));
 
   isLoading = signal(false);
   category = signal<CategoryDetailResponse | null>(null);
+  permissionDenied = signal<boolean>(false);
   errorMessage = signal('');
 
   // Computed helpers for badges
@@ -82,14 +84,19 @@ export class CategoryDetailComponent implements OnInit {
 
   loadCategory(id: string): void {
     this.isLoading.set(true);
+    this.permissionDenied.set(false);
     this.categoryService.getCategoryDetail(id).subscribe({
       next: (category) => {
         this.category.set(category);
         this.isLoading.set(false);
       },
-      error: () => {
-        this.errorMessage.set('Không thể tải thông tin danh mục');
+      error: (err) => {
         this.isLoading.set(false);
+        if (err instanceof HttpErrorResponse && err.status === 403) {
+          this.permissionDenied.set(true);
+        } else {
+          this.errorMessage.set('Không thể tải thông tin danh mục');
+        }
       },
     });
   }
@@ -121,14 +128,11 @@ export class CategoryDetailComponent implements OnInit {
       if (result && cat.id) {
         this.categoryService.deleteCategory(cat.id).subscribe({
           next: () => {
-            this.snackBar.open('Xóa danh mục thành công', 'Đóng', { duration: 3000 });
+            this.notification.success('Xóa danh mục thành công');
             this.router.navigate(['/admin/categories']);
           },
           error: (error) => {
             console.error('Error deleting category:', error);
-            this.snackBar.open(error.error?.message || 'Xóa danh mục thất bại', 'Đóng', {
-              duration: 5000,
-            });
           },
         });
       }

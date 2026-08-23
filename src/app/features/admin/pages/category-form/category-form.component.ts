@@ -8,7 +8,7 @@ import {
   CategoryCreationRequest,
   CategoryUpdateRequest,
 } from '@core/models/category.model';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { NotificationService } from '@core/services/notification.service';
 
 // Shared components (tham khảo product-form)
 import { FormFieldComponent } from '@shared/components/form-field/form-field.component';
@@ -41,7 +41,7 @@ export class CategoryFormComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly categoryService = inject(CategoryService);
-  private readonly snackBar = inject(MatSnackBar);
+  private readonly notification = inject(NotificationService);
 
   // State signals
   isLoading = signal(false);
@@ -89,7 +89,6 @@ export class CategoryFormComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error loading category:', error);
-        this.snackBar.open('Không thể tải thông tin danh mục', 'Đóng', { duration: 3000 });
         this.router.navigate(['/admin/categories']);
         this.isLoading.set(false);
       },
@@ -121,7 +120,7 @@ export class CategoryFormComponent implements OnInit {
     console.log('name value:', this.categoryForm.get('name')?.value);
     if (this.categoryForm.invalid) {
       this.markFormGroupTouched(this.categoryForm);
-      this.snackBar.open('Vui lòng điền đầy đủ thông tin bắt buộc', 'Đóng', { duration: 3000 });
+      this.notification.warn('Vui lòng điền đầy đủ thông tin bắt buộc');
       return;
     }
 
@@ -146,15 +145,12 @@ export class CategoryFormComponent implements OnInit {
       console.log(updateData);
       this.categoryService.updateCategory(this.categoryId(), updateData).subscribe({
         next: () => {
-          this.snackBar.open('Cập nhật danh mục thành công', 'Đóng', { duration: 3000 });
+          this.notification.success('Cập nhật danh mục thành công');
           this.isSubmitting.set(false);
           this.router.navigate(['/admin/categories']);
         },
         error: (error) => {
           console.error('Error updating category:', error);
-          this.snackBar.open(error.error?.message || 'Cập nhật danh mục thất bại', 'Đóng', {
-            duration: 5000,
-          });
           this.isSubmitting.set(false);
         },
       });
@@ -162,15 +158,12 @@ export class CategoryFormComponent implements OnInit {
       const createData: CategoryCreationRequest = { ...baseData };
       this.categoryService.createCategory(createData).subscribe({
         next: () => {
-          this.snackBar.open('Tạo danh mục thành công', 'Đóng', { duration: 3000 });
+          this.notification.success('Tạo danh mục thành công');
           this.isSubmitting.set(false);
           this.router.navigate(['/admin/categories']);
         },
         error: (error) => {
           console.error('Error creating category:', error);
-          this.snackBar.open(error.error?.message || 'Tạo danh mục thất bại', 'Đóng', {
-            duration: 5000,
-          });
           this.isSubmitting.set(false);
         },
       });

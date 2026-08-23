@@ -34,6 +34,20 @@
         </div>
       </div>
     </div>
+  } @else if (permissionDenied()) {
+    <app-detail-header
+      title="Chi tiết danh mục"
+      backAriaLabel="Quay về danh sách danh mục"
+      (backClick)="goBack()"
+    />
+    <div class="max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-8">
+      <app-empty-state
+        variant="permission"
+        icon="lock"
+        title="Bạn không có quyền xem chi tiết danh mục"
+        description="Quyền xem mục này đã bị thu hồi bởi quản trị viên. Vui lòng liên hệ quản trị viên nếu bạn cần truy cập."
+      />
+    </div>
   } @else if (errorMessage()) {
     <app-empty-state
       variant="error"

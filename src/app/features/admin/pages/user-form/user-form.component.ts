@@ -13,7 +13,7 @@ import { RoleService } from '@core/services/role.service';
 import { UserService } from '@core/services/user.service';
 import { RoleResponse } from '@core/models/role.model';
 import { UserResponse, UserCreationRequest, UserUpdateRequest } from '@core/models/user.model';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { NotificationService } from '@core/services/notification.service';
 import { Subject, takeUntil, filter, forkJoin } from 'rxjs';
 
 // Shared components
@@ -56,7 +56,7 @@ export class UserFormComponent implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly userService = inject(UserService);
   private readonly roleService = inject(RoleService);
-  private readonly snackBar = inject(MatSnackBar);
+  private readonly notification = inject(NotificationService);
   private readonly destroy$ = new Subject<void>();
 
   // State signals
@@ -155,7 +155,6 @@ export class UserFormComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           console.error('Error loading data:', error);
-          this.snackBar.open('Không thể tải dữ liệu', 'Đóng', { duration: 3000 });
           this.router.navigate(['/admin/users']);
           this.isLoading.set(false);
         },
@@ -170,7 +169,6 @@ export class UserFormComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           console.error('Error loading roles:', error);
-          this.snackBar.open('Không thể tải danh sách vai trò', 'Đóng', { duration: 3000 });
           this.isLoading.set(false);
         },
       });
@@ -198,11 +196,11 @@ export class UserFormComponent implements OnInit, OnDestroy {
     if (input.files && input.files[0]) {
       const file = input.files[0];
       if (!file.type.startsWith('image/')) {
-        this.snackBar.open('Vui lòng chọn file hình ảnh', 'Đóng', { duration: 3000 });
+        this.notification.warn('Vui lòng chọn file hình ảnh');
         return;
       }
       if (file.size > 2 * 1024 * 1024) {
-        this.snackBar.open('Kích thước ảnh không được vượt quá 2MB', 'Đóng', { duration: 3000 });
+        this.notification.warn('Kích thước ảnh không được vượt quá 2MB');
         return;
       }
       this.selectedAvatar.set(file);
@@ -222,7 +220,7 @@ export class UserFormComponent implements OnInit, OnDestroy {
   onSubmit(): void {
     if (this.userForm.invalid) {
       this.markFormGroupTouched(this.userForm);
-      this.snackBar.open('Vui lòng điền đầy đủ thông tin bắt buộc', 'Đóng', { duration: 3000 });
+      this.notification.warn('Vui lòng điền đầy đủ thông tin bắt buộc');
       return;
     }
 
@@ -243,14 +241,11 @@ export class UserFormComponent implements OnInit, OnDestroy {
       };
       this.userService.updateUser(this.userId(), userData).subscribe({
         next: () => {
-          this.snackBar.open('Cập nhật người dùng thành công', 'Đóng', { duration: 3000 });
+          this.notification.success('Cập nhật người dùng thành công');
           this.router.navigate(['/admin/users']);
         },
         error: (error) => {
           console.error('Error updating user:', error);
-          this.snackBar.open(error.error?.message || 'Cập nhật người dùng thất bại', 'Đóng', {
-            duration: 5000,
-          });
           this.isSubmitting.set(false);
         },
       });
@@ -266,14 +261,11 @@ export class UserFormComponent implements OnInit, OnDestroy {
       };
       this.userService.createUser(userData).subscribe({
         next: () => {
-          this.snackBar.open('Tạo người dùng thành công', 'Đóng', { duration: 3000 });
+          this.notification.success('Tạo người dùng thành công');
           this.router.navigate(['/admin/users']);
         },
         error: (error) => {
           console.error('Error creating user:', error);
-          this.snackBar.open(error.error?.message || 'Tạo người dùng thất bại', 'Đóng', {
-            duration: 5000,
-          });
           this.isSubmitting.set(false);
         },
       });

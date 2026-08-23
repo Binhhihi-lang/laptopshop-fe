@@ -11,7 +11,7 @@ import {
   ProductUpdateRequest,
 } from '@core/models/product.model';
 import { CategoryResponse } from '@core/models/category.model';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { NotificationService } from '@core/services/notification.service';
 
 // Shared components
 import { FormFieldComponent } from '@shared/components/form-field/form-field.component';
@@ -48,7 +48,7 @@ export class ProductFormComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly productService = inject(ProductService);
   private readonly categoryService = inject(CategoryService);
-  private readonly snackBar = inject(MatSnackBar);
+  private readonly notification = inject(NotificationService);
 
   productForm: FormGroup;
   isLoading = signal(false);
@@ -132,7 +132,6 @@ export class ProductFormComponent implements OnInit {
             },
             error: (error) => {
               console.error('Error loading product:', error);
-              this.snackBar.open('Không thể tải thông tin sản phẩm', 'Đóng', { duration: 3000 });
               this.isLoading.set(false);
               this.router.navigate(['/admin/products']);
             },
@@ -140,7 +139,6 @@ export class ProductFormComponent implements OnInit {
         },
         error: (error) => {
           console.error('Error loading categories:', error);
-          this.snackBar.open('Không thể tải danh sách danh mục', 'Đóng', { duration: 3000 });
           this.isLoading.set(false);
         },
       });
@@ -153,7 +151,6 @@ export class ProductFormComponent implements OnInit {
         },
         error: (error) => {
           console.error('Error loading categories:', error);
-          this.snackBar.open('Không thể tải danh sách danh mục', 'Đóng', { duration: 3000 });
           this.isLoading.set(false);
         },
       });
@@ -191,7 +188,7 @@ export class ProductFormComponent implements OnInit {
   onSubmit() {
     if (this.productForm.invalid) {
       this.markFormGroupTouched(this.productForm);
-      this.snackBar.open('Vui lòng điền đầy đủ thông tin bắt buộc', 'Đóng', { duration: 3000 });
+      this.notification.warn('Vui lòng điền đầy đủ thông tin bắt buộc');
       return;
     }
 
@@ -226,26 +223,24 @@ export class ProductFormComponent implements OnInit {
         .updateProduct(this.productId, productData, this.imageFile || undefined)
         .subscribe({
           next: () => {
-            this.snackBar.open('Cập nhật sản phẩm thành công', 'Đóng', { duration: 3000 });
+            this.notification.success('Cập nhật sản phẩm thành công');
             this.isSaving.set(false);
             this.router.navigate(['/admin/products']);
           },
           error: (error) => {
             console.error('Error updating product:', error);
-            this.snackBar.open('Cập nhật sản phẩm thất bại', 'Đóng', { duration: 3000 });
             this.isSaving.set(false);
           },
         });
     } else {
       this.productService.createProduct(productData, this.imageFile || undefined).subscribe({
         next: () => {
-          this.snackBar.open('Tạo sản phẩm thành công', 'Đóng', { duration: 3000 });
+          this.notification.success('Tạo sản phẩm thành công');
           this.isSaving.set(false);
           this.router.navigate(['/admin/products']);
         },
         error: (error) => {
           console.error('Error creating product:', error);
-          this.snackBar.open('Tạo sản phẩm thất bại', 'Đóng', { duration: 3000 });
           this.isSaving.set(false);
         },
       });

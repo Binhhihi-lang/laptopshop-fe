@@ -10,7 +10,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { NotificationService } from '@core/services/notification.service';
 import { PermissionService } from '@core/services/permission.service';
 import { PermissionResponse } from '@core/models/permission.model';
 import { AuthService } from '@core/services/auth.service';
@@ -47,7 +47,7 @@ import {
 export class PermissionsComponent implements OnInit, AfterViewInit {
   private readonly permissionService = inject(PermissionService);
   private readonly authService = inject(AuthService);
-  private readonly snackBar = inject(MatSnackBar);
+  private readonly notification = inject(NotificationService);
 
   permissions = signal<PermissionResponse[]>([]);
   filteredPermissions = signal<PermissionResponse[]>([]);
@@ -65,8 +65,8 @@ export class PermissionsComponent implements OnInit, AfterViewInit {
     { key: 'active', label: 'Trạng thái', visible: true, width: '140px', align: 'center' },
   ]);
 
-  @ViewChild('nameColumn', { static: true }) nameColumn!: TemplateRef<any>;
-  @ViewChild('statusColumn', { static: true }) statusColumn!: TemplateRef<any>;
+  @ViewChild('nameColumn') nameColumn!: TemplateRef<any>;
+  @ViewChild('statusColumn') statusColumn!: TemplateRef<any>;
 
   // Ẩn toàn bộ hành động với role thiếu MANAGE_ROLES_PERMISSIONS (module chỉ ADMIN quản lý)
   canManage = computed(() => this.authService.hasPermission('MANAGE_ROLES_PERMISSIONS'));
@@ -100,7 +100,6 @@ export class PermissionsComponent implements OnInit, AfterViewInit {
         this.isLoading.set(false);
       },
       error: () => {
-        this.snackBar.open('Không thể tải danh sách quyền hạn', 'Đóng', { duration: 3000 });
         this.isLoading.set(false);
       },
     });
@@ -233,48 +232,32 @@ export class PermissionsComponent implements OnInit, AfterViewInit {
 
   private updateBulkStatus(active: boolean): void {
     const ids = [...this.selectedPermissionIds()];
-    this.snackBar.open(`Đang ${active ? 'kích hoạt' : 'khóa'} ${ids.length} quyền hạn...`, 'Đóng', {
-      duration: 2000,
-    });
+    this.notification.info(
+      `Đang ${active ? 'kích hoạt' : 'khóa'} ${ids.length} quyền hạn...`,
+      2000,
+    );
     this.permissionService.bulkUpdatePermissionStatus(ids, active).subscribe({
       next: () => {
-        this.snackBar.open(`${active ? 'Kích hoạt' : 'Khóa'} quyền hạn thành công`, 'Đóng', {
-          duration: 3000,
-        });
+        this.notification.success(`${active ? 'Kích hoạt' : 'Khóa'} quyền hạn thành công`);
         this.loadData();
         this.selectedPermissionIds.set([]);
       },
-      error: (error) => {
-        this.snackBar.open(
-          error.error?.message || `${active ? 'Kích hoạt' : 'Khóa'} quyền hạn thất bại`,
-          'Đóng',
-          { duration: 3000 },
-        );
-      },
+      error: (error) => {},
     });
   }
 
   toggleStatus(permission: PermissionResponse): void {
     const newActive = !permission.active;
-    this.snackBar.open(
+    this.notification.info(
       `Đang ${newActive ? 'kích hoạt' : 'khóa'} quyền hạn ${permission.name}...`,
-      'Đóng',
-      { duration: 2000 },
+      2000,
     );
     this.permissionService.bulkUpdatePermissionStatus([permission.id], newActive).subscribe({
       next: () => {
-        this.snackBar.open(`${newActive ? 'Kích hoạt' : 'Khóa'} quyền hạn thành công`, 'Đóng', {
-          duration: 3000,
-        });
+        this.notification.success(`${newActive ? 'Kích hoạt' : 'Khóa'} quyền hạn thành công`);
         this.loadData();
       },
-      error: (error) => {
-        this.snackBar.open(
-          error.error?.message || `${newActive ? 'Kích hoạt' : 'Khóa'} quyền hạn thất bại`,
-          'Đóng',
-          { duration: 3000 },
-        );
-      },
+      error: (error) => {},
     });
   }
 

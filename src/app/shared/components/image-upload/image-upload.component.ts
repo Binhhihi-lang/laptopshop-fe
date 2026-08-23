@@ -1,5 +1,5 @@
 import { Component, input, output, signal, computed, effect, inject } from '@angular/core';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { NotificationService } from '@core/services/notification.service';
 import { ButtonComponent } from '../button/button.component';
 
 type ImageUploadSize = 'sm' | 'md' | 'lg';
@@ -96,7 +96,7 @@ const SIZE_CLASSES: Record<ImageUploadSize, string> = {
   ],
 })
 export class ImageUploadComponent {
-  private readonly snackBar = inject(MatSnackBar);
+  private readonly notification = inject(NotificationService);
 
   // Inputs
   existingImage = input<string | null>(null);
@@ -157,14 +157,12 @@ export class ImageUploadComponent {
     const file = input.files[0];
 
     if (!file.type.startsWith('image/')) {
-      this.snackBar.open('Chỉ chấp nhận file hình ảnh', 'Đóng', { duration: 3000 });
+      this.notification.warn('Chỉ chấp nhận file hình ảnh');
       input.value = '';
       return;
     }
     if (file.size > this.maxSizeMB() * 1024 * 1024) {
-      this.snackBar.open(`Kích thước file không được vượt quá ${this.maxSizeMB()}MB`, 'Đóng', {
-        duration: 3000,
-      });
+      this.notification.warn(`Kích thước file không được vượt quá ${this.maxSizeMB()}MB`);
       input.value = '';
       return;
     }

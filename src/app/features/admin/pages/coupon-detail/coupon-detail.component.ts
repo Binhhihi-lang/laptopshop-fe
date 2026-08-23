@@ -1,9 +1,10 @@
 import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialog } from '@angular/material/dialog';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { NotificationService } from '@core/services/notification.service';
 import { CouponService } from '@core/services/coupon.service';
 import { AuthService } from '@core/services/auth.service';
 import { CouponResponse } from '@core/models/coupon.model';
@@ -40,7 +41,7 @@ export class CouponDetailComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly couponService = inject(CouponService);
   private readonly dialog = inject(MatDialog);
-  private readonly snackBar = inject(MatSnackBar);
+  private readonly notification = inject(NotificationService);
   private readonly authService = inject(AuthService);
 
   canDeleteCoupon = computed(() => this.authService.hasPermission('DELETE_COUPON'));
@@ -48,6 +49,7 @@ export class CouponDetailComponent implements OnInit {
   isLoading = signal(false);
   coupon = signal<CouponResponse | null>(null);
   errorMessage = signal('');
+  permissionDenied = signal<boolean>(false);
 
   statusBadge = computed(() => {
     const c = this.coupon();
@@ -83,14 +85,18 @@ export class CouponDetailComponent implements OnInit {
 
   loadCoupon(id: string): void {
     this.isLoading.set(true);
+    this.permissionDenied.set(false);
     this.couponService.getCouponById(id).subscribe({
       next: (coupon) => {
         this.coupon.set(coupon);
         this.isLoading.set(false);
       },
-      error: () => {
+      error: (error: HttpErrorResponse) => {
         this.errorMessage.set('Không thể tải thông tin mã giảm giá');
         this.isLoading.set(false);
+        if (error instanceof HttpErrorResponse && error.status === 403) {
+          this.permissionDenied.set(true);
+        }
       },
     });
   }
@@ -122,14 +128,10 @@ export class CouponDetailComponent implements OnInit {
       if (result && c.id) {
         this.couponService.deleteCoupon(c.id).subscribe({
           next: () => {
-            this.snackBar.open('Xóa mã giảm giá thành công', 'Đóng', { duration: 3000 });
+            this.notification.success('Xóa mã giảm giá thành công');
             this.router.navigate(['/admin/coupons']);
           },
-          error: (error) => {
-            this.snackBar.open(error.error?.message || 'Xóa mã giảm giá thất bại', 'Đóng', {
-              duration: 5000,
-            });
-          },
+          error: (error) => {},
         });
       }
     });

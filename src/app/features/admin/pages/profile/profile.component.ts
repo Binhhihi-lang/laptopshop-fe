@@ -12,7 +12,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { UserService } from '@core/services/user.service';
 import { AuthService } from '@core/services/auth.service';
 import { UserResponse, UserProfileUpdateRequest } from '@core/models/user.model';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { NotificationService } from '@core/services/notification.service';
 
 // Shared components
 import {
@@ -52,7 +52,7 @@ export class ProfileComponent implements OnInit {
   private readonly userService = inject(UserService);
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
-  private readonly snackBar = inject(MatSnackBar);
+  private readonly notification = inject(NotificationService);
 
   // State signals
   isLoading = signal(true);
@@ -90,7 +90,6 @@ export class ProfileComponent implements OnInit {
       },
       error: (error) => {
         console.error('Lỗi tải hồ sơ:', error);
-        this.snackBar.open('Không thể tải hồ sơ cá nhân', 'Đóng', { duration: 3000 });
         this.isLoading.set(false);
       },
     });
@@ -101,11 +100,11 @@ export class ProfileComponent implements OnInit {
     if (input.files && input.files[0]) {
       const file = input.files[0];
       if (!file.type.startsWith('image/')) {
-        this.snackBar.open('Vui lòng chọn file hình ảnh', 'Đóng', { duration: 3000 });
+        this.notification.warn('Vui lòng chọn file hình ảnh');
         return;
       }
       if (file.size > 2 * 1024 * 1024) {
-        this.snackBar.open('Kích thước ảnh không được vượt quá 2MB', 'Đóng', { duration: 3000 });
+        this.notification.warn('Kích thước ảnh không được vượt quá 2MB');
         return;
       }
       this.selectedAvatar.set(file);
@@ -125,7 +124,7 @@ export class ProfileComponent implements OnInit {
   onSubmit(): void {
     if (this.profileForm.invalid) {
       this.profileForm.markAllAsTouched();
-      this.snackBar.open('Vui lòng điền đầy đủ thông tin bắt buộc', 'Đóng', { duration: 3000 });
+      this.notification.warn('Vui lòng điền đầy đủ thông tin bắt buộc');
       return;
     }
 
@@ -152,14 +151,11 @@ export class ProfileComponent implements OnInit {
           info.fullName = updated.fullName;
           this.authService.setUserInfo(info);
         }
-        this.snackBar.open('Cập nhật hồ sơ thành công', 'Đóng', { duration: 3000 });
+        this.notification.success('Cập nhật hồ sơ thành công');
         this.isSubmitting.set(false);
       },
       error: (error) => {
         console.error('Lỗi cập nhật hồ sơ:', error);
-        this.snackBar.open(error.error?.message || 'Cập nhật hồ sơ thất bại', 'Đóng', {
-          duration: 5000,
-        });
         this.isSubmitting.set(false);
       },
     });

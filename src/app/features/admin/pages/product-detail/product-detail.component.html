@@ -46,6 +46,20 @@
         </div>
       </div>
     </div>
+  } @else if (permissionDenied()) {
+    <app-detail-header
+      title="Chi tiết sản phẩm"
+      backAriaLabel="Quay về danh sách sản phẩm"
+      (backClick)="goBack()"
+    />
+    <div class="max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-8">
+      <app-empty-state
+        variant="permission"
+        icon="lock"
+        title="Bạn không có quyền xem chi tiết sản phẩm"
+        description="Quyền xem mục này đã bị thu hồi bởi quản trị viên. Vui lòng liên hệ quản trị viên nếu bạn cần truy cập."
+      />
+    </div>
   } @else if (product(); as product) {
     <app-detail-header
       [title]="product.name"

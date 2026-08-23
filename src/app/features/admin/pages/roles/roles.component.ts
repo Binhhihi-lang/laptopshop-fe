@@ -9,10 +9,11 @@ import {
   AfterViewInit,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Router, RouterModule } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialog } from '@angular/material/dialog';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { NotificationService } from '@core/services/notification.service';
 import { RoleService } from '@core/services/role.service';
 import { RoleResponse } from '@core/models/role.model';
 import { AuthService } from '@core/services/auth.service';
@@ -22,6 +23,7 @@ import { CardComponent } from '@shared/components/card/card.component';
 import { BadgeComponent } from '@shared/components/badge/badge.component';
 import { ButtonComponent } from '@shared/components/button/button.component';
 import { InputComponent } from '@shared/components/input/input.component';
+import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
 import {
   PageHeaderComponent,
   ColumnPickerComponent,
@@ -44,6 +46,7 @@ import {
     PageHeaderComponent,
     ColumnPickerComponent,
     BulkToolbarComponent,
+    EmptyStateComponent,
   ],
   templateUrl: './roles.html',
   styleUrl: './roles.css',
@@ -53,10 +56,11 @@ export class RolesComponent implements OnInit, AfterViewInit {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   private readonly dialog = inject(MatDialog);
-  private readonly snackBar = inject(MatSnackBar);
+  private readonly notification = inject(NotificationService);
 
   roles = signal<RoleResponse[]>([]);
   isLoading = signal(false);
+  permissionDenied = signal<boolean>(false);
 
   searchTerm = signal('');
   statusFilter = signal<'all' | 'active' | 'inactive'>('all');
@@ -76,11 +80,11 @@ export class RolesComponent implements OnInit, AfterViewInit {
 
   filteredRoles = signal<RoleResponse[]>([]);
 
-  @ViewChild('nameColumn', { static: true }) nameColumn!: TemplateRef<any>;
-  @ViewChild('permissionColumn', { static: true }) permissionColumn!: TemplateRef<any>;
-  @ViewChild('statusColumn', { static: true }) statusColumn!: TemplateRef<any>;
-  @ViewChild('createdAtColumn', { static: true }) createdAtColumn!: TemplateRef<any>;
-  @ViewChild('updatedAtColumn', { static: true }) updatedAtColumn!: TemplateRef<any>;
+  @ViewChild('nameColumn') nameColumn!: TemplateRef<any>;
+  @ViewChild('permissionColumn') permissionColumn!: TemplateRef<any>;
+  @ViewChild('statusColumn') statusColumn!: TemplateRef<any>;
+  @ViewChild('createdAtColumn') createdAtColumn!: TemplateRef<any>;
+  @ViewChild('updatedAtColumn') updatedAtColumn!: TemplateRef<any>;
 
   // Ẩn toàn bộ hành động với role thiếu MANAGE_ROLES_PERMISSIONS (module chỉ ADMIN quản lý)
   canManage = computed(() => this.authService.hasPermission('MANAGE_ROLES_PERMISSIONS'));
@@ -123,14 +127,17 @@ export class RolesComponent implements OnInit, AfterViewInit {
 
   loadData(): void {
     this.isLoading.set(true);
+    this.permissionDenied.set(false);
     this.roleService.getRoles().subscribe({
       next: (roles) => {
         this.roles.set(roles);
         this.applyFilter();
         this.isLoading.set(false);
       },
-      error: () => {
-        this.snackBar.open('Không thể tải danh sách vai trò', 'Đóng', { duration: 3000 });
+      error: (error) => {
+        if (error instanceof HttpErrorResponse && error.status === 403) {
+          this.permissionDenied.set(true);
+        }
         this.isLoading.set(false);
       },
     });
@@ -232,12 +239,10 @@ export class RolesComponent implements OnInit, AfterViewInit {
       if (!result) return;
       this.roleService.deleteRole(role.id).subscribe({
         next: () => {
-          this.snackBar.open('Xóa vai trò thành công', 'Đóng', { duration: 3000 });
+          this.notification.success('Xóa vai trò thành công');
           this.loadData();
         },
-        error: () => {
-          this.snackBar.open('Xóa vai trò thất bại', 'Đóng', { duration: 3000 });
-        },
+        error: () => {},
       });
     });
   }
@@ -299,13 +304,11 @@ export class RolesComponent implements OnInit, AfterViewInit {
       const ids = [...this.selectedRoleIds()];
       this.roleService.bulkDeleteRoles(ids).subscribe({
         next: () => {
-          this.snackBar.open('Xóa vai trò thành công', 'Đóng', { duration: 3000 });
+          this.notification.success('Xóa vai trò thành công');
           this.loadData();
           this.selectedRoleIds.set([]);
         },
-        error: () => {
-          this.snackBar.open('Xóa vai trò thất bại', 'Đóng', { duration: 3000 });
-        },
+        error: () => {},
       });
     });
   }
@@ -322,46 +325,29 @@ export class RolesComponent implements OnInit, AfterViewInit {
 
   private updateBulkStatus(active: boolean): void {
     const ids = [...this.selectedRoleIds()];
-    this.snackBar.open(`Đang ${active ? 'kích hoạt' : 'khóa'} ${ids.length} vai trò...`, 'Đóng', {
-      duration: 2000,
-    });
+    this.notification.info(`Đang ${active ? 'kích hoạt' : 'khóa'} ${ids.length} vai trò...`, 2000);
     this.roleService.bulkUpdateRoleStatus(ids, active).subscribe({
       next: () => {
-        this.snackBar.open(`${active ? 'Kích hoạt' : 'Khóa'} vai trò thành công`, 'Đóng', {
-          duration: 3000,
-        });
+        this.notification.success(`${active ? 'Kích hoạt' : 'Khóa'} vai trò thành công`);
         this.loadData();
         this.selectedRoleIds.set([]);
       },
-      error: (error) => {
-        this.snackBar.open(
-          error.error?.message || `${active ? 'Kích hoạt' : 'Khóa'} vai trò thất bại`,
-          'Đóng',
-          { duration: 3000 },
-        );
-      },
+      error: (error) => {},
     });
   }
 
   toggleStatus(role: RoleResponse): void {
     const newActive = !role.active;
-    this.snackBar.open(`Đang ${newActive ? 'kích hoạt' : 'khóa'} vai trò ${role.name}...`, 'Đóng', {
-      duration: 2000,
-    });
+    this.notification.info(
+      `Đang ${newActive ? 'kích hoạt' : 'khóa'} vai trò ${role.name}...`,
+      2000,
+    );
     this.roleService.bulkUpdateRoleStatus([role.id], newActive).subscribe({
       next: () => {
-        this.snackBar.open(`${newActive ? 'Kích hoạt' : 'Khóa'} vai trò thành công`, 'Đóng', {
-          duration: 3000,
-        });
+        this.notification.success(`${newActive ? 'Kích hoạt' : 'Khóa'} vai trò thành công`);
         this.loadData();
       },
-      error: (error) => {
-        this.snackBar.open(
-          error.error?.message || `${newActive ? 'Kích hoạt' : 'Khóa'} vai trò thất bại`,
-          'Đóng',
-          { duration: 3000 },
-        );
-      },
+      error: (error) => {},
     });
   }
 

@@ -9,9 +9,10 @@ import {
   AfterViewInit,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Router, RouterModule } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { NotificationService } from '@core/services/notification.service';
 import { MatDialog } from '@angular/material/dialog';
 import { CategoryService } from '@core/services/category.service';
 import { AuthService } from '@core/services/auth.service';
@@ -24,6 +25,7 @@ import { CardComponent } from '@shared/components/card/card.component';
 import { BadgeComponent } from '@shared/components/badge/badge.component';
 import { ButtonComponent } from '@shared/components/button/button.component';
 import { InputComponent } from '@shared/components/input/input.component';
+import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
 import {
   PageHeaderComponent,
   ColumnPickerComponent,
@@ -43,6 +45,7 @@ import {
     BadgeComponent,
     ButtonComponent,
     InputComponent,
+    EmptyStateComponent,
     PageHeaderComponent,
     ColumnPickerComponent,
     BulkToolbarComponent,
@@ -53,7 +56,7 @@ import {
 export class CategoriesComponent implements OnInit, AfterViewInit {
   private readonly categoryService = inject(CategoryService);
   protected readonly router = inject(Router);
-  private readonly snackBar = inject(MatSnackBar);
+  private readonly notification = inject(NotificationService);
   private readonly dialog = inject(MatDialog);
   private readonly authService = inject(AuthService);
 
@@ -62,6 +65,7 @@ export class CategoriesComponent implements OnInit, AfterViewInit {
   // Data signals
   categories = signal<CategoryResponse[]>([]);
   isLoading = signal(false);
+  permissionDenied = signal<boolean>(false);
 
   // Filter signals
   searchTerm = signal('');
@@ -105,14 +109,14 @@ export class CategoriesComponent implements OnInit, AfterViewInit {
   filteredCategories = signal<CategoryResponse[]>([]);
 
   // Table column templates
-  @ViewChild('imageColumn', { static: true }) imageColumn!: TemplateRef<any>;
-  @ViewChild('nameColumn', { static: true }) nameColumn!: TemplateRef<any>;
-  @ViewChild('descriptionColumn', { static: true }) descriptionColumn!: TemplateRef<any>;
-  @ViewChild('displayOrderColumn', { static: true }) displayOrderColumn!: TemplateRef<any>;
-  @ViewChild('productCountColumn', { static: true }) productCountColumn!: TemplateRef<any>;
-  @ViewChild('statusColumn', { static: true }) statusColumn!: TemplateRef<any>;
-  @ViewChild('createdAtColumn', { static: true }) createdAtColumn!: TemplateRef<any>;
-  @ViewChild('updatedAtColumn', { static: true }) updatedAtColumn!: TemplateRef<any>;
+  @ViewChild('imageColumn') imageColumn!: TemplateRef<any>;
+  @ViewChild('nameColumn') nameColumn!: TemplateRef<any>;
+  @ViewChild('descriptionColumn') descriptionColumn!: TemplateRef<any>;
+  @ViewChild('displayOrderColumn') displayOrderColumn!: TemplateRef<any>;
+  @ViewChild('productCountColumn') productCountColumn!: TemplateRef<any>;
+  @ViewChild('statusColumn') statusColumn!: TemplateRef<any>;
+  @ViewChild('createdAtColumn') createdAtColumn!: TemplateRef<any>;
+  @ViewChild('updatedAtColumn') updatedAtColumn!: TemplateRef<any>;
 
   // Table actions (kebab menu)
   actions: TableAction<CategoryResponse>[] = [
@@ -152,6 +156,7 @@ export class CategoriesComponent implements OnInit, AfterViewInit {
 
   loadData() {
     this.isLoading.set(true);
+    this.permissionDenied.set(false);
     this.categoryService.getCategories().subscribe({
       next: (categories) => {
         this.categories.set(categories);
@@ -160,8 +165,10 @@ export class CategoriesComponent implements OnInit, AfterViewInit {
       },
       error: (error) => {
         console.error('Error loading categories:', error);
-        this.snackBar.open('Không thể tải dữ liệu danh mục', 'Đóng', { duration: 3000 });
         this.isLoading.set(false);
+        if (error instanceof HttpErrorResponse && error.status === 403) {
+          this.permissionDenied.set(true);
+        }
       },
     });
   }
@@ -340,14 +347,13 @@ export class CategoriesComponent implements OnInit, AfterViewInit {
       this.deletingCategoryId.set(idsToDelete[0] ?? null);
       this.categoryService.bulkDeleteCategories(idsToDelete).subscribe({
         next: () => {
-          this.snackBar.open('Xóa danh mục thành công', 'Đóng', { duration: 3000 });
+          this.notification.success('Xóa danh mục thành công');
           this.loadData();
           this.selectedCategoryIds.set([]);
           this.deletingCategoryId.set(null);
         },
         error: (error) => {
           console.error('Error bulk deleting categories:', error);
-          this.snackBar.open('Xóa danh mục thất bại', 'Đóng', { duration: 3000 });
           this.deletingCategoryId.set(null);
         },
       });
@@ -367,22 +373,15 @@ export class CategoriesComponent implements OnInit, AfterViewInit {
   private updateBulkStatus(active: boolean): void {
     const ids = [...this.selectedCategoryIds()];
     const verb = active ? 'kích hoạt' : 'khóa';
-    this.snackBar.open(`Đang ${verb} ${ids.length} danh mục...`, 'Đóng', { duration: 2000 });
+    this.notification.info(`Đang ${verb} ${ids.length} danh mục...`, 2000);
     this.categoryService.bulkUpdateCategoryStatus(ids, active).subscribe({
       next: () => {
-        this.snackBar.open(`${active ? 'Kích hoạt' : 'Khóa'} danh mục thành công`, 'Đóng', {
-          duration: 3000,
-        });
+        this.notification.success(`${active ? 'Kích hoạt' : 'Khóa'} danh mục thành công`);
         this.loadData();
         this.selectedCategoryIds.set([]);
       },
       error: (error) => {
         console.error(`Error bulk ${verb} categories:`, error);
-        this.snackBar.open(
-          error.error?.message || `${active ? 'Kích hoạt' : 'Khóa'} danh mục thất bại`,
-          'Đóng',
-          { duration: 3000 },
-        );
       },
     });
   }
@@ -401,15 +400,12 @@ export class CategoriesComponent implements OnInit, AfterViewInit {
         this.deletingCategoryId.set(category.id);
         this.categoryService.deleteCategory(category.id).subscribe({
           next: () => {
-            this.snackBar.open('Xóa danh mục thành công', 'Đóng', { duration: 3000 });
+            this.notification.success('Xóa danh mục thành công');
             this.loadData();
             this.deletingCategoryId.set(null);
           },
           error: (error) => {
             console.error('Error deleting category:', error);
-            this.snackBar.open(error.error?.message || 'Xóa danh mục thất bại', 'Đóng', {
-              duration: 5000,
-            });
             this.deletingCategoryId.set(null);
           },
         });
@@ -419,26 +415,18 @@ export class CategoriesComponent implements OnInit, AfterViewInit {
 
   toggleCategoryStatus(category: CategoryResponse): void {
     const newActive = !category.active;
-    this.snackBar.open(
+    this.notification.info(
       `Đang ${newActive ? 'kích hoạt' : 'khóa'} danh mục ${category.name}...`,
-      'Đóng',
-      { duration: 2000 },
+      2000,
     );
 
     this.categoryService.bulkUpdateCategoryStatus([category.id], newActive).subscribe({
       next: () => {
-        this.snackBar.open(`${newActive ? 'Kích hoạt' : 'Khóa'} danh mục thành công`, 'Đóng', {
-          duration: 3000,
-        });
+        this.notification.success(`${newActive ? 'Kích hoạt' : 'Khóa'} danh mục thành công`);
         this.loadData();
       },
       error: (error) => {
         console.error('Error toggling category status:', error);
-        this.snackBar.open(
-          error.error?.message || `${newActive ? 'Kích hoạt' : 'Khóa'} danh mục thất bại`,
-          'Đóng',
-          { duration: 3000 },
-        );
       },
     });
   }

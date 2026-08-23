@@ -10,7 +10,7 @@ import {
 } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { NotificationService } from '@core/services/notification.service';
 import { CouponService } from '@core/services/coupon.service';
 import {
   CouponResponse,
@@ -65,7 +65,7 @@ export class CouponFormComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly couponService = inject(CouponService);
-  private readonly snackBar = inject(MatSnackBar);
+  private readonly notification = inject(NotificationService);
 
   isLoading = signal(false);
   isSubmitting = signal(false);
@@ -128,7 +128,6 @@ export class CouponFormComponent implements OnInit {
         this.isLoading.set(false);
       },
       error: () => {
-        this.snackBar.open('Không thể tải thông tin mã giảm giá', 'Đóng', { duration: 3000 });
         this.router.navigate(['/admin/coupons']);
         this.isLoading.set(false);
       },
@@ -162,7 +161,7 @@ export class CouponFormComponent implements OnInit {
   onSubmit(): void {
     if (this.couponForm.invalid) {
       this.markFormGroupTouched(this.couponForm);
-      this.snackBar.open('Vui lòng điền đầy đủ thông tin bắt buộc', 'Đóng', { duration: 3000 });
+      this.notification.warn('Vui lòng điền đầy đủ thông tin bắt buộc');
       return;
     }
 
@@ -190,28 +189,22 @@ export class CouponFormComponent implements OnInit {
       };
       this.couponService.updateCoupon(this.couponId(), updateData).subscribe({
         next: () => {
-          this.snackBar.open('Cập nhật mã giảm giá thành công', 'Đóng', { duration: 3000 });
+          this.notification.success('Cập nhật mã giảm giá thành công');
           this.isSubmitting.set(false);
           this.router.navigate(['/admin/coupons']);
         },
         error: (error) => {
-          this.snackBar.open(error.error?.message || 'Cập nhật thất bại', 'Đóng', {
-            duration: 5000,
-          });
           this.isSubmitting.set(false);
         },
       });
     } else {
       this.couponService.createCoupon(baseData).subscribe({
         next: () => {
-          this.snackBar.open('Tạo mã giảm giá thành công', 'Đóng', { duration: 3000 });
+          this.notification.success('Tạo mã giảm giá thành công');
           this.isSubmitting.set(false);
           this.router.navigate(['/admin/coupons']);
         },
         error: (error) => {
-          this.snackBar.open(error.error?.message || 'Tạo mã giảm giá thất bại', 'Đóng', {
-            duration: 5000,
-          });
           this.isSubmitting.set(false);
         },
       });

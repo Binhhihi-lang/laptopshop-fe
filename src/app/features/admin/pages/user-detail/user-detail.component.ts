@@ -1,8 +1,9 @@
 import { Component, OnInit, signal, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { NotificationService } from '@core/services/notification.service';
 import { UserService } from '@core/services/user.service';
 import { UserResponse } from '@core/models/user.model';
 import { AuthService } from '@core/services/auth.service';
@@ -45,11 +46,12 @@ export class UserDetailComponent implements OnInit {
   private readonly userService = inject(UserService);
   private readonly authService = inject(AuthService);
   private readonly dialog = inject(MatDialog);
-  private readonly snackBar = inject(MatSnackBar);
+  private readonly notification = inject(NotificationService);
 
   user = signal<UserResponse | null>(null);
   isLoading = signal(false);
   userId: string | null = null;
+  permissionDenied = signal<boolean>(false);
 
   // Ẩn nút "Xóa" với role thiếu quyền DELETE_USER
   canDeleteUser = computed(() => this.authService.hasPermission('DELETE_USER'));
@@ -88,6 +90,7 @@ export class UserDetailComponent implements OnInit {
 
   loadUser(id: string) {
     this.isLoading.set(true);
+    this.permissionDenied.set(false);
     this.userService.getUserById(id).subscribe({
       next: (user) => {
         this.user.set(user);
@@ -96,8 +99,11 @@ export class UserDetailComponent implements OnInit {
       error: (err) => {
         console.error('[UserDetail] Lỗi khi tải người dùng:', err);
         this.isLoading.set(false);
-        this.snackBar.open('Không thể tải thông tin người dùng', 'Đóng', { duration: 3000 });
-        this.router.navigate(['/admin/users']);
+        if (err instanceof HttpErrorResponse && err.status === 403) {
+          this.permissionDenied.set(true);
+        } else {
+          this.router.navigate(['/admin/users']);
+        }
       },
     });
   }
@@ -118,12 +124,11 @@ export class UserDetailComponent implements OnInit {
       if (result && this.userId) {
         this.userService.deleteUser(this.userId).subscribe({
           next: () => {
-            this.snackBar.open('Xóa người dùng thành công', 'Đóng', { duration: 3000 });
+            this.notification.success('Xóa người dùng thành công');
             this.router.navigate(['/admin/users']);
           },
           error: (error) => {
             console.error('Error deleting user:', error);
-            this.snackBar.open('Xóa người dùng thất bại', 'Đóng', { duration: 3000 });
           },
         });
       }

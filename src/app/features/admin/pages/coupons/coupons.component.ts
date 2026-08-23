@@ -9,10 +9,11 @@ import {
   AfterViewInit,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Router, RouterModule } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialog } from '@angular/material/dialog';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { NotificationService } from '@core/services/notification.service';
 import { CouponService } from '@core/services/coupon.service';
 import { AuthService } from '@core/services/auth.service';
 import { CouponResponse } from '@core/models/coupon.model';
@@ -22,6 +23,7 @@ import { CardComponent } from '@shared/components/card/card.component';
 import { BadgeComponent } from '@shared/components/badge/badge.component';
 import { ButtonComponent } from '@shared/components/button/button.component';
 import { InputComponent } from '@shared/components/input/input.component';
+import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
 import {
   PageHeaderComponent,
   ColumnPickerComponent,
@@ -45,6 +47,7 @@ import {
     PageHeaderComponent,
     ColumnPickerComponent,
     BulkToolbarComponent,
+    EmptyStateComponent,
   ],
   templateUrl: './coupons.html',
   styleUrl: './coupons.css',
@@ -53,7 +56,7 @@ export class CouponsComponent implements OnInit, AfterViewInit {
   private readonly couponService = inject(CouponService);
   private readonly router = inject(Router);
   private readonly dialog = inject(MatDialog);
-  private readonly snackBar = inject(MatSnackBar);
+  private readonly notification = inject(NotificationService);
   private readonly authService = inject(AuthService);
 
   canDeleteCoupon = computed(() => this.authService.hasPermission('DELETE_COUPON'));
@@ -61,6 +64,7 @@ export class CouponsComponent implements OnInit, AfterViewInit {
   coupons = signal<CouponResponse[]>([]);
   isLoading = signal(false);
   isBulkDeleting = signal(false);
+  permissionDenied = signal<boolean>(false);
 
   searchTerm = signal('');
   statusFilter = signal<'all' | 'active' | 'inactive'>('all');
@@ -83,14 +87,14 @@ export class CouponsComponent implements OnInit, AfterViewInit {
 
   filteredCoupons = signal<CouponResponse[]>([]);
 
-  @ViewChild('imageColumn', { static: true }) imageColumn!: TemplateRef<any>;
-  @ViewChild('codeColumn', { static: true }) codeColumn!: TemplateRef<any>;
-  @ViewChild('discountColumn', { static: true }) discountColumn!: TemplateRef<any>;
-  @ViewChild('expiryColumn', { static: true }) expiryColumn!: TemplateRef<any>;
-  @ViewChild('usageColumn', { static: true }) usageColumn!: TemplateRef<any>;
-  @ViewChild('statusColumn', { static: true }) statusColumn!: TemplateRef<any>;
-  @ViewChild('createdAtColumn', { static: true }) createdAtColumn!: TemplateRef<any>;
-  @ViewChild('updatedAtColumn', { static: true }) updatedAtColumn!: TemplateRef<any>;
+  @ViewChild('imageColumn') imageColumn!: TemplateRef<any>;
+  @ViewChild('codeColumn') codeColumn!: TemplateRef<any>;
+  @ViewChild('discountColumn') discountColumn!: TemplateRef<any>;
+  @ViewChild('expiryColumn') expiryColumn!: TemplateRef<any>;
+  @ViewChild('usageColumn') usageColumn!: TemplateRef<any>;
+  @ViewChild('statusColumn') statusColumn!: TemplateRef<any>;
+  @ViewChild('createdAtColumn') createdAtColumn!: TemplateRef<any>;
+  @ViewChild('updatedAtColumn') updatedAtColumn!: TemplateRef<any>;
 
   actions: TableAction<CouponResponse>[] = [
     {
@@ -129,14 +133,17 @@ export class CouponsComponent implements OnInit, AfterViewInit {
 
   loadData() {
     this.isLoading.set(true);
+    this.permissionDenied.set(false);
     this.couponService.getCoupons().subscribe({
       next: (coupons) => {
         this.coupons.set(coupons);
         this.applyFilter();
         this.isLoading.set(false);
       },
-      error: () => {
-        this.snackBar.open('Không thể tải danh sách mã giảm giá', 'Đóng', { duration: 3000 });
+      error: (error) => {
+        if (error instanceof HttpErrorResponse && error.status === 403) {
+          this.permissionDenied.set(true);
+        }
         this.isLoading.set(false);
       },
     });
@@ -259,12 +266,10 @@ export class CouponsComponent implements OnInit, AfterViewInit {
       if (result) {
         this.couponService.deleteCoupon(coupon.id).subscribe({
           next: () => {
-            this.snackBar.open('Xóa mã giảm giá thành công', 'Đóng', { duration: 3000 });
+            this.notification.success('Xóa mã giảm giá thành công');
             this.loadData();
           },
-          error: () => {
-            this.snackBar.open('Xóa mã giảm giá thất bại', 'Đóng', { duration: 3000 });
-          },
+          error: () => {},
         });
       }
     });
@@ -328,13 +333,12 @@ export class CouponsComponent implements OnInit, AfterViewInit {
       this.isBulkDeleting.set(true);
       this.couponService.bulkDeleteCoupons(ids).subscribe({
         next: () => {
-          this.snackBar.open('Xóa mã giảm giá thành công', 'Đóng', { duration: 3000 });
+          this.notification.success('Xóa mã giảm giá thành công');
           this.loadData();
           this.selectedCouponIds.set([]);
           this.isBulkDeleting.set(false);
         },
         error: () => {
-          this.snackBar.open('Xóa mã giảm giá thất bại', 'Đóng', { duration: 3000 });
           this.isBulkDeleting.set(false);
         },
       });
@@ -353,52 +357,32 @@ export class CouponsComponent implements OnInit, AfterViewInit {
 
   private updateBulkStatus(active: boolean): void {
     const ids = [...this.selectedCouponIds()];
-    this.snackBar.open(
+    this.notification.info(
       `Đang ${active ? 'kích hoạt' : 'khóa'} ${ids.length} mã giảm giá...`,
-      'Đóng',
-      {
-        duration: 2000,
-      },
+      2000,
     );
     this.couponService.bulkUpdateCouponStatus(ids, active).subscribe({
       next: () => {
-        this.snackBar.open(`${active ? 'Kích hoạt' : 'Khóa'} mã giảm giá thành công`, 'Đóng', {
-          duration: 3000,
-        });
+        this.notification.success(`${active ? 'Kích hoạt' : 'Khóa'} mã giảm giá thành công`);
         this.loadData();
         this.selectedCouponIds.set([]);
       },
-      error: (error) => {
-        this.snackBar.open(
-          error.error?.message || `${active ? 'Kích hoạt' : 'Khóa'} mã giảm giá thất bại`,
-          'Đóng',
-          { duration: 3000 },
-        );
-      },
+      error: (error) => {},
     });
   }
 
   toggleStatus(coupon: CouponResponse): void {
     const newActive = !coupon.active;
-    this.snackBar.open(
+    this.notification.info(
       `Đang ${newActive ? 'kích hoạt' : 'khóa'} mã giảm giá ${coupon.code}...`,
-      'Đóng',
-      { duration: 2000 },
+      2000,
     );
     this.couponService.bulkUpdateCouponStatus([coupon.id], newActive).subscribe({
       next: () => {
-        this.snackBar.open(`${newActive ? 'Kích hoạt' : 'Khóa'} mã giảm giá thành công`, 'Đóng', {
-          duration: 3000,
-        });
+        this.notification.success(`${newActive ? 'Kích hoạt' : 'Khóa'} mã giảm giá thành công`);
         this.loadData();
       },
-      error: (error) => {
-        this.snackBar.open(
-          error.error?.message || `${newActive ? 'Kích hoạt' : 'Khóa'} mã giảm giá thất bại`,
-          'Đóng',
-          { duration: 3000 },
-        );
-      },
+      error: (error) => {},
     });
   }
 

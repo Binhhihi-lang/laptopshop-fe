@@ -1,9 +1,10 @@
 import { Component, OnInit, signal, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialog } from '@angular/material/dialog';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { NotificationService } from '@core/services/notification.service';
 import { ProductService } from '@core/services/product.service';
 import { AuthService } from '@core/services/auth.service';
 import { ProductResponse } from '@core/models/product.model';
@@ -41,13 +42,14 @@ export class ProductDetailComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly productService = inject(ProductService);
   private readonly dialog = inject(MatDialog);
-  private readonly snackBar = inject(MatSnackBar);
+  private readonly notification = inject(NotificationService);
   private readonly authService = inject(AuthService);
 
   canDeleteProduct = computed(() => this.authService.hasPermission('DELETE_PRODUCT'));
 
   product = signal<ProductResponse | null>(null);
   isLoading = signal(false);
+  permissionDenied = signal<boolean>(false);
   productId: string | null = null;
 
   // Computed helpers for badges
@@ -95,6 +97,7 @@ export class ProductDetailComponent implements OnInit {
 
   loadProduct(id: string) {
     this.isLoading.set(true);
+    this.permissionDenied.set(false);
     this.productService.getProductById(id).subscribe({
       next: (product) => {
         this.product.set(product);
@@ -103,8 +106,11 @@ export class ProductDetailComponent implements OnInit {
       error: (err) => {
         console.error('[ProductDetail] Lỗi khi tải sản phẩm:', err);
         this.isLoading.set(false);
-        this.snackBar.open('Không thể tải thông tin sản phẩm', 'Đóng', { duration: 3000 });
-        this.router.navigate(['/admin/products']);
+        if (err instanceof HttpErrorResponse && err.status === 403) {
+          this.permissionDenied.set(true);
+        } else {
+          this.router.navigate(['/admin/products']);
+        }
       },
     });
   }
@@ -125,12 +131,11 @@ export class ProductDetailComponent implements OnInit {
       if (result && this.productId) {
         this.productService.deleteProduct(this.productId).subscribe({
           next: () => {
-            this.snackBar.open('Xóa sản phẩm thành công', 'Đóng', { duration: 3000 });
+            this.notification.success('Xóa sản phẩm thành công');
             this.router.navigate(['/admin/products']);
           },
           error: (error) => {
             console.error('Error deleting product:', error);
-            this.snackBar.open('Xóa sản phẩm thất bại', 'Đóng', { duration: 3000 });
           },
         });
       }

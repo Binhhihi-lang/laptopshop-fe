@@ -10,6 +10,7 @@ import {
   AfterViewInit,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
@@ -18,7 +19,7 @@ import { RoleService } from '@core/services/role.service';
 import { AuthService } from '@core/services/auth.service';
 import { UserResponse } from '@core/models/user.model';
 import { RoleResponse } from '@core/models/role.model';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { NotificationService } from '@core/services/notification.service';
 import { MatDialog } from '@angular/material/dialog';
 import { forkJoin, catchError, of } from 'rxjs';
 import { ConfirmDialogComponent } from '@shared/confirm-dialog/confirm-dialog.component';
@@ -29,6 +30,7 @@ import { CardComponent } from '@shared/components/card/card.component';
 import { BadgeComponent } from '@shared/components/badge/badge.component';
 import { ButtonComponent } from '@shared/components/button/button.component';
 import { InputComponent } from '@shared/components/input/input.component';
+import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
 import { SelectComponent, SelectOption } from '@shared/components/select/select.component';
 import {
   PageHeaderComponent,
@@ -60,6 +62,7 @@ import {
     ColumnPickerComponent,
     FilterPresetsComponent,
     BulkToolbarComponent,
+    EmptyStateComponent,
   ],
   templateUrl: './users.html',
   styleUrl: './users.css',
@@ -69,7 +72,7 @@ export class UsersComponent implements OnInit, AfterViewInit {
   private readonly roleService = inject(RoleService);
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
-  private readonly snackBar = inject(MatSnackBar);
+  private readonly notification = inject(NotificationService);
   private readonly dialog = inject(MatDialog);
 
   // Data signals
@@ -79,6 +82,7 @@ export class UsersComponent implements OnInit, AfterViewInit {
   // Loading states
   isLoading = signal(false);
   isLoadingRoles = signal(false);
+  permissionDenied = signal<boolean>(false);
 
   // Filter signals
   searchTerm = signal('');
@@ -120,14 +124,14 @@ export class UsersComponent implements OnInit, AfterViewInit {
   filteredUsers = signal<UserResponse[]>([]);
 
   // Table column templates
-  @ViewChild('avatarColumn', { static: true }) avatarColumn!: TemplateRef<any>;
-  @ViewChild('nameColumn', { static: true }) nameColumn!: TemplateRef<any>;
-  @ViewChild('emailColumn', { static: true }) emailColumn!: TemplateRef<any>;
-  @ViewChild('phoneColumn', { static: true }) phoneColumn!: TemplateRef<any>;
-  @ViewChild('rolesColumn', { static: true }) rolesColumn!: TemplateRef<any>;
-  @ViewChild('statusColumn', { static: true }) statusColumn!: TemplateRef<any>;
-  @ViewChild('lastLoginColumn', { static: true }) lastLoginColumn!: TemplateRef<any>;
-  @ViewChild('createdAtColumn', { static: true }) createdAtColumn!: TemplateRef<any>;
+  @ViewChild('avatarColumn') avatarColumn!: TemplateRef<any>;
+  @ViewChild('nameColumn') nameColumn!: TemplateRef<any>;
+  @ViewChild('emailColumn') emailColumn!: TemplateRef<any>;
+  @ViewChild('phoneColumn') phoneColumn!: TemplateRef<any>;
+  @ViewChild('rolesColumn') rolesColumn!: TemplateRef<any>;
+  @ViewChild('statusColumn') statusColumn!: TemplateRef<any>;
+  @ViewChild('lastLoginColumn') lastLoginColumn!: TemplateRef<any>;
+  @ViewChild('createdAtColumn') createdAtColumn!: TemplateRef<any>;
 
   // Table actions (using icon buttons)
   // Ẩn nút "Xóa" với role thiếu quyền DELETE_USER (giữ Xem/Sửa/Khóa)
@@ -197,6 +201,7 @@ export class UsersComponent implements OnInit, AfterViewInit {
   loadData() {
     this.isLoading.set(true);
     this.isLoadingRoles.set(true);
+    this.permissionDenied.set(false);
 
     forkJoin({
       users: this.userService.getUsers(),
@@ -213,7 +218,9 @@ export class UsersComponent implements OnInit, AfterViewInit {
       },
       error: (error) => {
         console.error('Error loading data:', error);
-        this.snackBar.open('Không thể tải dữ liệu người dùng', 'Đóng', { duration: 3000 });
+        if (error instanceof HttpErrorResponse && error.status === 403) {
+          this.permissionDenied.set(true);
+        }
         this.isLoading.set(false);
         this.isLoadingRoles.set(false);
       },
@@ -374,14 +381,13 @@ export class UsersComponent implements OnInit, AfterViewInit {
       this.deletingUserId.set(idsToDelete[0] ?? null);
       this.userService.bulkDeleteUsers(idsToDelete).subscribe({
         next: () => {
-          this.snackBar.open('Xóa người dùng thành công', 'Đóng', { duration: 3000 });
+          this.notification.success('Xóa người dùng thành công');
           this.loadData();
           this.selectedUserIds.set([]);
           this.deletingUserId.set(null);
         },
         error: (error) => {
           console.error('Error bulk deleting users:', error);
-          this.snackBar.open('Xóa người dùng thất bại', 'Đóng', { duration: 3000 });
           this.deletingUserId.set(null);
         },
       });
@@ -401,22 +407,15 @@ export class UsersComponent implements OnInit, AfterViewInit {
   private updateBulkStatus(active: boolean): void {
     const ids = [...this.selectedUserIds()];
     const verb = active ? 'kích hoạt' : 'khóa';
-    this.snackBar.open(`Đang ${verb} ${ids.length} người dùng...`, 'Đóng', { duration: 2000 });
+    this.notification.info(`Đang ${verb} ${ids.length} người dùng...`, 2000);
     this.userService.bulkUpdateUserStatus(ids, active).subscribe({
       next: () => {
-        this.snackBar.open(`${active ? 'Kích hoạt' : 'Khóa'} người dùng thành công`, 'Đóng', {
-          duration: 3000,
-        });
+        this.notification.success(`${active ? 'Kích hoạt' : 'Khóa'} người dùng thành công`);
         this.loadData();
         this.selectedUserIds.set([]);
       },
       error: (error) => {
         console.error(`Error bulk ${verb} users:`, error);
-        this.snackBar.open(
-          error.error?.message || `${active ? 'Kích hoạt' : 'Khóa'} người dùng thất bại`,
-          'Đóng',
-          { duration: 3000 },
-        );
       },
     });
   }
@@ -480,13 +479,12 @@ export class UsersComponent implements OnInit, AfterViewInit {
         this.deletingUserId.set(user.id);
         this.userService.deleteUser(user.id).subscribe({
           next: () => {
-            this.snackBar.open('Xóa người dùng thành công', 'Đóng', { duration: 3000 });
+            this.notification.success('Xóa người dùng thành công');
             this.loadData();
             this.deletingUserId.set(null);
           },
           error: (error) => {
             console.error('Error deleting user:', error);
-            this.snackBar.open('Xóa người dùng thất bại', 'Đóng', { duration: 3000 });
             this.deletingUserId.set(null);
           },
         });
@@ -496,26 +494,18 @@ export class UsersComponent implements OnInit, AfterViewInit {
 
   toggleUserStatus(user: UserResponse): void {
     const newActive = !(user.active ?? true);
-    this.snackBar.open(
+    this.notification.info(
       `Đang ${newActive ? 'kích hoạt' : 'khóa'} tài khoản ${user.email}...`,
-      'Đóng',
-      { duration: 2000 },
+      2000,
     );
 
     this.userService.bulkUpdateUserStatus([user.id], newActive).subscribe({
       next: () => {
-        this.snackBar.open(`${newActive ? 'Kích hoạt' : 'Khóa'} tài khoản thành công`, 'Đóng', {
-          duration: 3000,
-        });
+        this.notification.success(`${newActive ? 'Kích hoạt' : 'Khóa'} tài khoản thành công`);
         this.loadData();
       },
       error: (error) => {
         console.error('Error toggling user status:', error);
-        this.snackBar.open(
-          error.error?.message || `${newActive ? 'Kích hoạt' : 'Khóa'} tài khoản thất bại`,
-          'Đóng',
-          { duration: 3000 },
-        );
       },
     });
   }

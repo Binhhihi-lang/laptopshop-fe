@@ -9,6 +9,7 @@ import {
   AfterViewInit,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule, ReactiveFormsModule, FormControl } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { forkJoin } from 'rxjs';
@@ -17,7 +18,7 @@ import { CategoryService } from '@core/services/category.service';
 import { AuthService } from '@core/services/auth.service';
 import { ProductResponse } from '@core/models/product.model';
 import { CategoryResponse } from '@core/models/category.model';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { NotificationService } from '@core/services/notification.service';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { ConfirmDialogComponent } from '@shared/confirm-dialog/confirm-dialog.component';
@@ -28,6 +29,7 @@ import { CardComponent } from '@shared/components/card/card.component';
 import { BadgeComponent } from '@shared/components/badge/badge.component';
 import { ButtonComponent } from '@shared/components/button/button.component';
 import { InputComponent } from '@shared/components/input/input.component';
+import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
 import { SelectComponent, SelectOption } from '@shared/components/select/select.component';
 import {
   PageHeaderComponent,
@@ -53,6 +55,7 @@ import {
     ButtonComponent,
     InputComponent,
     SelectComponent,
+    EmptyStateComponent,
     PageHeaderComponent,
     ColumnPickerComponent,
     FilterPresetsComponent,
@@ -64,7 +67,7 @@ import {
 export class ProductsComponent implements OnInit, AfterViewInit {
   private readonly productService = inject(ProductService);
   private readonly categoryService = inject(CategoryService);
-  private readonly snackBar = inject(MatSnackBar);
+  private readonly notification = inject(NotificationService);
   private readonly dialog = inject(MatDialog);
   protected readonly router = inject(Router);
   private readonly authService = inject(AuthService);
@@ -78,6 +81,7 @@ export class ProductsComponent implements OnInit, AfterViewInit {
   // Loading states
   isLoading = signal(false);
   isLoadingCategories = signal(false);
+  permissionDenied = signal<boolean>(false);
 
   // Filter signals
   searchTerm = signal('');
@@ -121,16 +125,16 @@ export class ProductsComponent implements OnInit, AfterViewInit {
   filteredProducts = signal<ProductResponse[]>([]);
 
   // Table column templates
-  @ViewChild('imageColumn', { static: true }) imageColumn!: TemplateRef<any>;
-  @ViewChild('codeColumn', { static: true }) codeColumn!: TemplateRef<any>;
-  @ViewChild('nameColumn', { static: true }) nameColumn!: TemplateRef<any>;
-  @ViewChild('priceColumn', { static: true }) priceColumn!: TemplateRef<any>;
-  @ViewChild('quantityColumn', { static: true }) quantityColumn!: TemplateRef<any>;
-  @ViewChild('soldColumn', { static: true }) soldColumn!: TemplateRef<any>;
-  @ViewChild('categoryColumn', { static: true }) categoryColumn!: TemplateRef<any>;
-  @ViewChild('statusColumn', { static: true }) statusColumn!: TemplateRef<any>;
-  @ViewChild('createdAtColumn', { static: true }) createdAtColumn!: TemplateRef<any>;
-  @ViewChild('updatedAtColumn', { static: true }) updatedAtColumn!: TemplateRef<any>;
+  @ViewChild('imageColumn') imageColumn!: TemplateRef<any>;
+  @ViewChild('codeColumn') codeColumn!: TemplateRef<any>;
+  @ViewChild('nameColumn') nameColumn!: TemplateRef<any>;
+  @ViewChild('priceColumn') priceColumn!: TemplateRef<any>;
+  @ViewChild('quantityColumn') quantityColumn!: TemplateRef<any>;
+  @ViewChild('soldColumn') soldColumn!: TemplateRef<any>;
+  @ViewChild('categoryColumn') categoryColumn!: TemplateRef<any>;
+  @ViewChild('statusColumn') statusColumn!: TemplateRef<any>;
+  @ViewChild('createdAtColumn') createdAtColumn!: TemplateRef<any>;
+  @ViewChild('updatedAtColumn') updatedAtColumn!: TemplateRef<any>;
 
   // Table actions
   actions: TableAction<ProductResponse>[] = [
@@ -172,6 +176,7 @@ export class ProductsComponent implements OnInit, AfterViewInit {
   loadData() {
     this.isLoading.set(true);
     this.isLoadingCategories.set(true);
+    this.permissionDenied.set(false);
 
     forkJoin({
       products: this.productService.getProducts(),
@@ -186,9 +191,11 @@ export class ProductsComponent implements OnInit, AfterViewInit {
       },
       error: (error) => {
         console.error('Error loading data:', error);
-        this.snackBar.open('Không thể tải dữ liệu sản phẩm', 'Đóng', { duration: 3000 });
         this.isLoading.set(false);
         this.isLoadingCategories.set(false);
+        if (error instanceof HttpErrorResponse && error.status === 403) {
+          this.permissionDenied.set(true);
+        }
       },
     });
   }
@@ -329,12 +336,11 @@ export class ProductsComponent implements OnInit, AfterViewInit {
       if (result) {
         this.productService.deleteProduct(product.id).subscribe({
           next: () => {
-            this.snackBar.open('Xóa sản phẩm thành công', 'Đóng', { duration: 3000 });
+            this.notification.success('Xóa sản phẩm thành công');
             this.loadData();
           },
           error: (error) => {
             console.error('Error deleting product:', error);
-            this.snackBar.open('Xóa sản phẩm thất bại', 'Đóng', { duration: 3000 });
           },
         });
       }
@@ -408,14 +414,13 @@ export class ProductsComponent implements OnInit, AfterViewInit {
       this.deletingProductId.set(idsToDelete[0] ?? null);
       this.productService.bulkDeleteProducts(idsToDelete).subscribe({
         next: () => {
-          this.snackBar.open('Xóa sản phẩm thành công', 'Đóng', { duration: 3000 });
+          this.notification.success('Xóa sản phẩm thành công');
           this.loadData();
           this.selectedProductIds.set([]);
           this.deletingProductId.set(null);
         },
         error: (error) => {
           console.error('Error bulk deleting products:', error);
-          this.snackBar.open('Xóa sản phẩm thất bại', 'Đóng', { duration: 3000 });
           this.deletingProductId.set(null);
         },
       });
@@ -435,48 +440,33 @@ export class ProductsComponent implements OnInit, AfterViewInit {
   private updateBulkStatus(active: boolean): void {
     const ids = [...this.selectedProductIds()];
     const verb = active ? 'kích hoạt' : 'khóa';
-    this.snackBar.open(`Đang ${verb} ${ids.length} sản phẩm...`, 'Đóng', { duration: 2000 });
+    this.notification.info(`Đang ${verb} ${ids.length} sản phẩm...`, 2000);
     this.productService.bulkUpdateProductStatus(ids, active).subscribe({
       next: () => {
-        this.snackBar.open(`${active ? 'Kích hoạt' : 'Khóa'} sản phẩm thành công`, 'Đóng', {
-          duration: 3000,
-        });
+        this.notification.success(`${active ? 'Kích hoạt' : 'Khóa'} sản phẩm thành công`);
         this.loadData();
         this.selectedProductIds.set([]);
       },
       error: (error) => {
         console.error(`Error bulk ${verb} products:`, error);
-        this.snackBar.open(
-          error.error?.message || `${active ? 'Kích hoạt' : 'Khóa'} sản phẩm thất bại`,
-          'Đóng',
-          { duration: 3000 },
-        );
       },
     });
   }
 
   toggleProductStatus(product: ProductResponse): void {
     const newActive = !product.active;
-    this.snackBar.open(
+    this.notification.info(
       `Đang ${newActive ? 'kích hoạt' : 'khóa'} sản phẩm ${product.name}...`,
-      'Đóng',
-      { duration: 2000 },
+      2000,
     );
 
     this.productService.bulkUpdateProductStatus([product.id], newActive).subscribe({
       next: () => {
-        this.snackBar.open(`${newActive ? 'Kích hoạt' : 'Khóa'} sản phẩm thành công`, 'Đóng', {
-          duration: 3000,
-        });
+        this.notification.success(`${newActive ? 'Kích hoạt' : 'Khóa'} sản phẩm thành công`);
         this.loadData();
       },
       error: (error) => {
         console.error('Error toggling product status:', error);
-        this.snackBar.open(
-          error.error?.message || `${newActive ? 'Kích hoạt' : 'Khóa'} sản phẩm thất bại`,
-          'Đóng',
-          { duration: 3000 },
-        );
       },
     });
   }

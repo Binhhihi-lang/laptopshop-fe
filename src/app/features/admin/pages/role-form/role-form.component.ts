@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { NotificationService } from '@core/services/notification.service';
 import { RoleService } from '@core/services/role.service';
 import { PermissionService } from '@core/services/permission.service';
 import { RoleResponse, RoleCreationRequest, RoleUpdateRequest } from '@core/models/role.model';
@@ -42,7 +42,7 @@ export class RoleFormComponent implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly roleService = inject(RoleService);
   private readonly permissionService = inject(PermissionService);
-  private readonly snackBar = inject(MatSnackBar);
+  private readonly notification = inject(NotificationService);
   private readonly destroy$ = new Subject<void>();
 
   // State signals
@@ -115,7 +115,6 @@ export class RoleFormComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           console.error('Error loading data:', error);
-          this.snackBar.open('Không thể tải dữ liệu', 'Đóng', { duration: 3000 });
           this.router.navigate(['/admin/roles']);
           this.isLoading.set(false);
         },
@@ -130,7 +129,6 @@ export class RoleFormComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           console.error('Error loading permissions:', error);
-          this.snackBar.open('Không thể tải danh sách quyền hạn', 'Đóng', { duration: 3000 });
           this.isLoading.set(false);
         },
       });
@@ -149,7 +147,7 @@ export class RoleFormComponent implements OnInit, OnDestroy {
   onSubmit(): void {
     if (this.roleForm.invalid) {
       this.markFormGroupTouched(this.roleForm);
-      this.snackBar.open('Vui lòng điền đầy đủ thông tin bắt buộc', 'Đóng', { duration: 3000 });
+      this.notification.warn('Vui lòng điền đầy đủ thông tin bắt buộc');
       return;
     }
 
@@ -166,14 +164,11 @@ export class RoleFormComponent implements OnInit, OnDestroy {
       };
       this.roleService.updateRole(this.roleId(), roleData).subscribe({
         next: () => {
-          this.snackBar.open('Cập nhật vai trò thành công', 'Đóng', { duration: 3000 });
+          this.notification.success('Cập nhật vai trò thành công');
           this.router.navigate(['/admin/roles']);
         },
         error: (error) => {
           console.error('Error updating role:', error);
-          this.snackBar.open(error.error?.message || 'Cập nhật vai trò thất bại', 'Đóng', {
-            duration: 5000,
-          });
           this.isSubmitting.set(false);
         },
       });
@@ -186,14 +181,11 @@ export class RoleFormComponent implements OnInit, OnDestroy {
       };
       this.roleService.createRole(roleData).subscribe({
         next: () => {
-          this.snackBar.open('Tạo vai trò thành công', 'Đóng', { duration: 3000 });
+          this.notification.success('Tạo vai trò thành công');
           this.router.navigate(['/admin/roles']);
         },
         error: (error) => {
           console.error('Error creating role:', error);
-          this.snackBar.open(error.error?.message || 'Tạo vai trò thất bại', 'Đóng', {
-            duration: 5000,
-          });
           this.isSubmitting.set(false);
         },
       });

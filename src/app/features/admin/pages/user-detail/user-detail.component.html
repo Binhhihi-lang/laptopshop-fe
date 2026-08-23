@@ -1,5 +1,13 @@
 <div class="detail-container min-h-screen bg-slate-50 dark:bg-slate-950">
-  @if (isLoading()) {
+  @if (permissionDenied()) {
+    <app-empty-state
+      variant="permission"
+      icon="lock"
+      title="Bạn không có quyền xem chi tiết người dùng"
+      description="Quyền xem mục này đã bị thu hồi bởi quản trị viên. Vui lòng liên hệ quản trị viên nếu bạn cần truy cập."
+    />
+  } @else {
+    @if (isLoading()) {
     <!-- Skeleton loading -->
     <div class="max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-8" aria-hidden="true">
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -142,5 +150,6 @@
       actionVariant="primary"
       (actionClick)="goBack()"
     />
+  }
   }
 </div>

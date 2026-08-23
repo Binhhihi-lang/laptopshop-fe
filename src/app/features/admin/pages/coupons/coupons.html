@@ -128,8 +128,16 @@
   <!-- Coupons Table -->
   <div class="max-w-screen-2xl mx-auto px-4 md:px-6 lg:px-8 pb-8">
     <app-card [padding]="'none'">
-      <app-table
-        [data]="filteredCoupons()"
+      @if (permissionDenied()) {
+        <app-empty-state
+          variant="permission"
+          icon="lock"
+          title="Bạn không có quyền xem mã giảm giá"
+          description="Quyền xem mã giảm giá đã bị thu hồi bởi quản trị viên. Vui lòng liên hệ quản trị viên nếu bạn cần truy cập."
+        />
+      } @else {
+        <app-table
+          [data]="filteredCoupons()"
         [columns]="columns()"
         [loading]="isLoading()"
         [loadingText]="'Đang tải mã giảm giá...'"
@@ -211,7 +219,8 @@
         <ng-template #updatedAtColumn let-coupon>
           <span class="text-slate-600 dark:text-slate-400 whitespace-nowrap">{{ formatDate(coupon.updatedAt) }}</span>
         </ng-template>
-      </app-table>
+        </app-table>
+      }
     </app-card>
   </div>
 </div>

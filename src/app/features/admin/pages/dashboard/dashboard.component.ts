@@ -9,6 +9,7 @@ import {
 import { HttpErrorResponse } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { MaterialModule } from '@shared/material.module';
+import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
 
 import { DashboardService } from '@core/services/dashboard.service';
 import { DashboardStats } from '@core/models/dashboard.model';
@@ -46,7 +47,7 @@ interface ActivityItem {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, MaterialModule],
+  imports: [CommonModule, MaterialModule, EmptyStateComponent],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css',
 })
@@ -65,6 +66,7 @@ export class DashboardComponent implements OnInit, AfterViewInit {
 
   loading = true;
   errorMessage = '';
+  permissionDenied = false;
 
   kpis: Kpi[] = [];
 
@@ -209,9 +211,13 @@ export class DashboardComponent implements OnInit, AfterViewInit {
       },
       error: (error: HttpErrorResponse) => {
         console.error('Dashboard load error:', error);
-        this.errorMessage =
-          'Không thể tải thống kê bảng điều khiển' + (error.message ? ': ' + error.message : '');
         this.loading = false;
+        if (error.status === 403) {
+          this.permissionDenied = true;
+        } else {
+          this.errorMessage =
+            'Không thể tải thống kê bảng điều khiển' + (error.message ? ': ' + error.message : '');
+        }
         this.cdr.detectChanges();
       },
     });

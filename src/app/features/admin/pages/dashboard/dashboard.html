@@ -46,8 +46,18 @@
     </div>
   }
 
+  <!-- Permission Denied State -->
+  @if (permissionDenied) {
+    <app-empty-state
+      variant="permission"
+      icon="lock"
+      title="Bạn không có quyền xem bảng điều khiển"
+      description="Quyền xem bảng điều khiển đã bị thu hồi bởi quản trị viên. Vui lòng liên hệ quản trị viên nếu bạn cần truy cập."
+    />
+  }
+
   <!-- Error State -->
-  @if (errorMessage && !loading) {
+  @else if (errorMessage && !loading) {
     <div class="card-padded border-danger border bg-danger-light dark:bg-danger-light/20 animate-slide-up" role="alert">
       <div class="flex items-start gap-3">
         <mat-icon class="text-danger mt-0.5">error_outline</mat-icon>
@@ -64,7 +74,7 @@
   }
 
   <!-- Main Content -->
-  @if (!loading && !errorMessage) {
+  @if (!loading && !errorMessage && !permissionDenied) {
     <!-- KPI Grid -->
     <div class="grid-kpi animate-slide-up">
       @for (kpi of kpis; track kpi.label) {

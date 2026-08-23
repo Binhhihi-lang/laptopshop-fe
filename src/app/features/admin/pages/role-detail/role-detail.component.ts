@@ -1,9 +1,10 @@
 import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialog } from '@angular/material/dialog';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { NotificationService } from '@core/services/notification.service';
 import { RoleService } from '@core/services/role.service';
 import { RoleResponse } from '@core/models/role.model';
 import { AuthService } from '@core/services/auth.service';
@@ -44,11 +45,12 @@ export class RoleDetailComponent implements OnInit {
   private readonly roleService = inject(RoleService);
   private readonly authService = inject(AuthService);
   private readonly dialog = inject(MatDialog);
-  private readonly snackBar = inject(MatSnackBar);
+  private readonly notification = inject(NotificationService);
 
   isLoading = signal(false);
   role = signal<RoleResponse | null>(null);
   errorMessage = signal('');
+  permissionDenied = signal<boolean>(false);
 
   // Ẩn nút "Xóa" với role thiếu MANAGE_ROLES_PERMISSIONS
   canManage = computed(() => this.authService.hasPermission('MANAGE_ROLES_PERMISSIONS'));
@@ -75,14 +77,18 @@ export class RoleDetailComponent implements OnInit {
 
   loadRole(id: string): void {
     this.isLoading.set(true);
+    this.permissionDenied.set(false);
     this.roleService.getRoleById(id).subscribe({
       next: (role) => {
         this.role.set(role);
         this.isLoading.set(false);
       },
-      error: () => {
+      error: (error: HttpErrorResponse) => {
         this.errorMessage.set('Không thể tải thông tin vai trò');
         this.isLoading.set(false);
+        if (error instanceof HttpErrorResponse && error.status === 403) {
+          this.permissionDenied.set(true);
+        }
       },
     });
   }
@@ -114,14 +120,10 @@ export class RoleDetailComponent implements OnInit {
       if (result && r.id) {
         this.roleService.deleteRole(r.id).subscribe({
           next: () => {
-            this.snackBar.open('Xóa vai trò thành công', 'Đóng', { duration: 3000 });
+            this.notification.success('Xóa vai trò thành công');
             this.router.navigate(['/admin/roles']);
           },
-          error: (error) => {
-            this.snackBar.open(error.error?.message || 'Xóa vai trò thất bại', 'Đóng', {
-              duration: 5000,
-            });
-          },
+          error: (error) => {},
         });
       }
     });
