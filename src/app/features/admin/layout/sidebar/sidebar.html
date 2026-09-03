@@ -72,12 +72,16 @@
   @if (!collapsed()) {
     <div class="p-3 border-t border-slate-800 shrink-0">
       <div class="flex items-center gap-3 p-2 rounded-xl hover:bg-slate-800/50 transition-colors">
-        <div class="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shrink-0 shadow-lg shadow-blue-500/25">
-          <span class="text-white font-semibold text-sm">{{ userInitials() }}</span>
-        </div>
+        <app-avatar
+          [src]="userInfo()?.avatar || ''"
+          [initials]="getInitials(userInfo()?.fullName)"
+          [alt]="userInfo()?.fullName || 'Người dùng'"
+          size="sm"
+          shape="circle"
+          [shadow]="'sm'" />
         <div class="flex-1 min-w-0 overflow-hidden">
-          <p class="font-medium text-white text-sm truncate">{{ userName() }}</p>
-          <p class="text-xs text-slate-500 truncate">{{ userRole() }}</p>
+          <p class="font-medium text-white text-sm truncate">{{ userInfo()?.fullName || 'Administrator' }}</p>
+          <app-badge [label]="getPrimaryRole(userInfo()?.roleNames)" variant="primary" size="sm" />
         </div>
         <button
           class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/50 transition-colors"
@@ -94,9 +98,13 @@
         class="w-full flex items-center justify-center p-2 rounded-xl hover:bg-slate-800/50 transition-colors"
         aria-label="User profile"
         (click)="navigateToProfile()">
-        <div class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shrink-0 shadow-lg shadow-blue-500/25">
-          <span class="text-white font-semibold text-sm">{{ userInitials() }}</span>
-        </div>
+        <app-avatar
+          [src]="userInfo()?.avatar || ''"
+          [initials]="getInitials(userInfo()?.fullName)"
+          [alt]="userInfo()?.fullName || 'Người dùng'"
+          size="sm"
+          shape="circle"
+          [shadow]="'sm'" />
       </button>
     </div>
   }

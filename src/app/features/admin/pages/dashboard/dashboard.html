@@ -1,53 +1,35 @@
 <!-- Dashboard - Modern Clean with Dark Mode -->
 <div class="page-container">
-  <!-- Page Header -->
-  <div class="page-header">
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-      <div>
-        <h1 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Bảng điều khiển</h1>
-        <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Tổng quan hiệu suất cửa hàng</p>
-      </div>
-      <div class="flex items-center gap-2">
-        <button
-          (click)="loadStatistics()"
-          [disabled]="loading"
-          class="btn-secondary btn-sm">
-          <mat-icon class="w-4 h-4">refresh</mat-icon>
-          Làm mới
-        </button>
-        <button class="btn-primary btn-sm">
-          <mat-icon class="w-4 h-4">download</mat-icon>
-          Xuất báo cáo
-        </button>
-      </div>
-    </div>
-  </div>
+  <!-- Page Header (shared) -->
+  <app-page-header
+    title="Bảng điều khiển"
+    subtitle="Tổng quan hiệu suất cửa hàng"
+    [hasActions]="true">
+    <app-button
+      variant="secondary"
+      icon="refresh"
+      label="Làm mới"
+      [disabled]="loading()"
+      (click)="loadStatistics()" />
+    <app-button variant="primary" icon="download" label="Xuất báo cáo" />
+  </app-page-header>
 
-  <!-- Loading Overlay -->
-  @if (loading) {
+  <!-- Loading skeleton -->
+  @if (loading()) {
     <div class="grid-kpi animate-fade-in" role="status" aria-label="Đang tải thống kê bảng điều khiển">
-      @for (i of [1,2,3,4,5,6,7,8]; track i) {
-        <div class="card-padded">
-          <div class="flex items-center gap-3">
-            <div class="skeleton-avatar"></div>
-            <div class="flex-1 space-y-2">
-              <div class="skeleton-title"></div>
-              <div class="skeleton-text w-3/4"></div>
-              <div class="skeleton-text w-1/2"></div>
-            </div>
-          </div>
-        </div>
+      @for (i of [1, 2, 3, 4, 5, 6, 7, 8]; track i) {
+        <app-loading type="skeleton" [height]="'5.5rem'" [borderRadius]="'rounded-xl'" />
       }
-      <div class="grid-2col animate-fade-in">
-        @for (i of [1,2]; track i) {
-          <div class="skeleton-card"></div>
-        }
-      </div>
+    </div>
+    <div class="grid-2col animate-fade-in mt-6">
+      @for (i of [1, 2]; track i) {
+        <app-loading type="skeleton" [height]="'16rem'" [borderRadius]="'rounded-xl'" />
+      }
     </div>
   }
 
-  <!-- Permission Denied State -->
-  @if (permissionDenied) {
+  <!-- Permission Denied State (shared empty-state, variant "permission") -->
+  @if (!loading() && permissionDenied()) {
     <app-empty-state
       variant="permission"
       icon="lock"
@@ -56,72 +38,52 @@
     />
   }
 
-  <!-- Error State -->
-  @else if (errorMessage && !loading) {
-    <div class="card-padded border-danger border bg-danger-light dark:bg-danger-light/20 animate-slide-up" role="alert">
-      <div class="flex items-start gap-3">
-        <mat-icon class="text-danger mt-0.5">error_outline</mat-icon>
-        <div class="flex-1">
-          <p class="text-sm text-danger-dark dark:text-danger">{{ errorMessage }}</p>
-          <button
-            (click)="loadStatistics()"
-            class="btn-sm btn-danger mt-2">
-            Thử lại
-          </button>
-        </div>
-      </div>
-    </div>
+  <!-- Error State (shared empty-state + nút thử lại) -->
+  @if (!loading() && errorMessage() && !permissionDenied()) {
+    <app-empty-state
+      variant="error"
+      [title]="errorMessage()"
+      description="Vui lòng kiểm tra kết nối và thử lại."
+      actionLabel="Thử lại"
+      actionIcon="refresh"
+      (actionClick)="loadStatistics()"
+    />
   }
 
   <!-- Main Content -->
-  @if (!loading && !errorMessage && !permissionDenied) {
-    <!-- KPI Grid -->
+  @if (!loading() && !errorMessage() && !permissionDenied()) {
+    <!-- KPI Grid (shared stat-card) -->
     <div class="grid-kpi animate-slide-up">
-      @for (kpi of kpis; track kpi.label) {
-        <article class="card-hover card-padded group"
-                  [attr.data-trend]="kpi.trend?.up ? 'up' : 'down'">
-          <div class="flex items-start justify-between">
-            <div class="flex items-center gap-3">
-              <div class="kpi-icon p-3 rounded-xl"
-                   [class]="kpi.iconClass + ' group-hover:scale-110 transition-transform duration-200'">
-                <mat-icon class="w-6 h-6">{{ kpi.icon }}</mat-icon>
-              </div>
-              <div>
-                <p class="text-caption text-slate-500 dark:text-slate-400">{{ kpi.label }}</p>
-                <p class="text-heading-3 font-bold text-slate-900 dark:text-white tabular-nums">{{ kpi.value }}</p>
-              </div>
-            </div>
-            @if (kpi.trend) {
-              <div class="kpi-trend flex items-center gap-2 px-2 py-1 rounded-full text-xs font-medium transition-colors"
-                   [class]="kpi.trend.up ? 'bg-success-light text-success dark:bg-success-light/30 dark:text-success' : 'bg-danger-light text-danger dark:bg-danger-light/30 dark:text-danger'">
-                <mat-icon class="w-3.5 h-3.5">{{ kpi.trend.up ? 'trending_up' : 'trending_down' }}</mat-icon>
-                <span class="trend-text whitespace-nowrap">{{ kpi.trend.text }}</span>
-              </div>
-            }
-          </div>
-        </article>
+      @for (kpi of kpis(); track kpi.label) {
+        <app-stat-card
+          [label]="kpi.label"
+          [value]="kpi.value"
+          [icon]="kpi.icon"
+          [iconClass]="kpi.iconClass"
+          [trendUp]="kpi.trend ? kpi.trend.up : true"
+          [trendText]="kpi.trend?.text || ''" />
       }
     </div>
 
     <!-- Charts & Alerts Section -->
-    <div class="grid-2col animate-slide-up mt-6" style="animation-delay: 100ms;">
-      <!-- Low Stock Alerts Card -->
-      <section class="card overflow-hidden">
-        <div class="card-header flex items-center justify-between">
-          <h2 class="text-heading-5 font-semibold text-slate-900 dark:text-white">Sản phẩm sắp hết hàng</h2>
+    <div class="grid-2col animate-slide-up mt-6" style="animation-delay: 100ms">
+      <!-- Low Stock Alerts Card (shared card + badge) -->
+      <app-card [padding]="'none'" class="overflow-hidden">
+        <app-card-header title="Sản phẩm sắp hết hàng">
           <button class="btn-ghost btn-sm text-primary hover:text-primary-hover">
             Xem tất cả
             <mat-icon class="w-4 h-4">chevron_right</mat-icon>
           </button>
-        </div>
-        <div class="card-content p-0">
-          @if (lowStockProducts.length > 0) {
+        </app-card-header>
+        <div class="p-0">
+          @if (lowStockProducts().length > 0) {
             <div class="divide-y divide-slate-200 dark:divide-slate-700">
-              @for (product of lowStockProducts; track product.id || product.code) {
-                <div class="alert-item p-4 flex items-center gap-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+              @for (product of lowStockProducts(); track product.id || product.code) {
+                <div
+                  class="alert-item p-4 flex items-center gap-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                   <div class="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-slate-100 dark:bg-slate-800">
                     @if (product.image) {
-                      <img [src]="product.image" alt="Product" class="w-full h-full object-cover">
+                      <img [src]="product.image" alt="Product" class="w-full h-full object-cover" />
                     } @else {
                       <div class="w-full h-full flex items-center justify-center text-slate-400 dark:text-slate-500">
                         <mat-icon class="w-6 h-6">inventory_2</mat-icon>
@@ -133,8 +95,13 @@
                     <p class="text-caption text-slate-500 dark:text-slate-400 truncate">{{ product.code }}</p>
                   </div>
                   <div class="flex items-center gap-2">
-                    <span class="badge badge-warning text-xs">{{ product.quantity }} còn lại</span>
-                    <button class="btn-icon btn-ghost p-1.5 text-slate-400 hover:text-primary" aria-label="Xem sản phẩm">
+                    <app-badge
+                      [label]="product.quantity + ' còn lại'"
+                      variant="warning"
+                      size="sm" />
+                    <button
+                      class="btn-icon btn-ghost p-1.5 text-slate-400 hover:text-primary"
+                      aria-label="Xem sản phẩm">
                       <mat-icon class="w-4 h-4">visibility</mat-icon>
                     </button>
                   </div>
@@ -149,26 +116,27 @@
             </div>
           }
         </div>
-      </section>
+      </app-card>
 
-      <!-- Recent Activity Card (Placeholder for charts) -->
-      <section class="card overflow-hidden">
-        <div class="card-header flex items-center justify-between">
-          <h2 class="text-heading-5 font-semibold text-slate-900 dark:text-white">Hoạt động gần đây</h2>
-          <div class="flex items-center gap-2">
-            <select class="input input-sm w-auto py-1.5 pl-2 pr-8 text-xs" aria-label="Khoảng thời gian">
-              <option value="today">Hôm nay</option>
-              <option value="week" selected>Tuần này</option>
-              <option value="month">Tháng này</option>
-            </select>
-          </div>
-        </div>
-        <div class="card-content">
+      <!-- Recent Activity Card (shared card) -->
+      <app-card [padding]="'none'" class="overflow-hidden">
+        <app-card-header title="Hoạt động gần đây">
+          <select
+            class="input input-sm w-auto py-1.5 pl-2 pr-8 text-xs"
+            aria-label="Khoảng thời gian">
+            <option value="today">Hôm nay</option>
+            <option value="week" selected>Tuần này</option>
+            <option value="month">Tháng này</option>
+          </select>
+        </app-card-header>
+        <div class="p-4">
           <div class="space-y-3">
-            @for (activity of recentActivity; track activity.id) {
-              <div class="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
-                     [class]="activity.iconClass">
+            @for (activity of recentActivity(); track activity.id) {
+              <div
+                class="activity-item flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                <div
+                  class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
+                  [class]="activity.iconClass">
                   <mat-icon class="w-5 h-5">{{ activity.icon }}</mat-icon>
                 </div>
                 <div class="flex-1 min-w-0">
@@ -178,7 +146,7 @@
                 <span class="text-caption text-slate-400 dark:text-slate-500 whitespace-nowrap">{{ activity.time }}</span>
               </div>
             }
-            @if (recentActivity.length === 0) {
+            @if (recentActivity().length === 0) {
               <div class="empty-state py-8">
                 <mat-icon class="empty-state-icon">history</mat-icon>
                 <p class="empty-state-title">Chưa có hoạt động</p>
@@ -187,19 +155,18 @@
             }
           </div>
         </div>
-        <div class="card-footer border-t border-slate-200 dark:border-slate-700">
+        <div class="card-footer border-t border-slate-200 dark:border-slate-700 px-4 py-3">
           <button class="btn-ghost btn-sm text-primary hover:text-primary-hover">
             Xem tất cả hoạt động
             <mat-icon class="w-4 h-4">chevron_right</mat-icon>
           </button>
         </div>
-      </section>
+      </app-card>
     </div>
 
-    <!-- Revenue Chart Placeholder -->
-    <section class="card animate-slide-up mt-6" style="animation-delay: 200ms;">
-      <div class="card-header flex items-center justify-between">
-        <h2 class="text-heading-5 font-semibold text-slate-900 dark:text-white">Tổng quan doanh thu</h2>
+    <!-- Revenue Chart Placeholder (shared card) -->
+    <app-card class="animate-slide-up mt-6" style="animation-delay: 200ms">
+      <app-card-header title="Tổng quan doanh thu">
         <div class="flex items-center gap-2">
           <button class="btn-ghost btn-sm" aria-label="Kỳ trước">
             <mat-icon class="w-4 h-4">chevron_left</mat-icon>
@@ -209,8 +176,8 @@
             <mat-icon class="w-4 h-4">chevron_right</mat-icon>
           </button>
         </div>
-      </div>
-      <div class="card-content">
+      </app-card-header>
+      <div class="px-5 pb-5">
         <div class="h-64 flex items-center justify-center bg-slate-50 dark:bg-slate-800/50 rounded-lg relative overflow-hidden">
           <!-- Chart canvas placeholder -->
           <canvas #revenueChart class="w-full h-full"></canvas>
@@ -222,9 +189,8 @@
             </div>
           </div>
         </div>
-      </div>
-      <div class="card-footer border-t border-slate-200 dark:border-slate-700">
-        <div class="flex items-center gap-4 text-sm text-slate-600 dark:text-slate-400">
+        <!-- Legend -->
+        <div class="flex items-center gap-4 text-sm text-slate-600 dark:text-slate-400 mt-4">
           <span class="flex items-center gap-2">
             <span class="w-3 h-3 rounded-full bg-primary"></span>
             Doanh thu
@@ -239,6 +205,6 @@
           </span>
         </div>
       </div>
-    </section>
+    </app-card>
   }
 </div>

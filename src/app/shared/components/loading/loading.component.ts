@@ -46,7 +46,12 @@ export type LoadingSize = 'sm' | 'default' | 'lg' | 'xl';
       }
       @default {
         <!-- skeleton -->
-        <div [class]="skeletonClass()" aria-hidden="true"></div>
+        <div
+          [class]="skeletonClass()"
+          [style.width]="width()"
+          [style.height]="height()"
+          aria-hidden="true"
+        ></div>
       }
     }
     @if (text()) {
@@ -107,6 +112,6 @@ export class LoadingComponent {
   });
 
   skeletonClass = computed(() => {
-    return `animate-pulse bg-slate-200 dark:bg-slate-700 ${this.borderRadius()} ${this.width()} ${this.height()}`;
+    return `animate-pulse bg-slate-200 dark:bg-slate-700 ${this.borderRadius()}`;
   });
 }

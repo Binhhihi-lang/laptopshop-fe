@@ -15,6 +15,7 @@ import {
 import { JwtHelper } from '@core/utils/jwt.helper';
 import { API_ENDPOINTS, STORAGE_KEYS } from '@core/utils/constants';
 import { IntrospectResponse, LoginResponse } from '@core/models/auth.model';
+import { UserInfo, UserResponse } from '@core/models/user.model';
 
 @Injectable({
   providedIn: 'root',
@@ -56,12 +57,13 @@ export class AuthService {
       );
   }
 
-  private buildUserInfo(token: string): any {
+  private buildUserInfo(token: string): UserInfo {
     return {
-      userId: this.jwtHelper.getUserIdFromToken(token),
-      fullName: this.jwtHelper.getFullNameFromToken(token),
-      roleNames: this.jwtHelper.getRoleNamesFromToken(token),
-      permissions: this.jwtHelper.getPermissionsFromToken(token),
+      // JwtHelper trả string | null -> chuẩn hóa về undefined để khớp UserInfo
+      userId: this.jwtHelper.getUserIdFromToken(token) ?? undefined,
+      fullName: this.jwtHelper.getFullNameFromToken(token) ?? undefined,
+      roleNames: this.jwtHelper.getRoleNamesFromToken(token) ?? undefined,
+      permissions: this.jwtHelper.getPermissionsFromToken(token) ?? undefined,
     };
   }
 
@@ -135,13 +137,30 @@ export class AuthService {
     this.refreshTokenSubject.next(null);
   }
 
-  getUserInfo(): any {
+  getUserInfo(): UserInfo | null {
     const userInfo = localStorage.getItem(STORAGE_KEYS.USER_INFO);
-    return userInfo ? JSON.parse(userInfo) : null;
+    return userInfo ? (JSON.parse(userInfo) as UserInfo) : null;
   }
 
-  setUserInfo(user: any): void {
+  setUserInfo(user: UserInfo): void {
     localStorage.setItem(STORAGE_KEYS.USER_INFO, JSON.stringify(user));
+  }
+
+  /**
+   * Lấy avatar (URL Cloudinary đầy đủ) của user đang đăng nhập từ API
+   * `/admin/users/me` và gộp vào `userInfo` lưu ở localStorage, để sidebar/
+   * header có thể hiển thị ảnh đại diện (fallback về chữ cái nếu rỗng).
+   * Dùng trực tiếp `this.api` để tránh circular DI với UserService.
+   */
+  refreshAvatar(): Observable<UserResponse | null> {
+    const current = this.getUserInfo();
+    if (!current) return of(null);
+    return this.api.get<UserResponse>(`${API_ENDPOINTS.USERS}/me`).pipe(
+      tap((u) => {
+        if (u?.avatar) this.setUserInfo({ ...current, avatar: u.avatar });
+      }),
+      catchError(() => of(null)),
+    );
   }
 
   clearUserInfo(): void {

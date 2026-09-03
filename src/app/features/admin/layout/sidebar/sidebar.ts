@@ -2,6 +2,9 @@ import { Component, input, output, effect, signal, computed, inject } from '@ang
 import { MaterialModule } from '@shared/material.module';
 import { RouterModule, Router } from '@angular/router';
 import { AuthService } from '@core/services/auth.service';
+import { AvatarComponent } from '@shared/components/avatar/avatar.component';
+import { BadgeComponent } from '@shared/components/badge/badge.component';
+import { UserInfo, getInitials, getPrimaryRole } from '@core/models/user.model';
 
 interface NavItem {
   path: string;
@@ -13,13 +16,16 @@ interface NavItem {
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [MaterialModule, RouterModule],
+  imports: [MaterialModule, RouterModule, AvatarComponent, BadgeComponent],
   templateUrl: './sidebar.html',
   styleUrl: './sidebar.css',
 })
 export class Sidebar {
   private readonly router = inject(Router);
   private readonly authService = inject(AuthService);
+
+  // User tóm tắt truyền từ AdminLayout (nhất quán với Header)
+  userInfo = input<UserInfo | null>(null);
 
   // Input/Output signals for parent communication
   collapsedInput = input(false);
@@ -31,6 +37,11 @@ export class Sidebar {
   private collapsedSignal = signal(false);
   readonly collapsed = this.collapsedSignal.asReadonly();
   readonly mobileOpen = this.mobileOpenInput;
+
+  // Expose helper để dùng trong template (Angular template chỉ gọi được
+  // thành viên lớp, không gọi trực tiếp hàm import).
+  readonly getInitials = getInitials;
+  readonly getPrimaryRole = getPrimaryRole;
 
   // Nav items:
   // - Vai trò/Quyền: chỉ hiện khi có MANAGE_ROLES_PERMISSIONS (STAFF không có → ẩn).
@@ -79,24 +90,6 @@ export class Sidebar {
 
   closeMobile(): void {
     this.mobileOpenChange.emit(false);
-  }
-
-  userInitials(): string {
-    const user = this.authService.getUserInfo();
-    if (!user) return 'AD';
-    const first = user.firstName ? user.firstName[0] : '';
-    const last = user.lastName ? user.lastName[0] : '';
-    return (first + last || 'AD').toUpperCase();
-  }
-
-  userName(): string {
-    const user = this.authService.getUserInfo();
-    return user?.fullName || 'Administrator';
-  }
-
-  userRole(): string {
-    const user = this.authService.getUserInfo();
-    return user?.role || 'ADMIN';
   }
 
   navigateToProfile(): void {

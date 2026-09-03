@@ -45,3 +45,7 @@ export type { AvatarSize, AvatarShape, AvatarShadow } from './avatar/avatar.comp
 
 export { InfoItemComponent } from './info-item/info-item.component';
 export type { InfoItemFormat } from './info-item/info-item.component';
+
+export { NotificationBellComponent } from './notification-bell/notification-bell.component';
+export { UserMenuComponent } from './user-menu/user-menu.component';
+export { StatCardComponent } from './stat-card/stat-card.component';

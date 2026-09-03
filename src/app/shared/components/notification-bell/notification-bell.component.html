@@ -1,0 +1,77 @@
+<!-- Notification bell + dropdown (shared) -->
+<div class="relative notifications-container">
+  <button
+    (click)="toggle()"
+    class="relative p-2 rounded-lg text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+    aria-label="Thông báo"
+    [attr.aria-expanded]="showNotifications()"
+    aria-haspopup="true">
+    <mat-icon class="w-6 h-6">notifications_none</mat-icon>
+    @if (unreadCount() > 0) {
+      <span
+        class="absolute -top-1 -right-1 w-5 h-5 min-w-[18px] bg-red-500 text-white text-xs font-medium rounded-full flex items-center justify-center animate-bounce-in">
+        {{ unreadCount() > 9 ? '9+' : unreadCount() }}
+      </span>
+    }
+  </button>
+
+  @if (showNotifications()) {
+    <div
+      class="absolute right-0 mt-2 w-80 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 overflow-hidden z-[200] animate-in fade-in-0 zoom-in-95 duration-150">
+      <!-- Header -->
+      <div
+        class="px-4 py-3 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+        <h3 class="text-sm font-semibold text-slate-900 dark:text-white">Thông báo</h3>
+        @if (unreadCount() > 0) {
+          <button
+            (click)="markAllAsRead()"
+            class="text-xs text-primary hover:text-primary-hover font-medium"
+            aria-label="Đánh dấu tất cả đã đọc">
+            Đánh dấu đã đọc
+          </button>
+        }
+      </div>
+
+      <!-- Notification list -->
+      <div class="max-h-96 overflow-y-auto">
+        @for (notification of notifications(); track notification.id) {
+          <button
+            (click)="onNotificationClick(notification)"
+            class="w-full px-4 py-3 text-left hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors border-b border-slate-100 dark:border-slate-700/50 flex items-start gap-3"
+            [class.bg-blue-50/50]="!notification.read"
+            [class.dark:bg-blue-900/20]="!notification.read">
+            <div
+              class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+              [class]="getIconClass(notification.type)">
+              <mat-icon class="w-4 h-4">{{ getIcon(notification.type) }}</mat-icon>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="font-medium text-slate-900 dark:text-white truncate">{{ notification.title }}</p>
+              <p class="text-sm text-slate-600 dark:text-slate-400 truncate mt-0.5">{{ notification.message }}</p>
+              <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">{{ notification.time }}</p>
+            </div>
+            @if (!notification.read) {
+              <span class="w-2 h-2 rounded-full bg-primary flex-shrink-0 mt-2" aria-label="Chưa đọc"></span>
+            }
+          </button>
+        }
+        @if (notifications().length === 0) {
+          <div class="p-6 text-center">
+            <mat-icon class="text-slate-300 dark:text-slate-600 text-4xl mb-2">notifications_off</mat-icon>
+            <p class="text-slate-500 dark:text-slate-400">Không có thông báo</p>
+          </div>
+        }
+      </div>
+
+      <!-- Footer -->
+      <div class="px-4 py-2 border-t border-slate-200 dark:border-slate-700">
+        <a
+          routerLink="/admin/notifications"
+          class="text-sm font-medium text-primary hover:text-primary-hover flex items-center gap-2">
+          Xem tất cả thông báo
+          <mat-icon class="w-4 h-4">chevron_right</mat-icon>
+        </a>
+      </div>
+    </div>
+  }
+</div>

@@ -1,6 +1,6 @@
 import { Component, input, output, signal, computed, effect, inject } from '@angular/core';
 import { NotificationService } from '@core/services/notification.service';
-import { ButtonComponent } from '../button/button.component';
+import { ButtonComponent } from '@shared/components/button/button.component';
 
 type ImageUploadSize = 'sm' | 'md' | 'lg';
 

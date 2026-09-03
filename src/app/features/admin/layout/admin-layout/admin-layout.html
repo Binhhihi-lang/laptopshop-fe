@@ -4,6 +4,7 @@
   <app-sidebar
     [collapsedInput]="isSidebarCollapsed()"
     [mobileOpenInput]="mobileSidebarOpen()"
+    [userInfo]="userInfo()"
     (collapsedChange)="onSidebarCollapsedChange($event)"
     (mobileOpenChange)="onMobileSidebarChange($event)">
   </app-sidebar>
@@ -12,7 +13,7 @@
   <div [class]="mainContentClasses">
     <!-- Header -->
     <app-header
-      [userInfo]="userInfo"
+      [userInfo]="userInfo()"
       (logout)="logout()"
       (toggleSidebar)="onToggleSidebar()">
     </app-header>
