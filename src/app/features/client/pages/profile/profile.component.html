@@ -1,0 +1,127 @@
+<div class="max-w-4xl mx-auto px-4 py-8">
+  <app-page-header
+    title="Hồ sơ cá nhân"
+    subtitle="Quản lý thông tin tài khoản của bạn"
+  ></app-page-header>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <!-- Sidebar mini -->
+    <aside class="md:col-span-1">
+      <app-card padding="lg">
+        <div class="flex flex-col items-center text-center">
+          <app-avatar
+            [src]="avatarPreview() || ''"
+            [initials]="getInitials(currentUser()?.fullName)"
+            size="xl"
+            shape="circle"
+          ></app-avatar>
+          <h3 class="mt-3 text-lg font-semibold text-slate-900 dark:text-white">
+            {{ currentUser()?.fullName }}
+          </h3>
+          <p class="text-sm text-slate-500">{{ currentUser()?.email }}</p>
+        </div>
+        <nav class="mt-6 space-y-1 text-sm">
+          <a
+            routerLink="/profile"
+            class="block px-3 py-2 rounded-lg bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300 font-medium"
+          >
+            Thông tin cá nhân
+          </a>
+          <a
+            routerLink="/change-password"
+            class="block px-3 py-2 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
+          >
+            Đổi mật khẩu
+          </a>
+          <a
+            routerLink="/orders"
+            class="block px-3 py-2 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
+          >
+            Đơn hàng của tôi
+          </a>
+        </nav>
+      </app-card>
+    </aside>
+
+    <!-- Form chính -->
+    <section class="md:col-span-2" aria-labelledby="profile-form-title">
+      <app-card padding="lg">
+        <h2 id="profile-form-title" class="sr-only">Thông tin cá nhân</h2>
+        <app-card-header
+          title="Thông tin cá nhân"
+          subtitle="Cập nhật họ tên, số điện thoại và địa chỉ"
+        ></app-card-header>
+
+        <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-4 mt-4">
+          <div class="flex items-start gap-4">
+            <input
+              type="file"
+              id="profileAvatarInput"
+              accept="image/*"
+              class="hidden"
+              (change)="onAvatarSelected($event)"
+            />
+            <label
+              for="profileAvatarInput"
+              class="cursor-pointer px-3 py-1.5 text-sm rounded-lg border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800"
+            >
+              Đổi ảnh đại diện
+            </label>
+            @if (selectedAvatar()) {
+              <button
+                type="button"
+                class="text-sm text-danger-600 hover:underline"
+                (click)="removeAvatar()"
+              >
+                Hủy ảnh mới
+              </button>
+            }
+          </div>
+
+          <app-form-field id="fullName" label="Họ và tên" [required]="true" [error]="hasError('fullName', 'required') ? 'Vui lòng nhập họ tên' : hasError('fullName', 'minlength') ? 'Họ tên tối thiểu 2 ký tự' : ''">
+            <app-input
+              id="fullName"
+              type="text"
+              formControlName="fullName"
+              placeholder="Nguyễn Văn A"
+              autocomplete="name"
+            ></app-input>
+          </app-form-field>
+
+          <app-form-field id="phone" label="Số điện thoại" [error]="hasError('phone', 'pattern') ? 'Số điện thoại không hợp lệ (10-11 số)' : ''">
+            <app-input
+              id="phone"
+              type="tel"
+              formControlName="phone"
+              placeholder="0901234567"
+              autocomplete="tel"
+            ></app-input>
+          </app-form-field>
+
+          <app-form-field id="address" label="Địa chỉ">
+            <app-input
+              id="address"
+              type="textarea"
+              formControlName="address"
+              placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành"
+              [rows]="3"
+            ></app-input>
+          </app-form-field>
+
+          <div class="flex items-center justify-end gap-3 pt-2">
+            <a routerLink="/change-password" class="text-sm text-primary-600 hover:underline">
+              Đổi mật khẩu
+            </a>
+            <app-button
+              type="submit"
+              label="Lưu thay đổi"
+              variant="primary"
+              [loading]="isSubmitting()"
+              [disabled]="isSubmitting()"
+            ></app-button>
+          </div>
+        </form>
+      </app-card>
+    </section>
+  </div>
+</div>

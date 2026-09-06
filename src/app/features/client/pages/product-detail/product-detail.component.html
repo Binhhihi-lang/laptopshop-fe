@@ -1,0 +1,191 @@
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  @if (isLoading()) {
+    <app-loading message="Đang tải sản phẩm..."></app-loading>
+  } @else if (!product()) {
+    <app-empty-state
+      icon="error"
+      title="Không tìm thấy sản phẩm"
+      message="Sản phẩm không tồn tại hoặc đã ngừng kinh doanh."
+    >
+      <a routerLink="/products" class="text-primary-600 hover:underline">
+        ← Quay lại danh sách
+      </a>
+    </app-empty-state>
+  } @else {
+    <nav class="text-sm text-slate-500 mb-4">
+      <a routerLink="/products" class="hover:text-primary-600">Sản phẩm</a>
+      @if (product()?.categoryName) {
+        <span class="mx-2">/</span>
+        <a
+          [routerLink]="['/products']"
+          [queryParams]="{ categoryId: product()?.categoryId }"
+          class="hover:text-primary-600"
+        >
+          {{ product()?.categoryName }}
+        </a>
+      }
+      <span class="mx-2">/</span>
+      <span class="text-slate-700 dark:text-slate-300">{{ product()?.name }}</span>
+    </nav>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <!-- Gallery -->
+      <div>
+        <div class="aspect-square rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-800">
+          @if (product()?.image) {
+            <img
+              [src]="product()?.image"
+              [alt]="product()?.name"
+              class="w-full h-full object-cover"
+            />
+          } @else {
+            <div class="w-full h-full flex items-center justify-center">
+              <mat-icon class="!w-24 !h-24 text-slate-300">image</mat-icon>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Info -->
+      <div>
+        <div class="flex items-center gap-2 mb-2">
+          <app-badge [label]="product()?.factory || ''" variant="info"></app-badge>
+          <app-badge [label]="product()?.categoryName || ''" variant="neutral"></app-badge>
+          @if ((product()?.sold ?? 0) > 0) {
+            <app-badge [label]="'Đã bán ' + (product()?.sold ?? 0)" variant="danger"></app-badge>
+          }
+        </div>
+
+        <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">
+          {{ product()?.name }}
+        </h1>
+
+        <p class="mt-3 text-3xl font-bold text-primary-600">
+          {{ formatPrice(product()?.price ?? 0) }}
+        </p>
+
+        @if (product()?.shortDesc) {
+          <p class="mt-4 text-slate-600 dark:text-slate-400 leading-relaxed">
+            {{ product()?.shortDesc }}
+          </p>
+        }
+
+        <div class="mt-6 flex items-center gap-4">
+          <span class="text-sm font-medium">Số lượng:</span>
+          <div class="inline-flex items-center border border-slate-200 dark:border-slate-700 rounded-lg">
+            <button
+              type="button"
+              class="px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-800"
+              (click)="decQty()"
+              [disabled]="quantity() <= 1"
+              aria-label="Giảm"
+            >
+              <mat-icon class="!w-4 !h-4">remove</mat-icon>
+            </button>
+            <span class="px-4 py-1.5 border-x border-slate-200 dark:border-slate-700 min-w-[48px] text-center">
+              {{ quantity() }}
+            </span>
+            <button
+              type="button"
+              class="px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-800"
+              (click)="incQty()"
+              [disabled]="quantity() >= (product()?.quantity ?? 1)"
+              aria-label="Tăng"
+            >
+              <mat-icon class="!w-4 !h-4">add</mat-icon>
+            </button>
+          </div>
+          <span class="text-sm text-slate-500">
+            Còn {{ product()?.quantity }} sản phẩm
+          </span>
+        </div>
+
+        <div class="mt-6 flex flex-wrap gap-3">
+          <app-button
+            type="button"
+            label="Mua ngay"
+            variant="primary"
+            size="lg"
+            icon="bolt"
+            (click)="onBuyNow()"
+          ></app-button>
+          <app-button
+            type="button"
+            label="Thêm vào giỏ"
+            variant="outline"
+            size="lg"
+            icon="shopping_cart"
+            (click)="onAddToCart()"
+          ></app-button>
+        </div>
+
+        <!-- Thông số kỹ thuật -->
+        @if (specs.length > 0) {
+          <div class="mt-8">
+            <h2 class="text-lg font-semibold mb-3 text-slate-900 dark:text-white">
+              Thông số kỹ thuật
+            </h2>
+            <app-card padding="none">
+              <dl class="divide-y divide-slate-200 dark:divide-slate-700">
+                @for (s of specs; track s.label) {
+                  <div class="grid grid-cols-3 px-4 py-2.5">
+                    <dt class="text-sm text-slate-500 col-span-1">{{ s.label }}</dt>
+                    <dd class="text-sm font-medium col-span-2">{{ s.value }}</dd>
+                  </div>
+                }
+              </dl>
+            </app-card>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Mô tả chi tiết -->
+    @if (product()?.detailDesc) {
+      <section class="mt-10" aria-labelledby="detail-desc-title">
+        <h2 id="detail-desc-title" class="text-lg font-semibold mb-3 text-slate-900 dark:text-white">
+          Mô tả chi tiết
+        </h2>
+        <app-card padding="lg">
+          <p class="text-slate-700 dark:text-slate-300 whitespace-pre-line leading-relaxed">
+            {{ product()?.detailDesc }}
+          </p>
+        </app-card>
+      </section>
+    }
+
+    <!-- Sản phẩm liên quan -->
+    @if (related().length > 0) {
+      <section class="mt-12" aria-labelledby="related-title">
+        <h2 id="related-title" class="text-xl font-semibold mb-4 text-slate-900 dark:text-white">
+          Sản phẩm cùng danh mục
+        </h2>
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+          @for (p of related(); track p.id) {
+            <a
+              [routerLink]="['/products', p.code]"
+              class="group block rounded-xl border border-slate-200 dark:border-slate-700 hover:border-primary-500 hover:shadow-md transition-all overflow-hidden bg-white dark:bg-slate-900"
+            >
+              <div class="aspect-square bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                @if (p.image) {
+                  <img
+                    [src]="p.image"
+                    [alt]="p.name"
+                    class="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                    loading="lazy"
+                  />
+                }
+              </div>
+              <div class="p-3">
+                <h3 class="text-sm font-medium line-clamp-2 min-h-[2.5rem]">{{ p.name }}</h3>
+                <p class="mt-1 text-base font-bold text-primary-600">
+                  {{ formatPrice(p.price) }}
+                </p>
+              </div>
+            </a>
+          }
+        </div>
+      </section>
+    }
+  }
+</div>

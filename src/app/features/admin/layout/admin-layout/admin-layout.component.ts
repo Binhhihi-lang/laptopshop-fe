@@ -75,7 +75,7 @@ export class AdminLayoutComponent {
 
   async logout(): Promise<void> {
     await this.authService.logout();
-    this.router.navigate(['/login']);
+    this.router.navigate(['/admin/login']);
   }
 
   onToggleTheme(): void {

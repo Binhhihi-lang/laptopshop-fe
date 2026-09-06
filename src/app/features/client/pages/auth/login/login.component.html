@@ -1,0 +1,53 @@
+<div class="min-h-[calc(100vh-200px)] flex items-center justify-center px-4 py-12 bg-slate-50 dark:bg-slate-950">
+  <app-card padding="lg" class="w-full max-w-md">
+    <app-card-header
+      title="Đăng nhập"
+      subtitle="Chào mừng bạn quay lại LaptopShop"
+      icon="login"
+    ></app-card-header>
+
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-4">
+      <app-form-field id="email" label="Email" [required]="true" [error]="emailControl?.touched && emailControl?.invalid ? (emailControl?.hasError('required') ? 'Vui lòng nhập email' : 'Email không hợp lệ') : ''">
+        <app-input
+          id="email"
+          type="email"
+          formControlName="email"
+          placeholder="you@example.com"
+          autocomplete="email"
+          icon="email"
+        ></app-input>
+      </app-form-field>
+
+      <app-form-field id="password" label="Mật khẩu" [required]="true" [error]="passwordControl?.touched && passwordControl?.invalid ? (passwordControl?.hasError('required') ? 'Vui lòng nhập mật khẩu' : 'Mật khẩu tối thiểu 6 ký tự') : ''">
+        <app-input
+          id="password"
+          type="password"
+          formControlName="password"
+          placeholder="••••••••"
+          autocomplete="current-password"
+          icon="lock"
+          [showPasswordToggle]="true"
+        ></app-input>
+      </app-form-field>
+
+      <div class="flex items-center justify-between text-sm">
+        <a routerLink="/forgot-password" class="text-primary-600 hover:underline">
+          Quên mật khẩu?
+        </a>
+        <a routerLink="/register" class="text-primary-600 hover:underline">
+          Đăng ký tài khoản
+        </a>
+      </div>
+
+      <app-button
+        type="submit"
+        label="Đăng nhập"
+        variant="primary"
+        size="lg"
+        class="w-full"
+        [loading]="isSubmitting()"
+        [disabled]="isSubmitting()"
+      ></app-button>
+    </form>
+  </app-card>
+</div>

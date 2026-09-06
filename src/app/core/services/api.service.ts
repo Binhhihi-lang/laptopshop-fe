@@ -1,8 +1,9 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { catchError, map } from 'rxjs/operators';
 import { throwError, Observable } from 'rxjs';
 import { ApiResponse } from '@core/models/api-response.model';
+import { Page } from '@core/models/page.model';
 import { environment } from '@environments/environment';
 
 @Injectable({
@@ -20,11 +21,35 @@ export class ApiService {
   }
 
   // GET request
-  get<T>(endpoint: string): Observable<T> {
-    return this.http.get<ApiResponse<T>>(`${this.apiUrl}${endpoint}`).pipe(
+  get<T>(
+    endpoint: string,
+    params?: Record<string, string | number | boolean | undefined>,
+  ): Observable<T> {
+    let httpParams = new HttpParams();
+    if (params) {
+      for (const [key, value] of Object.entries(params)) {
+        if (value !== undefined && value !== null && value !== '') {
+          httpParams = httpParams.set(key, String(value));
+        }
+      }
+    }
+    const url = httpParams.toString()
+      ? `${this.apiUrl}${endpoint}?${httpParams.toString()}`
+      : `${this.apiUrl}${endpoint}`;
+    return this.http.get<ApiResponse<T>>(url).pipe(
       map((response) => response.result),
       catchError(this.handleError),
     );
+  }
+
+  // GET request trả về Page<T> — dùng cho danh sách phân trang.
+  // Trả về nguyên Page<T> (không unwrap content) để component vẫn thấy
+  // totalElements, totalPages, number, size... cho việc render phân trang.
+  getPage<T>(
+    endpoint: string,
+    params?: Record<string, string | number | boolean | undefined>,
+  ): Observable<Page<T>> {
+    return this.get<Page<T>>(endpoint, params);
   }
 
   // POST request , D là dữ liệu gửi lên , T là kiểu trả về

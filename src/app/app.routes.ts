@@ -29,10 +29,13 @@ import { PermissionsComponent } from '@features/admin/pages/permissions/permissi
 // import { CartComponent } from './features/client/pages/cart/cart.component';
 
 export const routes: Routes = [
-  // Auth routes
-  { path: 'login', component: LoginComponent, canActivate: [authGuard] },
+  // Admin login: đặt NGOÀI block /admin để không bị AdminLayoutComponent
+  // bọc quanh (form login nên đứng riêng, không có header/sidebar). URL là
+  // /admin/login nhưng không có layout. Đăng ký TRƯỚC block /admin để
+  // first-match-wins khớp chính xác /admin/login.
+  { path: 'admin/login', component: LoginComponent, canActivate: [authGuard] },
 
-  // Admin routes (protected)
+  // Admin routes (protected) — bọc trong AdminLayoutComponent (header + sidebar).
   {
     path: 'admin',
     component: AdminLayoutComponent,
@@ -103,19 +106,13 @@ export const routes: Routes = [
     ],
   },
 
-  // Client routes (public)
-  // {
-  //   path: '',
-  //   component: HomeComponent
-  // },
-  // {
-  //   path: 'product/:id',
-  //   component: ProductDetailComponent
-  // },
-  // {
-  //   path: 'cart',
-  //   component: CartComponent
-  // },
+  // Storefront (client) — giao diện mặc định khi user vào /.
+  // Đăng ký với path '' để khớp mọi URL không thuộc /admin/**, đặt SAU block
+  // admin để first-match-wins. Wildcard '**' ở dưới cùng sẽ bắt các path lạ.
+  {
+    path: '',
+    loadChildren: () => import('./features/client/client.routes').then((m) => m.CLIENT_ROUTES),
+  },
 
   // Wildcard route for 404
   { path: '**', redirectTo: '' },

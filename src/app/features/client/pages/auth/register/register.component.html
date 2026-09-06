@@ -1,0 +1,71 @@
+<div class="min-h-[calc(100vh-200px)] flex items-center justify-center px-4 py-12 bg-slate-50 dark:bg-slate-950">
+  <app-card padding="lg" class="w-full max-w-md">
+    <app-card-header
+      title="Tạo tài khoản"
+      subtitle="Đăng ký để mua sắm và theo dõi đơn hàng"
+      icon="person_add"
+    ></app-card-header>
+
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-4">
+      <app-form-field id="fullName" label="Họ và tên" [required]="true" [error]="fullNameControl?.touched && fullNameControl?.invalid ? (fullNameControl?.hasError('required') ? 'Vui lòng nhập họ tên' : 'Họ tên tối thiểu 2 ký tự') : ''">
+        <app-input
+          id="fullName"
+          type="text"
+          formControlName="fullName"
+          placeholder="Nguyễn Văn A"
+          autocomplete="name"
+          icon="person"
+        ></app-input>
+      </app-form-field>
+
+      <app-form-field id="email" label="Email" [required]="true" [error]="emailControl?.touched && emailControl?.invalid ? (emailControl?.hasError('required') ? 'Vui lòng nhập email' : 'Email không hợp lệ') : ''">
+        <app-input
+          id="email"
+          type="email"
+          formControlName="email"
+          placeholder="you@example.com"
+          autocomplete="email"
+          icon="email"
+        ></app-input>
+      </app-form-field>
+
+      <app-form-field id="phone" label="Số điện thoại" [error]="phoneControl?.touched && phoneControl?.hasError('pattern') ? 'Số điện thoại không hợp lệ (10-11 số)' : ''" hint="Không bắt buộc">
+        <app-input
+          id="phone"
+          type="tel"
+          formControlName="phone"
+          placeholder="0901234567"
+          autocomplete="tel"
+          icon="phone"
+        ></app-input>
+      </app-form-field>
+
+      <app-form-field id="password" label="Mật khẩu" [required]="true" [error]="passwordControl?.touched && passwordControl?.invalid ? (passwordControl?.hasError('required') ? 'Vui lòng nhập mật khẩu' : 'Mật khẩu tối thiểu 6 ký tự') : ''">
+        <app-input
+          id="password"
+          type="password"
+          formControlName="password"
+          placeholder="••••••••"
+          autocomplete="new-password"
+          icon="lock"
+          [showPasswordToggle]="true"
+        ></app-input>
+      </app-form-field>
+
+      <div class="text-sm text-slate-600 dark:text-slate-400">
+        Đã có tài khoản?
+        <a routerLink="/login" class="text-primary-600 hover:underline">Đăng nhập</a>
+      </div>
+
+      <app-button
+        type="submit"
+        label="Đăng ký"
+        variant="primary"
+        size="lg"
+        class="w-full"
+        [loading]="isSubmitting()"
+        [disabled]="isSubmitting()"
+      ></app-button>
+    </form>
+  </app-card>
+</div>

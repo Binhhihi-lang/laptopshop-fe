@@ -11,7 +11,7 @@ export const adminGuard: CanActivateFn = (route, state) => {
     // Check roles if specified in route data
     const requiredRoles = route.data?.['roles'] as string[] | undefined;
     if (requiredRoles && Array.isArray(requiredRoles)) {
-      const hasAnyRole = requiredRoles.some(role => authService.hasRole(role));
+      const hasAnyRole = requiredRoles.some((role) => authService.hasRole(role));
       if (!hasAnyRole) {
         // Redirect to unauthorized or home
         router.navigate(['/']);
@@ -21,7 +21,7 @@ export const adminGuard: CanActivateFn = (route, state) => {
     // Check permissions if specified in route data
     const requiredPermissions = route.data?.['permissions'] as string[] | undefined;
     if (requiredPermissions && Array.isArray(requiredPermissions)) {
-      const hasAnyPermission = requiredPermissions.some(perm => authService.hasPermission(perm));
+      const hasAnyPermission = requiredPermissions.some((perm) => authService.hasPermission(perm));
       if (!hasAnyPermission) {
         router.navigate(['/']);
         return false;
@@ -29,8 +29,8 @@ export const adminGuard: CanActivateFn = (route, state) => {
     }
     return true;
   } else {
-    // Not authenticated, redirect to login
-    router.navigate(['/login']);
+    // Not authenticated, redirect to admin login
+    router.navigate(['/admin/login']);
     return false;
   }
 };
