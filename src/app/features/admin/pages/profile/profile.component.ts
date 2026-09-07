@@ -153,6 +153,8 @@ export class ProfileComponent implements OnInit {
         }
         this.notification.success('Cập nhật hồ sơ thành công');
         this.isSubmitting.set(false);
+        // Quay về trang dashboard sau khi lưu (giống hành vi cancel)
+        this.router.navigate(['/admin/dashboard']);
       },
       error: (error) => {
         console.error('Lỗi cập nhật hồ sơ:', error);

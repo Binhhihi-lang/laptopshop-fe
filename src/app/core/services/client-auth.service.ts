@@ -49,6 +49,18 @@ export class ClientAuthService {
   private readonly isAuthenticatedSubject = new BehaviorSubject<boolean>(!!this.getToken());
   readonly isAuthenticated$ = this.isAuthenticatedSubject.asObservable();
 
+  // Observable để component (header) subscribe biết khi userInfo đổi
+  // (vd: user vừa cập nhật fullName/avatar từ trang profile). Mỗi lần
+  // setUserInfo() được gọi (kể cả qua login/register/refresh), subject sẽ
+  // emit giá trị mới để layout sync signal và render lại avatar + tên.
+  private readonly userInfoSubject = new BehaviorSubject<UserInfo | null>(
+    (() => {
+      const raw = localStorage.getItem(CLIENT_USER_INFO_KEY);
+      return raw ? (JSON.parse(raw) as UserInfo) : null;
+    })(),
+  );
+  readonly userInfo$ = this.userInfoSubject.asObservable();
+
   // ===== Token helpers =====
   private getToken(): string | null {
     return localStorage.getItem(CLIENT_ACCESS_TOKEN_KEY);
@@ -69,16 +81,19 @@ export class ClientAuthService {
     localStorage.removeItem(CLIENT_REFRESH_TOKEN_KEY);
     localStorage.removeItem(CLIENT_USER_INFO_KEY);
     this.isAuthenticatedSubject.next(false);
+    this.userInfoSubject.next(null);
   }
 
   // ===== User info helpers =====
   getUserInfo(): UserInfo | null {
-    const raw = localStorage.getItem(CLIENT_USER_INFO_KEY);
-    return raw ? (JSON.parse(raw) as UserInfo) : null;
+    return this.userInfoSubject.value;
   }
 
-  private setUserInfo(info: UserInfo): void {
+  // Public: cho phép component (vd: profile) cập nhật userInfo sau khi đổi
+  // fullName/avatar. Phát userInfoSubject để layout subscribe sync signal.
+  setUserInfo(info: UserInfo): void {
     localStorage.setItem(CLIENT_USER_INFO_KEY, JSON.stringify(info));
+    this.userInfoSubject.next(info);
   }
 
   // ===== Public API =====

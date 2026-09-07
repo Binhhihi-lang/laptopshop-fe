@@ -46,6 +46,7 @@ export class ClientProfileComponent implements OnInit {
   private readonly userService = inject(ClientUserService);
   private readonly auth = inject(ClientAuthService);
   private readonly notification = inject(NotificationService);
+  private readonly router = inject(Router);
 
   readonly isLoading = signal(true);
   readonly isSubmitting = signal(false);
@@ -131,15 +132,18 @@ export class ClientProfileComponent implements OnInit {
       next: (updated) => {
         this.currentUser.set(updated);
         if (updated.avatar) this.avatarPreview.set(updated.avatar);
-        // Đồng bộ fullName mới vào localStorage để header hiển thị
+        // Đồng bộ fullName mới vào localStorage + phát sự kiện
+        // để ClientLayoutComponent cập nhật header ngay lập tức.
         const info = this.auth.getUserInfo();
         if (info) {
           info.fullName = updated.fullName;
-          // Tái sử dụng helper setUserInfo của ClientAuthService
-          localStorage.setItem('user_info', JSON.stringify(info));
+          if (updated.avatar) info.avatar = updated.avatar;
+          this.auth.setUserInfo(info);
         }
         this.notification.success('Cập nhật hồ sơ thành công');
         this.isSubmitting.set(false);
+        // Quay về trang chủ sau khi lưu (như yêu cầu)
+        this.router.navigate(['/']);
       },
       error: (err) => {
         console.error('Lỗi cập nhật hồ sơ:', err);

@@ -1,4 +1,5 @@
-import { Component, effect, inject, signal, HostListener } from '@angular/core';
+import { Component, effect, inject, signal, HostListener, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MaterialModule } from '@shared/material.module';
 import { RouterModule } from '@angular/router';
 import { AuthService } from '@core/services/auth.service';
@@ -19,6 +20,7 @@ export class AdminLayoutComponent {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   private readonly themeService = inject(ThemeService);
+  private readonly destroyRef = inject(DestroyRef);
 
   // Sidebar state signals
   readonly isSidebarCollapsed = signal(false);
@@ -46,6 +48,10 @@ export class AdminLayoutComponent {
     this.authService.refreshAvatar().subscribe(() => {
       const updated = this.authService.getUserInfo();
       if (updated) this.userInfo.set(updated);
+    });
+    // Sync signal khi userInfo đổi (vd: profile update fullName/avatar)
+    this.authService.userInfo$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((info) => {
+      this.userInfo.set(info);
     });
 
     // Sync sidebar state from Sidebar component

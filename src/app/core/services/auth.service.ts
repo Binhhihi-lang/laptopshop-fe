@@ -27,6 +27,16 @@ export class AuthService {
   // Subject để emit token mới cho các request đang chờ (single-flight pattern)
   private refreshResultSubject = new BehaviorSubject<string | null>(null);
 
+  // Subject để emit khi userInfo đổi (vd: profile update ở admin/client).
+  // Layout admin (AdminLayoutComponent) subscribe userInfo$ để sync signal.
+  private userInfoSubject = new BehaviorSubject<UserInfo | null>(
+    (() => {
+      const raw = localStorage.getItem(STORAGE_KEYS.USER_INFO);
+      return raw ? (JSON.parse(raw) as UserInfo) : null;
+    })(),
+  );
+  readonly userInfo$ = this.userInfoSubject.asObservable();
+
   constructor(
     private api: ApiService,
     private router: Router,
@@ -138,12 +148,12 @@ export class AuthService {
   }
 
   getUserInfo(): UserInfo | null {
-    const userInfo = localStorage.getItem(STORAGE_KEYS.USER_INFO);
-    return userInfo ? (JSON.parse(userInfo) as UserInfo) : null;
+    return this.userInfoSubject.value;
   }
 
   setUserInfo(user: UserInfo): void {
     localStorage.setItem(STORAGE_KEYS.USER_INFO, JSON.stringify(user));
+    this.userInfoSubject.next(user);
   }
 
   /**
@@ -157,7 +167,10 @@ export class AuthService {
     if (!current) return of(null);
     return this.api.get<UserResponse>(`${API_ENDPOINTS.USERS}/me`).pipe(
       tap((u) => {
-        if (u?.avatar) this.setUserInfo({ ...current, avatar: u.avatar });
+        if (u?.avatar) {
+          const updated = { ...current, avatar: u.avatar };
+          this.setUserInfo(updated);
+        }
       }),
       catchError(() => of(null)),
     );
@@ -165,6 +178,7 @@ export class AuthService {
 
   clearUserInfo(): void {
     localStorage.removeItem(STORAGE_KEYS.USER_INFO);
+    this.userInfoSubject.next(null);
   }
 
   isAuthenticated(): boolean {
