@@ -59,6 +59,7 @@ export class CategoryFormComponent implements OnInit {
     description: [''],
     displayOrder: [null, [Validators.min(0)]],
     active: [true],
+    imageUrl: ['', [Validators.pattern(/^https?:\/\/.+/)]],
   });
 
   // Computed
@@ -135,6 +136,7 @@ export class CategoryFormComponent implements OnInit {
       displayOrder: formValue.displayOrder ?? undefined,
       active: formValue.active,
       inputFile: this.imageFile() ?? undefined,
+      imageUrl: formValue.imageUrl?.trim() || undefined,
     };
 
     if (this.isEditMode() && this.categoryId()) {

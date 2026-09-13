@@ -134,6 +134,8 @@
         [actions]="actions()"
         [trackByFn]="trackByUserId"
         [selectable]="true"
+        [rowClickable]="true"
+        (rowClick)="viewUser($event)"
         [selectedRows]="selectedUsers()"
         (selectionChange)="onSelectionChange($event)"
         [emptyIcon]="'people_outline'"

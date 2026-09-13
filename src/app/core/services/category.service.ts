@@ -43,6 +43,10 @@ export class CategoryService {
     if ('removeImage' in data && data.removeImage) {
       formData.append('removeImage', 'true');
     }
+    // URL ảnh online (thay cho inputFile khi admin dán link)
+    if (data.imageUrl) {
+      formData.append('imageUrl', data.imageUrl);
+    }
     // File ảnh nằm TRONG data (inputFile), khớp backend @ModelAttribute +
     // MultipartFile inputFile (giống user.service.ts, KHÔNG như product.service.ts)
     if (data.inputFile instanceof File) {

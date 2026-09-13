@@ -143,10 +143,12 @@ export interface TableAction<T> {
             @for (row of data(); track trackByFn()(row); let rowIndex = $index) {
               <tr
                 class="transition-colors"
-                [class.hover:bg-slate-50]="!selectable()"
-                [class.dark:hover:bg-slate-800/50]="!selectable()"
+                [class.cursor-pointer]="rowClickable()"
+                [class.hover:bg-slate-50]="rowClickable()"
+                [class.dark:hover:bg-slate-800/50]="rowClickable()"
                 [class.bg-primary-50/30]="selectable() && isSelected(row)"
                 [class.dark:bg-primary-900/20]="selectable() && isSelected(row)"
+                (click)="onRowClick(row, $event)"
               >
                 @if (selectable()) {
                   <td class="w-12 px-4 py-3">
@@ -287,6 +289,9 @@ export class TableComponent<T = any> {
   sortDirection = input<'asc' | 'desc'>('asc');
   density = input<'comfortable' | 'compact' | 'spacious'>('comfortable');
   ariaLabelPrefix = input<string>('');
+  // Bật để cả dòng có thể bấm (điều hướng chi tiết). Khi bật sẽ thêm con trỏ
+  // pointer + hover, và phát rowClick khi bấm vào ô dữ liệu (không phải checkbox/kebab).
+  rowClickable = input<boolean>(false);
 
   // Empty state
   emptyIcon = input<string>('inventory_2');
@@ -375,6 +380,17 @@ export class TableComponent<T = any> {
       direction = 'desc';
     }
     this.sortChange.emit({ column: columnKey, direction });
+  }
+
+  // Bấm vào dòng -> điều hướng chi tiết. Bỏ qua khi bấm checkbox chọn,
+  // nút kebab menu hay phần tử tương tác khác để không xung đột thao tác.
+  onRowClick(row: T, event: MouseEvent): void {
+    if (!this.rowClickable()) return;
+    const target = event.target as HTMLElement;
+    if (target.closest('button, input, a')) {
+      return;
+    }
+    this.rowClick.emit(row);
   }
 
   // Row actions (kebab) menu

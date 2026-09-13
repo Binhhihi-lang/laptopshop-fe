@@ -133,6 +133,8 @@
         [actions]="actions"
         [trackByFn]="trackByCategoryId"
         [selectable]="true"
+        [rowClickable]="true"
+        (rowClick)="viewCategory($event)"
         [selectedRows]="selectedCategories()"
         (selectionChange)="onSelectionChange($event)"
         [sortColumn]="sortColumn()"

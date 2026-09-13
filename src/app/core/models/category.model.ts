@@ -19,6 +19,7 @@ export interface CategoryCreationRequest {
   name: string;
   description: string;
   inputFile?: File; // Ảnh danh mục, khớp backend @ModelAttribute + MultipartFile inputFile (giống User)
+  imageUrl?: string; // URL ảnh online (thay cho inputFile khi dán link)
 }
 
 export interface CategoryUpdateRequest {
@@ -28,4 +29,5 @@ export interface CategoryUpdateRequest {
   active?: boolean;
   inputFile?: File; // Ảnh mới (nếu admin đổi ảnh)
   removeImage?: boolean; // true = xóa ảnh hiện tại nếu không gửi file mới
+  imageUrl?: string; // URL ảnh online (thay cho inputFile khi dán link)
 }

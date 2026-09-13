@@ -48,6 +48,7 @@ export interface ProductCreationRequest {
   weight?: number; // Double
   warrantyMonths?: number; // Integer
   active?: boolean;
+  imageUrl?: string; // URL ảnh online (thay cho inputFile khi dán link)
 }
 
 export interface ProductUpdateRequest {
@@ -73,4 +74,5 @@ export interface ProductUpdateRequest {
   weight?: number; // Double
   warrantyMonths?: number; // Integer
   active?: boolean;
+  imageUrl?: string; // URL ảnh online (thay cho inputFile khi dán link)
 }

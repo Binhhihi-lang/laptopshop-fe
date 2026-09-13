@@ -20,6 +20,7 @@ export interface CouponCreationRequest {
   usageLimit: number;
   active?: boolean;
   inputFile?: File;
+  imageUrl?: string; // URL ảnh online (thay cho inputFile khi dán link)
 }
 
 export interface CouponUpdateRequest {
@@ -31,4 +32,5 @@ export interface CouponUpdateRequest {
   active?: boolean;
   inputFile?: File;
   removeImage?: boolean;
+  imageUrl?: string; // URL ảnh online (thay cho inputFile khi dán link)
 }

@@ -45,6 +45,22 @@
           (fileChange)="onImageFileChange($event)"
           (imageRemoved)="imageRemoved = $event"
         />
+
+        <div class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+          <app-form-field
+            id="imageUrl-field"
+            label="Hoặc dán link ảnh (URL)"
+            [error]="f['imageUrl'].touched && f['imageUrl'].hasError('pattern') ? 'Link ảnh phải bắt đầu bằng http:// hoặc https://' : ''"
+          >
+            <app-input
+              id="imageUrl"
+              name="imageUrl"
+              formControlName="imageUrl"
+              placeholder="https://example.com/image.jpg"
+              [ariaLabel]="'Link ảnh sản phẩm'"
+            ></app-input>
+          </app-form-field>
+        </div>
       </app-card>
     </section>
 

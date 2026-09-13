@@ -47,6 +47,10 @@ export class CouponService {
     if ('removeImage' in data && data.removeImage) {
       formData.append('removeImage', 'true');
     }
+    // URL ảnh online (thay cho inputFile khi admin dán link)
+    if (data.imageUrl) {
+      formData.append('imageUrl', data.imageUrl);
+    }
     // File ảnh nằm TRONG data (inputFile), khớp backend @ModelAttribute + MultipartFile inputFile
     if (data.inputFile instanceof File) {
       formData.append('inputFile', data.inputFile);

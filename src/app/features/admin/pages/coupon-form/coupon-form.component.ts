@@ -84,6 +84,7 @@ export class CouponFormComponent implements OnInit {
       expiryDate: [''],
       usageLimit: [0, [Validators.min(0)]],
       active: [true],
+      imageUrl: ['', [Validators.pattern(/^https?:\/\/.+/)]],
     },
     { validators: discountXorValidator },
   );
@@ -176,6 +177,7 @@ export class CouponFormComponent implements OnInit {
       expiryDate: formValue.expiryDate || undefined,
       usageLimit: formValue.usageLimit,
       inputFile: this.imageFile() ?? undefined,
+      imageUrl: formValue.imageUrl?.trim() || undefined,
       ...(isPercent
         ? { discountPercent: formValue.discountPercent || null, discountAmount: null }
         : { discountAmount: formValue.discountAmount || null, discountPercent: null }),

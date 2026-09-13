@@ -144,6 +144,8 @@
         [actions]="actions"
         [trackByFn]="trackByCouponId"
         [selectable]="true"
+        [rowClickable]="true"
+        (rowClick)="viewCoupon($event)"
         [selectedRows]="selectedCoupons()"
         (selectionChange)="onSelectionChange($event)"
         [sortColumn]="sortColumn()"

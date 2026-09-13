@@ -82,6 +82,7 @@ export class ProductFormComponent implements OnInit {
       shortDesc: [''],
       detailDesc: [''],
       image: [null],
+      imageUrl: ['', [Validators.pattern(/^https?:\/\/.+/)]],
 
       // Inventory
       quantity: [0, [Validators.min(0)]],
@@ -215,6 +216,7 @@ export class ProductFormComponent implements OnInit {
       os: formValue.os || '',
       weight: formValue.weight,
       active: formValue.active,
+      imageUrl: formValue.imageUrl?.trim() || undefined,
       removeImage: this.imageRemoved, // gửi cờ xóa ảnh hiện tại
     };
 
