@@ -3,6 +3,7 @@ export interface ProductResponse {
   code: string;
   name: string;
   price: number; // Long (int64) -> number
+  originalPrice?: number; // Giá niêm yết gốc (nếu có giảm giá); null/undefined = không giảm
   image: string;
   shortDesc: string;
   detailDesc: string;
@@ -32,6 +33,7 @@ export interface ProductCreationRequest {
   name: string;
   price: number; // Long
   categoryId: string;
+  originalPrice?: number; // Giá niêm yết gốc (optional)
 
   // Optional fields
   shortDesc?: string;
@@ -57,6 +59,7 @@ export interface ProductUpdateRequest {
   name: string;
   price: number; // Long
   categoryId: string; // String (NOT Category object)
+  originalPrice?: number; // Giá niêm yết gốc (optional)
 
   // Optional fields
   removeImage?: boolean; // true = xóa ảnh hiện tại khi update (không gửi inputFile)

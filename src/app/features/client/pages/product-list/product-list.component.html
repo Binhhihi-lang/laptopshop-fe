@@ -120,8 +120,15 @@
             <h3 class="mt-0.5 text-sm font-medium line-clamp-2 min-h-[2.5rem]">
               {{ p.name }}
             </h3>
-            <p class="mt-1 text-base font-bold text-primary-600">
-              {{ formatPrice(p.price) }}
+            <p class="mt-1 flex items-baseline gap-2">
+              <span class="text-base font-bold text-primary-600">
+                {{ formatPrice(p.price) }}
+              </span>
+              @if (p.originalPrice && p.originalPrice > p.price) {
+                <span class="text-xs text-slate-400 line-through">
+                  {{ formatPrice(p.originalPrice) }}
+                </span>
+              }
             </p>
           </div>
         </a>

@@ -155,4 +155,14 @@ export class ProductDetailComponent implements OnInit {
   formatPrice(price: number): string {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
   }
+
+  // Sản phẩm có đang giảm giá không (giá niêm yết gốc > giá bán)
+  hasDiscount(p: ProductResponse): boolean {
+    return !!p.originalPrice && p.originalPrice > p.price;
+  }
+
+  // Phần trăm giảm giá (làm tròn), chỉ gọi khi hasDiscount() true
+  discountPercent(p: ProductResponse): number {
+    return Math.round(((p.originalPrice! - p.price) / p.originalPrice!) * 100);
+  }
 }

@@ -97,7 +97,7 @@
             </app-input>
           </app-form-field>
 
-          <app-form-field id="price-field" label="Giá (VNĐ)" [required]="true" [error]="f['price'].touched && f['price'].hasError('required') ? 'Giá là bắt buộc' : f['price'].touched && f['price'].hasError('min') ? 'Giá phải lớn hơn hoặc bằng 0' : ''">
+          <app-form-field id="price-field" label="Giá bán (VNĐ)" [required]="true" [error]="f['price'].touched && f['price'].hasError('required') ? 'Giá là bắt buộc' : f['price'].touched && f['price'].hasError('min') ? 'Giá phải lớn hơn hoặc bằng 0' : ''">
             <app-input
               id="price"
               name="price"
@@ -107,8 +107,25 @@
               [min]="'0'"
               [step]="'1000'"
               [prefix]="'₫ '"
-              [ariaLabel]="'Giá sản phẩm'">
+              [ariaLabel]="'Giá bán sản phẩm'">
             </app-input>
+          </app-form-field>
+
+          <app-form-field id="originalPrice-field" label="Giá niêm yết gốc (VNĐ)" [error]="f['originalPrice'].touched && f['originalPrice'].hasError('min') ? 'Giá phải lớn hơn hoặc bằng 0' : ''">
+            <app-input
+              id="originalPrice"
+              name="originalPrice"
+              type="number"
+              formControlName="originalPrice"
+              placeholder="Để trống nếu không giảm giá"
+              [min]="'0'"
+              [step]="'1000'"
+              [prefix]="'₫ '"
+              [ariaLabel]="'Giá niêm yết gốc'">
+            </app-input>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              Nếu lớn hơn giá bán, sản phẩm sẽ hiển thị giá cũ (gạch ngang) và phần trăm giảm.
+            </p>
           </app-form-field>
 
           <app-form-field id="category-field" label="Danh mục" [required]="true" [error]="f['categoryId'].touched && f['categoryId'].hasError('required') ? 'Vui lòng chọn danh mục' : ''">

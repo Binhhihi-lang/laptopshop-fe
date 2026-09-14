@@ -93,6 +93,18 @@ export class ProductDetailComponent implements OnInit {
     }).format(value);
   }
 
+  // Có đang giảm giá không (giá gốc > giá bán)
+  hasDiscount(): boolean {
+    const p = this.product();
+    return !!p && !!p.originalPrice && p.originalPrice > p.price;
+  }
+
+  // Phần trăm giảm giá (làm tròn xuống), chỉ gọi khi hasDiscount() true
+  discountPercent(): number {
+    const p = this.product()!;
+    return Math.round(((p.originalPrice! - p.price) / p.originalPrice!) * 100);
+  }
+
   // Các cặp label/value cho thông số kỹ thuật
   get specs(): { label: string; value: string | number | undefined }[] {
     const p = this.product();

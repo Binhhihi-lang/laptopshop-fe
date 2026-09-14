@@ -141,7 +141,22 @@
           <app-card [padding]="'default'">
             <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div class="flex-1">
-                <span class="text-3xl font-bold text-primary-600 dark:text-primary-400">{{ formatPrice(product.price) }}</span>
+                <div class="flex items-baseline gap-3 flex-wrap">
+                  <span class="text-3xl font-bold text-primary-600 dark:text-primary-400">{{ formatPrice(product.price) }}</span>
+                  @if (hasDiscount(product)) {
+                    <span class="text-lg text-slate-400 line-through">{{ formatPrice(product.originalPrice!) }}</span>
+                    <app-badge
+                      [label]="'-' + discountPercent(product) + '%'"
+                      [variant]="'danger'"
+                      [size]="'sm'"
+                    />
+                  }
+                </div>
+                @if (hasDiscount(product)) {
+                  <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                    Giá niêm yết gốc {{ formatPrice(product.originalPrice!) }} — giảm {{ formatPrice((product.originalPrice! - product.price)) }}
+                  </p>
+                }
               </div>
               <div class="flex items-center gap-3 text-slate-600 dark:text-slate-400">
                 <mat-icon class="w-5 h-5">category</mat-icon>
