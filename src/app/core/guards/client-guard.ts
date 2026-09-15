@@ -1,36 +1,31 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
 import { ClientAuthService } from '@core/services/client-auth.service';
-import { AuthService } from '@core/services/auth.service';
 
 /**
- * Storefront guards (Sprint 1):
+ * Storefront guards:
  *
- * - `clientAuthGuard`: yêu cầu đăng nhập (cart / checkout / orders / profile /
- *   change-password). Đồng thời chặn ADMIN/STAFF khỏi storefront — nếu lỡ
- *   vào /client/** thì đẩy về /admin/dashboard. Đây là sự khác biệt cốt lõi
- *   so với adminGuard: phía storefront chỉ dành cho CUSTOMER (hoặc guest
- *   browse, xem clientGuestGuard ở dưới).
+ * - `clientAuthGuard`: yêu cầu đăng nhập storefront (checkout / orders /
+ *   profile / change-password).
  *
- * - `clientGuestGuard`: chỉ cho phép KHÁCH (chưa login) vào login / register /
- *   forgot-password / reset-password. Nếu đã login thì đẩy về /.
+ * - `clientGuestGuard`: chỉ cho phép KHÁCH CHƯA đăng nhập client vào login /
+ *   register / forgot-password / reset-password. Đã login client thì về `/`.
  *
- * - `clientGuestBrowseGuard`: mặc định browse công khai (home / product-list /
- *   product-detail) — ai cũng vào được. Hiện tại trả true luôn; function này
- *   chỉ là placeholder để nhất quán cách gọi, dễ thay đổi sau này nếu
- *   muốn chặn geo hoặc rate-limit.
+ * - `clientGuestBrowseGuard`: browse công khai (home / product-list /
+ *   product-detail) — ai cũng vào được.
+ *
+ * LƯU Ý về phiên admin song song: guard ở đây CHỈ xét token storefront
+ * (`ClientAuthService`, key `client_*`) — cố ý KHÔNG xét token admin
+ * (`AuthService`, key `access_token`). Trước đây guard xét admin trước nên
+ * admin đang đăng nhập ở tab khác làm khách bị đá sang /admin/dashboard ngay
+ * khi vừa login client; và admin cũng không xem được storefront. Hai phiên
+ * đã tách key hoàn toàn nên không còn chồng lấn — ai vào `/admin/**` thì
+ * `adminGuard` lo, còn storefront chỉ quan tâm danh tính khách.
  */
 
 const clientAuthGuard: CanActivateFn = (route, state) => {
   const clientAuth = inject(ClientAuthService);
-  const adminAuth = inject(AuthService);
   const router = inject(Router);
-
-  // Nếu user đang giữ token admin → đẩy về dashboard.
-  if (adminAuth.isAuthenticated() && (adminAuth.hasRole('ADMIN') || adminAuth.hasRole('STAFF'))) {
-    router.navigate(['/admin/dashboard']);
-    return false;
-  }
 
   if (clientAuth.isAuthenticated()) {
     return true;
@@ -43,14 +38,7 @@ const clientAuthGuard: CanActivateFn = (route, state) => {
 
 const clientGuestGuard: CanActivateFn = (route, state) => {
   const clientAuth = inject(ClientAuthService);
-  const adminAuth = inject(AuthService);
   const router = inject(Router);
-
-  // Nếu đang là admin → không cho vào login/register/forgot/reset client.
-  if (adminAuth.isAuthenticated() && (adminAuth.hasRole('ADMIN') || adminAuth.hasRole('STAFF'))) {
-    router.navigate(['/admin/dashboard']);
-    return false;
-  }
 
   if (clientAuth.isAuthenticated()) {
     // Đã login customer → về trang chủ client.

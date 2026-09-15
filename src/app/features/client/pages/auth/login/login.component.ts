@@ -4,6 +4,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { ClientAuthService } from '@core/services/client-auth.service';
+import { ClientCartService } from '@core/services/client-cart.service';
 import { NotificationService } from '@core/services/notification.service';
 import {
   ButtonComponent,
@@ -41,6 +42,7 @@ import {
 export class ClientLoginComponent {
   private readonly fb = inject(FormBuilder);
   private readonly auth = inject(ClientAuthService);
+  private readonly cartService = inject(ClientCartService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly notification = inject(NotificationService);
@@ -67,16 +69,38 @@ export class ClientLoginComponent {
     const { email, password } = this.form.value;
     this.auth.login({ email, password }).subscribe({
       next: () => {
-        this.isSubmitting.set(false);
-        this.notification.success('Đăng nhập thành công');
-        const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') || '/';
-        this.router.navigateByUrl(returnUrl);
+        this.mergeGuestCartAndGo();
       },
       error: (err) => {
         this.isSubmitting.set(false);
         const message = err?.error?.message || 'Email hoặc mật khẩu không đúng';
         this.notification.error(message);
       },
+    });
+  }
+
+  /** Gộp giỏ guest vào giỏ server rồi mới điều hướng. */
+  private mergeGuestCartAndGo(): void {
+    const navigate = () => {
+      this.isSubmitting.set(false);
+      this.notification.success('Đăng nhập thành công');
+      const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') || '/';
+      this.router.navigateByUrl(returnUrl);
+    };
+
+    const guestItems = this.cartService.getGuestCart();
+    if (guestItems.length === 0) {
+      this.cartService.getCart().subscribe({ next: () => navigate(), error: () => navigate() });
+      return;
+    }
+
+    this.cartService.mergeGuestCart({ items: guestItems }).subscribe({
+      next: (cart) => {
+        this.notification.success(`Đã gộp ${cart.totalItems} sản phẩm vào giỏ hàng`);
+        navigate();
+      },
+      // Merge lỗi không nên chặn đăng nhập.
+      error: () => navigate(),
     });
   }
 }

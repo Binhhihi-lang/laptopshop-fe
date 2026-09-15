@@ -14,29 +14,14 @@ import {
 import { UserInfo } from '@core/models/user.model';
 
 /**
- * Storefront auth — tách hoàn toàn khỏi `AuthService` (admin):
- * - Token + refresh + userInfo lưu key riêng (`client_*`) trong localStorage.
- * - Không gọi /admin/auth/** mà dùng /api/v1/client/auth/** (BE permitAll).
- * - Guard route storefront bằng `clientGuard`; nếu admin lỡ truy cập /client/**
- *   thì check role != ADMIN/STAFF để đẩy về /admin/dashboard.
- *
- * Tránh circular dependency với interceptor (FE chưa có interceptor riêng
- * cho client) — chỉ cần đảm bảo khi vào ClientLayout, JwtInterceptor vẫn
- * gắn header Authorization từ access_token (cùng key với admin).
- *
- * → Giải pháp: TÁI SỬ DỤNG key access_token/refresh_token/user_info của admin.
- *   Hai service chỉ khác nhau ở URL gọi; cùng đọc cùng localStorage → JWT
- *   interceptor vẫn gắn header bình thường, nhưng nếu user đã login admin
- *   rồi mà vào /client/** thì bị ClientGuard chặn (check role != ADMIN/STAFF
- *   qua `authService.hasRole`).
- *
- * Đây là thiết kế đơn giản nhất cho FE monorepo dùng chung JwtInterceptor,
- * tránh phải viết thêm 1 interceptor nữa chỉ để đổi key.
+ * Auth storefront — tách khỏi `AuthService` (admin): token/userInfo lưu key
+ * riêng `client_*` nên admin và khách đăng nhập song song không ghi đè nhau.
+ * Gọi `/api/v1/client/auth/**`, gắn token qua `clientJwtInterceptor`.
  */
 
-const CLIENT_ACCESS_TOKEN_KEY = 'access_token';
-const CLIENT_REFRESH_TOKEN_KEY = 'refresh_token';
-const CLIENT_USER_INFO_KEY = 'user_info';
+const CLIENT_ACCESS_TOKEN_KEY = 'client_access_token';
+const CLIENT_REFRESH_TOKEN_KEY = 'client_refresh_token';
+const CLIENT_USER_INFO_KEY = 'client_user_info';
 
 @Injectable({
   providedIn: 'root',
@@ -64,6 +49,11 @@ export class ClientAuthService {
   // ===== Token helpers =====
   private getToken(): string | null {
     return localStorage.getItem(CLIENT_ACCESS_TOKEN_KEY);
+  }
+
+  /** Public cho ClientJwtInterceptor gắn header Authorization. */
+  getAccessToken(): string | null {
+    return this.getToken();
   }
 
   private getRefreshToken(): string | null {
@@ -148,9 +138,8 @@ export class ClientAuthService {
     });
   }
 
-  // Refresh — chưa wire single-flight như AuthService vì store chưa có cart
-  // hoặc dữ liệu nhạy cảm. Nếu sau này cần, copy pattern single-flight từ
-  // AuthService.refreshToken().
+  // Refresh token storefront. Dùng bởi ClientJwtInterceptor (single-flight
+  // nằm ở interceptor, service chỉ refresh đơn lẻ).
   refresh(): Observable<ClientLoginResponse> {
     const refreshToken = this.getRefreshToken();
     if (!refreshToken) {

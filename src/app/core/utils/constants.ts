@@ -3,7 +3,7 @@ export const API_ENDPOINTS = {
     LOGIN: '/admin/auth/login',
     INTROSPECT: '/admin/auth/introspect',
     LOGOUT: '/admin/auth/logout',
-    REFRESH: '/admin/auth/admin/auth/refresh',
+    REFRESH: '/admin/auth/refresh',
   },
 
   USERS: '/admin/users',

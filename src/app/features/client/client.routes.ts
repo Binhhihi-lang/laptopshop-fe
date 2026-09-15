@@ -90,13 +90,56 @@ export const CLIENT_ROUTES: Routes = [
         canActivate: [clientAuthGuard],
       },
 
-      // Cart / orders (Sprint 2) — tạm redirect về home để tránh 404
-      // ngay khi user bấm icon cart.
-      { path: 'cart', redirectTo: '', pathMatch: 'full' },
-      { path: 'checkout', redirectTo: '', pathMatch: 'full' },
-      { path: 'orders', redirectTo: '', pathMatch: 'full' },
-      { path: 'orders/:id', redirectTo: '', pathMatch: 'full' },
-      { path: 'payment/return', redirectTo: '', pathMatch: 'full' },
+      // Giỏ hàng: cho phép KHÁCH CHƯA đăng nhập xem giỏ guest (localStorage) —
+      // trang tự hiện lời mời đăng nhập. Checkout trở đi mới bắt buộc login.
+      {
+        path: 'cart',
+        loadComponent: () => import('./pages/cart/cart.component').then((m) => m.CartComponent),
+      },
+      {
+        path: 'checkout',
+        loadComponent: () =>
+          import('./pages/checkout/checkout.component').then((m) => m.CheckoutComponent),
+        canActivate: [clientAuthGuard],
+      },
+      {
+        path: 'order-success',
+        loadComponent: () =>
+          import('./pages/order-success/order-success.component').then(
+            (m) => m.OrderSuccessComponent,
+          ),
+        canActivate: [clientAuthGuard],
+      },
+      {
+        path: 'orders',
+        loadComponent: () =>
+          import('./pages/order-list/order-list.component').then((m) => m.OrderListComponent),
+        canActivate: [clientAuthGuard],
+      },
+      {
+        path: 'orders/:id',
+        loadComponent: () =>
+          import('./pages/order-detail/order-detail.component').then((m) => m.OrderDetailComponent),
+        canActivate: [clientAuthGuard],
+      },
+
+      // Trang tĩnh
+      {
+        path: 'warranty',
+        loadComponent: () =>
+          import('./pages/static/warranty.component').then((m) => m.WarrantyComponent),
+      },
+      {
+        path: 'guide',
+        loadComponent: () => import('./pages/static/guide.component').then((m) => m.GuideComponent),
+      },
+
+      // Wildcard trong layout client → 404 giữ header/footer
+      {
+        path: '**',
+        loadComponent: () =>
+          import('./pages/not-found/not-found.component').then((m) => m.NotFoundComponent),
+      },
     ],
   },
 ];

@@ -17,6 +17,10 @@ export class GlobalErrorInterceptor implements HttpInterceptor {
   private readonly authService = inject(AuthService);
 
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
+    // Request storefront có luồng logout riêng (ClientAuthService) — không được
+    // gọi AuthService.logout() của admin, nếu không khách bị đá về /admin/login.
+    const isClientRequest = req.url.includes('/api/v1/client/');
+
     return next.handle(req).pipe(
       catchError((error: HttpErrorResponse) => {
         // 401 do JwtInterceptor xử lý (refresh / logout) → không hiện toast ở đây
@@ -25,7 +29,7 @@ export class GlobalErrorInterceptor implements HttpInterceptor {
         }
         // (B) Bị thu hồi toàn bộ quyền (khóa role / xóa mềm user): BE trả về lỗi 403 code 6012
         // → logout ngay về màn hình login, không show toast
-        if (error.status === 403 && error.error?.code === 6012) {
+        if (!isClientRequest && error.status === 403 && error.error?.code === 6012) {
           this.authService.logout();
           return throwError(() => error);
         }

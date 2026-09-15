@@ -12,6 +12,15 @@ export class JwtInterceptor implements HttpInterceptor {
   constructor(private authService: AuthService) {}
 
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
+    // Request storefront do ClientJwtInterceptor lo trọn gói (token + refresh).
+    // Phải bỏ qua ở đây vì interceptor chạy theo thứ tự đăng ký ở chiều request
+    // nhưng NGƯỢC LẠI ở chiều lỗi: 401 của client sẽ lọt vào đây trước, gọi
+    // refreshToken() của ADMIN → khách bị đá về /admin/login. Ngoài ra addToken()
+    // bên dưới sẽ ghi đè header Authorization của khách bằng token admin.
+    if (req.url.includes('/api/v1/client/')) {
+      return next.handle(req);
+    }
+
     const token = this.authService.getToken();
     if (token) {
       req = this.addToken(req, token);
