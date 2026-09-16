@@ -159,9 +159,39 @@ export class ClientAuthService {
       );
   }
 
-  // Logout — gọi BE để blacklist access token + xóa refresh token, rồi clear local.
+  /**
+   * Đăng xuất 1 thiết bị đã chọn khi login bị chặn vì vượt giới hạn.
+   *
+   * Xác thực bằng `revokeTicket` (BE cấp kèm lỗi 1013) chứ không phải mật khẩu —
+   * vé dùng 1 lần. BE đá thiết bị được chọn rồi trả luôn cặp token cho thiết bị
+   * đang xin đăng nhập, nên chỉ cần 1 round-trip.
+   */
+  revokeDeviceAndLogin(
+    revokeTicket: string,
+    targetDeviceId: string,
+  ): Observable<ClientLoginResponse> {
+    return this.api
+      .post<ClientLoginResponse, { revokeTicket: string; targetDeviceId: string }>(
+        '/client/auth/devices/revoke-and-login',
+        { revokeTicket, targetDeviceId },
+      )
+      .pipe(tap((res) => this.handleLoginSuccess(res)));
+  }
+
+  /**
+   * Logout — gọi BE để blacklist access token + thu hồi refresh token + GIẢI
+   * PHÓNG SLOT THIẾT BỊ, rồi mới clear local.
+   *
+   * PHẢI gửi kèm `refreshToken`: BE chỉ chạy bước thu hồi khi nhận được nó
+   * (`AuthenticationService.logout`). Thiếu nó thì refresh token nằm lại Redis
+   * tới 10 ngày VÀ `UserDeviceSession` không bị xóa → slot không giải phóng,
+   * user bị chặn oan khi đăng nhập ở máy khác.
+   */
   logout(): Observable<void> {
     const token = this.getToken();
+    // Đọc refresh token TRƯỚC khi gửi: clearTokens() ở tap/finalize sẽ xóa nó.
+    const refreshToken = this.getRefreshToken();
+
     if (!token) {
       this.clearTokens();
       return new Observable((s) => {
@@ -170,7 +200,10 @@ export class ClientAuthService {
       });
     }
     return this.api
-      .post<void, { token: string }>('/client/auth/logout', { token })
+      .post<void, { token: string; refreshToken: string | null }>('/client/auth/logout', {
+        token,
+        refreshToken,
+      })
       .pipe(tap({ next: () => this.clearTokens(), finalize: () => this.clearTokens() }));
   }
 

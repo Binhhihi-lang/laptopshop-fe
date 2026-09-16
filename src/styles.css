@@ -447,3 +447,19 @@ body {
   --mat-snack-bar-supporting-text-color: #ffffff;
   --mat-snack-bar-button-color: #ffffff;
 }
+
+/* ===========================================
+   CUSTOM DIALOG CONTAINER (Device Limit Dialog)
+   Loại bỏ padding mặc định của Material Dialog
+   =========================================== */
+.custom-dialog-container .mat-mdc-dialog-container {
+  padding: 0 !important;
+  overflow: hidden;
+}
+
+.custom-dialog-container .mat-mdc-dialog-surface {
+  padding: 0 !important;
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xl);
+  background: var(--color-bg-secondary);
+}

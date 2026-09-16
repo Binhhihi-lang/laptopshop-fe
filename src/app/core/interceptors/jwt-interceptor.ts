@@ -3,6 +3,8 @@ import { HttpEvent, HttpHandler, HttpInterceptor, HttpRequest } from '@angular/c
 import { BehaviorSubject, Observable, throwError } from 'rxjs';
 import { switchMap, catchError, filter, take } from 'rxjs/operators';
 import { AuthService } from '@core/services/auth.service';
+import { DEVICE_ID_HEADER } from '@core/utils/constants';
+import { getOrCreateDeviceId } from '@core/utils/device-id.util';
 
 @Injectable()
 export class JwtInterceptor implements HttpInterceptor {
@@ -22,6 +24,11 @@ export class JwtInterceptor implements HttpInterceptor {
     }
 
     const token = this.authService.getToken();
+    // Gắn deviceId cho MỌI request admin, kể cả khi chưa có token — endpoint
+    // /auth/login cần header này để BE nhận diện thiết bị và áp giới hạn.
+    req = req.clone({
+      setHeaders: { [DEVICE_ID_HEADER]: getOrCreateDeviceId() },
+    });
     if (token) {
       req = this.addToken(req, token);
     }
@@ -41,7 +48,7 @@ export class JwtInterceptor implements HttpInterceptor {
   }
 
   private addToken(request: HttpRequest<any>, token: string): HttpRequest<any> {
-    // đính kèm Token cho mỗi request
+    // đính kèm Token cho mỗi request (deviceId đã gắn ở intercept)
     return request.clone({
       setHeaders: {
         Authorization: `Bearer ${token}`,

@@ -83,7 +83,53 @@ export class AuthService {
     });
   }
 
+  /**
+   * Đăng xuất 1 thiết bị đã chọn khi login bị chặn vì vượt giới hạn. Xác thực
+   * bằng `revokeTicket` (BE cấp kèm lỗi 1013). Dự phòng cho admin — hiện admin
+   * được miễn giới hạn nên ít dùng, nhưng giữ cho nhất quán với client.
+   */
+  revokeDeviceAndLogin(revokeTicket: string, targetDeviceId: string): Observable<LoginResponse> {
+    return this.api
+      .post<LoginResponse, { revokeTicket: string; targetDeviceId: string }>(
+        API_ENDPOINTS.AUTH.DEVICES_REVOKE_AND_LOGIN,
+        { revokeTicket, targetDeviceId },
+      )
+      .pipe(
+        tap((response) => {
+          if (response.authenticated && response.token && response.refreshToken) {
+            this.setToken(response.token);
+            this.setRefreshToken(response.refreshToken);
+            this.setUserInfo(this.buildUserInfo(response.token));
+          }
+        }),
+      );
+  }
+
+  /**
+   * Đăng xuất: gọi BE để blacklist access token + thu hồi refresh token + GIẢI
+   * PHÓNG SLOT THIẾT BỊ, rồi mới xóa local.
+   *
+   * Trước đây hàm này chỉ xóa localStorage, khiến refresh token nằm lại Redis và
+   * phiên thiết bị không bao giờ được giải phóng -> user bị chặn khi đăng nhập ở
+   * máy khác. Giữ signature `void` để không phá các call site hiện có
+   * (refreshToken(), global-error.interceptor).
+   */
   logout(): void {
+    const token = this.getToken();
+    const refreshToken = this.getRefreshToken();
+
+    if (token) {
+      // subscribe() kích hoạt interceptor ĐỒNG BỘ nên header Authorization vẫn
+      // được gắn bằng token hiện tại; clearTokens() bên dưới chạy sau khi request
+      // đã được dựng. Không cần chờ response — logout phía FE phải luôn thành công.
+      this.api
+        .post<void, { token: string; refreshToken: string | null }>(API_ENDPOINTS.AUTH.LOGOUT, {
+          token,
+          refreshToken,
+        })
+        .subscribe({ error: () => {} });
+    }
+
     this.clearTokens();
     this.clearUserInfo();
     this.router.navigate(['/admin/login']);

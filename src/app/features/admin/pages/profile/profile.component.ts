@@ -9,10 +9,14 @@ import {
 } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
+import { MatDialog } from '@angular/material/dialog';
 import { UserService } from '@core/services/user.service';
 import { AuthService } from '@core/services/auth.service';
+import { DeviceService } from '@core/services/device.service';
 import { UserResponse, UserProfileUpdateRequest } from '@core/models/user.model';
+import { DeviceInfo } from '@core/models/device.model';
 import { NotificationService } from '@core/services/notification.service';
+import { ConfirmDialogComponent } from '@shared/confirm-dialog/confirm-dialog.component';
 
 // Shared components
 import {
@@ -51,6 +55,8 @@ export class ProfileComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly userService = inject(UserService);
   private readonly authService = inject(AuthService);
+  private readonly deviceService = inject(DeviceService);
+  private readonly dialog = inject(MatDialog);
   private readonly router = inject(Router);
   private readonly notification = inject(NotificationService);
 
@@ -61,6 +67,12 @@ export class ProfileComponent implements OnInit {
   selectedAvatar = signal<File | null>(null);
   avatarPreview = signal<string | null>(null);
 
+  // Thiết bị đang đăng nhập
+  devices = signal<DeviceInfo[]>([]);
+  isLoadingDevices = signal(false);
+  revokingDeviceId = signal<string | null>(null);
+  isRevokingOthers = signal(false);
+
   // Form: CHỈ các trường cho phép sửa (không email/role/active/password)
   profileForm: FormGroup = this.fb.group({
     fullName: ['', [Validators.required, Validators.minLength(2)]],
@@ -70,6 +82,84 @@ export class ProfileComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadProfile();
+    this.loadDevices();
+  }
+
+  // ================== THIẾT BỊ ĐANG ĐĂNG NHẬP ==================
+
+  loadDevices(): void {
+    this.isLoadingDevices.set(true);
+    this.deviceService.getDevices('admin').subscribe({
+      next: (devices) => {
+        this.devices.set(devices);
+        this.isLoadingDevices.set(false);
+      },
+      error: () => {
+        // Không chặn trang hồ sơ nếu tải danh sách thiết bị lỗi.
+        this.isLoadingDevices.set(false);
+      },
+    });
+  }
+
+  /** Số thiết bị khác (không tính thiết bị đang dùng) — quyết định nút "Đăng xuất thiết bị khác". */
+  get otherDeviceCount(): number {
+    return this.devices().filter((d) => !d.current).length;
+  }
+
+  /** Thu hồi 1 thiết bị cụ thể, có dialog xác nhận vì hành động không hoàn tác được. */
+  revokeDevice(device: DeviceInfo): void {
+    this.dialog
+      .open(ConfirmDialogComponent, {
+        width: '380px',
+        data: {
+          title: 'Đăng xuất thiết bị',
+          message: `Bạn có chắc muốn đăng xuất "${device.deviceName}"? Thiết bị đó sẽ phải đăng nhập lại.`,
+        },
+      })
+      .afterClosed()
+      .subscribe((confirmed: boolean) => {
+        if (!confirmed) return;
+        this.revokingDeviceId.set(device.deviceId);
+        this.deviceService.revokeDevice('admin', device.deviceId).subscribe({
+          next: () => {
+            this.notification.success('Đã đăng xuất thiết bị');
+            this.revokingDeviceId.set(null);
+            this.loadDevices();
+          },
+          error: (err) => {
+            this.revokingDeviceId.set(null);
+            this.notification.error(this.notification.extractError(err));
+          },
+        });
+      });
+  }
+
+  /** Thu hồi mọi thiết bị khác, giữ thiết bị đang dùng. */
+  revokeOtherDevices(): void {
+    this.dialog
+      .open(ConfirmDialogComponent, {
+        width: '380px',
+        data: {
+          title: 'Đăng xuất các thiết bị khác',
+          message: `Bạn có chắc muốn đăng xuất ${this.otherDeviceCount} thiết bị khác? Chúng sẽ phải đăng nhập lại.`,
+        },
+      })
+      .afterClosed()
+      .subscribe((confirmed: boolean) => {
+        if (!confirmed) return;
+        this.isRevokingOthers.set(true);
+        this.deviceService.revokeOthers('admin').subscribe({
+          next: () => {
+            this.notification.success('Đã đăng xuất các thiết bị khác');
+            this.isRevokingOthers.set(false);
+            this.loadDevices();
+          },
+          error: (err) => {
+            this.isRevokingOthers.set(false);
+            this.notification.error(this.notification.extractError(err));
+          },
+        });
+      });
   }
 
   loadProfile(): void {

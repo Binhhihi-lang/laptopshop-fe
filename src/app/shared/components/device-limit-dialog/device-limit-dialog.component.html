@@ -1,0 +1,69 @@
+<!-- Dialog tuân theo design system của dự án (Tailwind + CSS vars) -->
+<div class="dialog-container">
+  <!-- Header -->
+  <div class="dialog-header">
+    <h2 class="dialog-title">
+      Bạn đã đăng nhập trên {{ data.maxSessions }} thiết bị
+    </h2>
+  </div>
+
+  <!-- Content -->
+  <div class="dialog-content">
+    <p class="dialog-description">
+      Chọn một thiết bị để đăng xuất, sau đó thiết bị này sẽ được đăng nhập.
+    </p>
+
+    <mat-radio-group
+      [(ngModel)]="selectedDeviceId"
+      class="device-list"
+      aria-label="Chọn thiết bị cần đăng xuất"
+    >
+      @for (device of data.devices; track device.deviceId) {
+        <label
+          class="device-item"
+          [class.device-item--current]="device.current"
+          [class.device-item--disabled]="device.current"
+        >
+          <mat-radio-button
+            [value]="device.deviceId"
+            [disabled]="device.current"
+            color="primary"
+          ></mat-radio-button>
+
+          <div class="device-info">
+            <span class="device-name">
+              {{ device.deviceName }}
+              @if (device.current) {
+                <span class="device-badge">Thiết bị này</span>
+              }
+            </span>
+            <span class="device-meta">
+              Đăng nhập: {{ device.createdAt | date: 'dd/MM/yyyy HH:mm' }}
+            </span>
+          </div>
+        </label>
+      }
+    </mat-radio-group>
+
+    @if (!hasSelectable) {
+      <div class="dialog-warning">
+        <mat-icon class="warning-icon">warning</mat-icon>
+        <p class="warning-text">
+          Không có thiết bị nào khác để đăng xuất. Vui lòng thử lại sau.
+        </p>
+      </div>
+    }
+  </div>
+
+  <!-- Actions -->
+  <div class="dialog-actions">
+    <button class="btn-secondary" (click)="onCancel()">Hủy</button>
+    <button
+      class="btn-primary"
+      (click)="onConfirm()"
+      [disabled]="!selectedDeviceId"
+    >
+      Đăng xuất thiết bị đã chọn
+    </button>
+  </div>
+</div>

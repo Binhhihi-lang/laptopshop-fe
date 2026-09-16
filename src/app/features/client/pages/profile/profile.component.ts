@@ -3,10 +3,14 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
+import { MatDialog } from '@angular/material/dialog';
 import { ClientAuthService } from '@core/services/client-auth.service';
 import { ClientUserService } from '@core/services/client-user.service';
+import { DeviceService } from '@core/services/device.service';
 import { NotificationService } from '@core/services/notification.service';
 import { UserResponse, UserProfileUpdateRequest, getInitials } from '@core/models/user.model';
+import { DeviceInfo } from '@core/models/device.model';
+import { ConfirmDialogComponent } from '@shared/confirm-dialog/confirm-dialog.component';
 import {
   AvatarComponent,
   ButtonComponent,
@@ -14,6 +18,7 @@ import {
   CardHeaderComponent,
   FormFieldComponent,
   InputComponent,
+  LoadingComponent,
   PageHeaderComponent,
 } from '@shared/components';
 
@@ -36,6 +41,7 @@ import {
     CardHeaderComponent,
     FormFieldComponent,
     InputComponent,
+    LoadingComponent,
     PageHeaderComponent,
   ],
   templateUrl: './profile.component.html',
@@ -45,6 +51,8 @@ export class ClientProfileComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly userService = inject(ClientUserService);
   private readonly auth = inject(ClientAuthService);
+  private readonly deviceService = inject(DeviceService);
+  private readonly dialog = inject(MatDialog);
   private readonly notification = inject(NotificationService);
   private readonly router = inject(Router);
 
@@ -53,6 +61,12 @@ export class ClientProfileComponent implements OnInit {
   readonly currentUser = signal<UserResponse | null>(null);
   readonly selectedAvatar = signal<File | null>(null);
   readonly avatarPreview = signal<string | null>(null);
+
+  // Thiết bị đang đăng nhập
+  readonly devices = signal<DeviceInfo[]>([]);
+  readonly isLoadingDevices = signal(false);
+  readonly revokingDeviceId = signal<string | null>(null);
+  readonly isRevokingOthers = signal(false);
 
   // Form: chỉ các trường cho phép sửa (giống admin profile)
   readonly form: FormGroup = this.fb.group({
@@ -63,6 +77,84 @@ export class ClientProfileComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadProfile();
+    this.loadDevices();
+  }
+
+  // ================== THIẾT BỊ ĐANG ĐĂNG NHẬP ==================
+
+  loadDevices(): void {
+    this.isLoadingDevices.set(true);
+    this.deviceService.getDevices('client').subscribe({
+      next: (devices) => {
+        this.devices.set(devices);
+        this.isLoadingDevices.set(false);
+      },
+      error: () => {
+        // Không chặn trang hồ sơ nếu tải danh sách thiết bị lỗi.
+        this.isLoadingDevices.set(false);
+      },
+    });
+  }
+
+  /** Số thiết bị khác (không tính thiết bị đang dùng). */
+  get otherDeviceCount(): number {
+    return this.devices().filter((d) => !d.current).length;
+  }
+
+  /** Thu hồi 1 thiết bị cụ thể, có dialog xác nhận vì không hoàn tác được. */
+  revokeDevice(device: DeviceInfo): void {
+    this.dialog
+      .open(ConfirmDialogComponent, {
+        width: '380px',
+        data: {
+          title: 'Đăng xuất thiết bị',
+          message: `Bạn có chắc muốn đăng xuất "${device.deviceName}"? Thiết bị đó sẽ phải đăng nhập lại.`,
+        },
+      })
+      .afterClosed()
+      .subscribe((confirmed: boolean) => {
+        if (!confirmed) return;
+        this.revokingDeviceId.set(device.deviceId);
+        this.deviceService.revokeDevice('client', device.deviceId).subscribe({
+          next: () => {
+            this.notification.success('Đã đăng xuất thiết bị');
+            this.revokingDeviceId.set(null);
+            this.loadDevices();
+          },
+          error: (err) => {
+            this.revokingDeviceId.set(null);
+            this.notification.error(this.notification.extractError(err));
+          },
+        });
+      });
+  }
+
+  /** Thu hồi mọi thiết bị khác, giữ thiết bị đang dùng. */
+  revokeOtherDevices(): void {
+    this.dialog
+      .open(ConfirmDialogComponent, {
+        width: '380px',
+        data: {
+          title: 'Đăng xuất các thiết bị khác',
+          message: `Bạn có chắc muốn đăng xuất ${this.otherDeviceCount} thiết bị khác? Chúng sẽ phải đăng nhập lại.`,
+        },
+      })
+      .afterClosed()
+      .subscribe((confirmed: boolean) => {
+        if (!confirmed) return;
+        this.isRevokingOthers.set(true);
+        this.deviceService.revokeOthers('client').subscribe({
+          next: () => {
+            this.notification.success('Đã đăng xuất các thiết bị khác');
+            this.isRevokingOthers.set(false);
+            this.loadDevices();
+          },
+          error: (err) => {
+            this.isRevokingOthers.set(false);
+            this.notification.error(this.notification.extractError(err));
+          },
+        });
+      });
   }
 
   loadProfile(): void {

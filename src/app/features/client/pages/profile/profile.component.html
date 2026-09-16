@@ -44,84 +44,158 @@
     </aside>
 
     <!-- Form chính -->
-    <section class="md:col-span-2" aria-labelledby="profile-form-title">
-      <app-card padding="lg">
-        <h2 id="profile-form-title" class="sr-only">Thông tin cá nhân</h2>
-        <app-card-header
-          title="Thông tin cá nhân"
-          subtitle="Cập nhật họ tên, số điện thoại và địa chỉ"
-        ></app-card-header>
+    <div class="md:col-span-2 space-y-6">
+      <section aria-labelledby="profile-form-title">
+        <app-card padding="lg">
+          <h2 id="profile-form-title" class="sr-only">Thông tin cá nhân</h2>
+          <app-card-header
+            title="Thông tin cá nhân"
+            subtitle="Cập nhật họ tên, số điện thoại và địa chỉ"
+          ></app-card-header>
 
-        <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-4 mt-4">
-          <div class="flex items-start gap-4">
-            <input
-              type="file"
-              id="profileAvatarInput"
-              accept="image/*"
-              class="hidden"
-              (change)="onAvatarSelected($event)"
-            />
-            <label
-              for="profileAvatarInput"
-              class="cursor-pointer px-3 py-1.5 text-sm rounded-lg border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800"
-            >
-              Đổi ảnh đại diện
-            </label>
-            @if (selectedAvatar()) {
-              <button
-                type="button"
-                class="text-sm text-danger-600 hover:underline"
-                (click)="removeAvatar()"
+          <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-4 mt-4">
+            <div class="flex items-start gap-4">
+              <input
+                type="file"
+                id="profileAvatarInput"
+                accept="image/*"
+                class="hidden"
+                (change)="onAvatarSelected($event)"
+              />
+              <label
+                for="profileAvatarInput"
+                class="cursor-pointer px-3 py-1.5 text-sm rounded-lg border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800"
               >
-                Hủy ảnh mới
-              </button>
+                Đổi ảnh đại diện
+              </label>
+              @if (selectedAvatar()) {
+                <button
+                  type="button"
+                  class="text-sm text-danger-600 hover:underline"
+                  (click)="removeAvatar()"
+                >
+                  Hủy ảnh mới
+                </button>
+              }
+            </div>
+
+            <app-form-field id="fullName" label="Họ và tên" [required]="true" [error]="hasError('fullName', 'required') ? 'Vui lòng nhập họ tên' : hasError('fullName', 'minlength') ? 'Họ tên tối thiểu 2 ký tự' : ''">
+              <app-input
+                id="fullName"
+                type="text"
+                formControlName="fullName"
+                placeholder="Nguyễn Văn A"
+                autocomplete="name"
+              ></app-input>
+            </app-form-field>
+
+            <app-form-field id="phone" label="Số điện thoại" [error]="hasError('phone', 'pattern') ? 'Số điện thoại không hợp lệ (10-11 số)' : ''">
+              <app-input
+                id="phone"
+                type="tel"
+                formControlName="phone"
+                placeholder="0901234567"
+                autocomplete="tel"
+              ></app-input>
+            </app-form-field>
+
+            <app-form-field id="address" label="Địa chỉ">
+              <app-input
+                id="address"
+                type="textarea"
+                formControlName="address"
+                placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành"
+                [rows]="3"
+              ></app-input>
+            </app-form-field>
+
+            <div class="flex items-center justify-end gap-3 pt-2">
+              <a routerLink="/change-password" class="text-sm text-primary-600 hover:underline">
+                Đổi mật khẩu
+              </a>
+              <app-button
+                type="submit"
+                label="Lưu thay đổi"
+                variant="primary"
+                [loading]="isSubmitting()"
+                [disabled]="isSubmitting()"
+              ></app-button>
+            </div>
+          </form>
+        </app-card>
+      </section>
+
+      <!-- Thiết bị đang đăng nhập -->
+      <section aria-labelledby="profile-devices-title">
+        <app-card padding="lg">
+          <div class="flex items-start justify-between gap-4">
+            <app-card-header
+              title="Thiết bị đang đăng nhập"
+              subtitle="Tài khoản của bạn được dùng trên tối đa 2 thiết bị"
+            ></app-card-header>
+            @if (otherDeviceCount > 0) {
+              <app-button
+                variant="ghost"
+                icon="logout"
+                [label]="'Đăng xuất thiết bị khác (' + otherDeviceCount + ')'"
+                (click)="revokeOtherDevices()"
+                [loading]="isRevokingOthers()"
+                [disabled]="isRevokingOthers()"
+              ></app-button>
             }
           </div>
 
-          <app-form-field id="fullName" label="Họ và tên" [required]="true" [error]="hasError('fullName', 'required') ? 'Vui lòng nhập họ tên' : hasError('fullName', 'minlength') ? 'Họ tên tối thiểu 2 ký tự' : ''">
-            <app-input
-              id="fullName"
-              type="text"
-              formControlName="fullName"
-              placeholder="Nguyễn Văn A"
-              autocomplete="name"
-            ></app-input>
-          </app-form-field>
-
-          <app-form-field id="phone" label="Số điện thoại" [error]="hasError('phone', 'pattern') ? 'Số điện thoại không hợp lệ (10-11 số)' : ''">
-            <app-input
-              id="phone"
-              type="tel"
-              formControlName="phone"
-              placeholder="0901234567"
-              autocomplete="tel"
-            ></app-input>
-          </app-form-field>
-
-          <app-form-field id="address" label="Địa chỉ">
-            <app-input
-              id="address"
-              type="textarea"
-              formControlName="address"
-              placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành"
-              [rows]="3"
-            ></app-input>
-          </app-form-field>
-
-          <div class="flex items-center justify-end gap-3 pt-2">
-            <a routerLink="/change-password" class="text-sm text-primary-600 hover:underline">
-              Đổi mật khẩu
-            </a>
-            <app-button
-              type="submit"
-              label="Lưu thay đổi"
-              variant="primary"
-              [loading]="isSubmitting()"
-              [disabled]="isSubmitting()"
-            ></app-button>
+          <div class="mt-4">
+            @if (isLoadingDevices()) {
+              <div class="flex justify-center py-4">
+                <app-loading size="lg" text="Đang tải danh sách thiết bị..." />
+              </div>
+            } @else if (devices().length === 0) {
+              <p class="text-sm text-slate-500 dark:text-slate-400">
+                Chưa có thiết bị nào đang đăng nhập.
+              </p>
+            } @else {
+              <ul class="divide-y divide-slate-200 dark:divide-slate-700">
+                @for (device of devices(); track device.deviceId) {
+                  <li class="flex items-center gap-4 py-3 first:pt-0 last:pb-0">
+                    <mat-icon class="w-5 h-5 shrink-0 text-slate-400">computer</mat-icon>
+                    <div class="flex-1 min-w-0">
+                      <div class="flex items-center gap-2 flex-wrap">
+                        <span class="font-medium text-slate-900 dark:text-white truncate">
+                          {{ device.deviceName }}
+                        </span>
+                        @if (device.current) {
+                          <span class="text-xs font-semibold px-2 py-0.5 rounded bg-success-100 text-success-700 dark:bg-success-900/30 dark:text-success-300">
+                            Thiết bị này
+                          </span>
+                        }
+                      </div>
+                      <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                        @if (device.lastActiveAt) {
+                          Hoạt động: {{ device.lastActiveAt | date: 'dd/MM/yyyy HH:mm' }}
+                        }
+                        @if (device.ipAddress) {
+                          · IP: {{ device.ipAddress }}
+                        }
+                      </p>
+                    </div>
+                    @if (!device.current) {
+                      <app-button
+                        variant="ghost"
+                        icon="logout"
+                        label="Đăng xuất"
+                        (click)="revokeDevice(device)"
+                        [loading]="revokingDeviceId() === device.deviceId"
+                        [disabled]="revokingDeviceId() !== null || isRevokingOthers()"
+                      ></app-button>
+                    }
+                  </li>
+                }
+              </ul>
+            }
           </div>
-        </form>
-      </app-card>
-    </section>
+        </app-card>
+      </section>
+    </div>
   </div>
 </div>
