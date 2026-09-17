@@ -182,15 +182,15 @@ export class ProfileComponent implements OnInit {
 
   /** True khi đã tích hết thiết bị khác (dùng cho nút "Chọn tất cả"). */
   allNonCurrentSelected(): boolean {
-    return (
-      this.otherDeviceCount > 0 && this.selectedDeviceIds().length === this.otherDeviceCount
-    );
+    return this.otherDeviceCount > 0 && this.selectedDeviceIds().length === this.otherDeviceCount;
   }
 
   toggleSelectAll(checked: boolean): void {
     this.selectedDeviceIds.set(
       checked
-        ? this.devices().filter((d) => !d.current).map((d) => d.deviceId)
+        ? this.devices()
+            .filter((d) => !d.current)
+            .map((d) => d.deviceId)
         : [],
     );
   }

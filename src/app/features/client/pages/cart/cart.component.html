@@ -1,0 +1,83 @@
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <app-breadcrumb
+    [items]="[{ label: 'Trang chủ', link: '/' }, { label: 'Giỏ hàng' }]"
+    class="block mb-6"
+  />
+
+  <h1 class="text-2xl font-bold mb-6">Giỏ hàng</h1>
+
+  @if (isLoading()) {
+    <app-loading />
+  } @else if (!isAuthenticated()) {
+    <app-empty-state
+      icon="shopping_cart"
+      title="Đăng nhập để xem giỏ hàng"
+      description="Vui lòng đăng nhập để tiếp tục mua sắm và thanh toán."
+      [actionLabel]="'Đăng nhập'"
+      [actionIcon]="'login'"
+      (actionClick)="goLogin()"
+    />
+  } @else if (cart() && cart()!.items.length > 0) {
+    <div class="grid lg:grid-cols-[1fr_360px] gap-6 items-start">
+      <div class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 divide-y divide-slate-200 dark:divide-slate-700">
+        @for (item of cart()!.items; track item.id) {
+          <app-cart-line-item
+            [item]="item"
+            (quantityChange)="updateQty(item, $event)"
+            (remove)="removeItem(item)"
+          />
+        }
+      </div>
+
+      <aside class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-5 lg:sticky lg:top-24">
+        <h2 class="font-semibold mb-4">Tóm tắt đơn hàng</h2>
+        <app-order-summary
+          [subtotal]="cart()!.subtotal"
+          [discount]="couponDiscount()"
+          [shippingFee]="cart()!.shippingFee"
+          [total]="finalTotal(cart()!)"
+        >
+          <div class="mt-4 flex gap-2">
+            <input
+              type="text"
+              [ngModel]="couponCode()"
+              (ngModelChange)="couponCode.set($event.toUpperCase())"
+              placeholder="Mã giảm giá"
+              class="flex-1 h-11 px-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-sm"
+            />
+            <app-button
+              label="Áp dụng"
+              variant="outline"
+              [loading]="isApplyingCoupon()"
+              (click)="applyCoupon()"
+            />
+          </div>
+          @if (couponNote()) {
+            <p
+              class="text-xs mt-2"
+              [class]="couponValid() ? 'text-green-600 dark:text-green-400' : 'text-rose-500'"
+            >
+              {{ couponNote() }}
+            </p>
+          }
+        </app-order-summary>
+
+        <a
+          [routerLink]="checkoutLink()"
+          class="mt-5 w-full inline-flex items-center justify-center px-4 py-3 rounded-lg bg-primary-600 text-white font-semibold hover:bg-primary-700"
+        >
+          Thanh toán
+        </a>
+      </aside>
+    </div>
+  } @else {
+    <app-empty-state
+      icon="shopping_cart"
+      title="Giỏ hàng trống"
+      description="Chưa có sản phẩm nào trong giỏ hàng của bạn."
+      [actionLabel]="'Khám phá sản phẩm'"
+      [actionIcon]="'storefront'"
+      (actionClick)="goShop()"
+    />
+  }
+</div>

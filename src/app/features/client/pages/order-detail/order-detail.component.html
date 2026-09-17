@@ -1,0 +1,104 @@
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <app-breadcrumb
+    [items]="[
+      { label: 'Trang chủ', link: '/' },
+      { label: 'Đơn hàng của tôi', link: '/orders' },
+      { label: order() ? '#' + order()!.orderCode : '' }
+    ]"
+    class="block mb-6"
+  />
+
+  @if (isLoading()) {
+    <app-loading />
+  } @else if (order()) {
+    <div class="flex items-center justify-between flex-wrap gap-3 mb-6">
+      <h1 class="text-2xl font-bold">Chi tiết đơn hàng</h1>
+      @if (canCancel()) {
+        <app-button
+          label="Hủy đơn hàng"
+          variant="danger"
+          [loading]="isCancelling()"
+          (click)="cancel()"
+        />
+      }
+    </div>
+
+    <div class="grid lg:grid-cols-[1fr_360px] gap-6 items-start">
+      <div class="space-y-6">
+        <section class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-5">
+          <h2 class="font-semibold mb-4">Trạng thái đơn hàng</h2>
+          @if (order()!.status === 'CANCELLED') {
+            <app-badge label="Đã hủy" variant="danger" />
+          } @else {
+            <app-order-timeline [status]="order()!.status" />
+          }
+        </section>
+
+        <section class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-5">
+          <h2 class="font-semibold mb-4">Sản phẩm</h2>
+          <div class="divide-y divide-slate-200 dark:divide-slate-700">
+            @for (item of order()!.items; track item.productCode) {
+              <div class="flex items-center gap-3 py-3">
+                <img [src]="item.productImage" [alt]="item.productName"
+                  class="w-14 h-14 rounded-lg object-cover bg-slate-100 dark:bg-slate-800" />
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-medium truncate">{{ item.productName }}</p>
+                  <p class="text-xs text-slate-500">Số lượng: {{ item.quantity }}</p>
+                </div>
+                <span class="font-mono tabular-nums text-sm font-semibold">
+                  {{ format(item.lineTotal) }}
+                </span>
+              </div>
+            }
+          </div>
+        </section>
+      </div>
+
+      <aside class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-5">
+        <h2 class="font-semibold mb-4">Thông tin thanh toán</h2>
+        <app-order-summary
+          [subtotal]="order()!.subtotal"
+          [discount]="order()!.discountAmount"
+          [shippingFee]="order()!.shippingFee"
+          [total]="order()!.totalPrice"
+        />
+
+        <div class="border-t border-slate-200 dark:border-slate-700 mt-4 pt-4">
+          <h3 class="text-sm font-semibold mb-3">Thông tin giao hàng</h3>
+          <dl class="space-y-2 text-sm">
+            <div class="flex justify-between gap-3">
+              <dt class="text-slate-500 shrink-0">Người nhận</dt>
+              <dd class="text-right">{{ order()!.receiverFullName }}</dd>
+            </div>
+            <div class="flex justify-between gap-3">
+              <dt class="text-slate-500 shrink-0">SĐT</dt>
+              <dd class="text-right">{{ order()!.receiverPhone }}</dd>
+            </div>
+            <div class="flex justify-between gap-3">
+              <dt class="text-slate-500 shrink-0">Địa chỉ</dt>
+              <dd class="text-right">{{ order()!.receiverAddress }}</dd>
+            </div>
+            <div class="flex justify-between gap-3">
+              <dt class="text-slate-500 shrink-0">Thanh toán</dt>
+              <dd class="text-right">
+                {{ order()!.paymentMethod === 'COD' ? 'Thanh toán khi nhận hàng (COD)' : 'VNPay' }}
+              </dd>
+            </div>
+          </dl>
+          @if (order()!.note) {
+            <p class="text-xs text-slate-500 mt-3">Ghi chú: {{ order()!.note }}</p>
+          }
+        </div>
+      </aside>
+    </div>
+  } @else {
+    <app-empty-state
+      icon="receipt_long"
+      title="Không tìm thấy đơn hàng"
+      description="Đơn hàng không tồn tại hoặc bạn không có quyền xem."
+      [actionLabel]="'Về danh sách đơn'"
+      [actionIcon]="'arrow_back'"
+      (actionClick)="goOrders()"
+    />
+  }
+</div>

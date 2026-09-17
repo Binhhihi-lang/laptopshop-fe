@@ -14,6 +14,8 @@ import {
   FormFieldComponent,
   InputComponent,
   LoadingComponent,
+  PaginationComponent,
+  ProductCardComponent,
   SelectComponent,
   SelectOption,
 } from '@shared/components';
@@ -34,6 +36,8 @@ const PAGE_SIZE = 12;
     FormFieldComponent,
     InputComponent,
     LoadingComponent,
+    PaginationComponent,
+    ProductCardComponent,
     SelectComponent,
   ],
   templateUrl: './product-list.component.html',
@@ -193,24 +197,5 @@ export class ProductListComponent implements OnInit {
       { value: '', label: 'Tất cả hãng' },
       ...this.brands().map((b) => ({ value: b, label: b })),
     ];
-  }
-
-  // Tính mảng số trang cho pagination
-  get pageNumbers(): number[] {
-    const total = this.totalPages();
-    const cur = this.currentPage();
-    const start = Math.max(0, cur - 2);
-    const end = Math.min(total - 1, cur + 2);
-    const out: number[] = [];
-    for (let i = start; i <= end; i++) out.push(i);
-    return out;
-  }
-
-  formatPrice(value: number): string {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND',
-      maximumFractionDigits: 0,
-    }).format(value);
   }
 }

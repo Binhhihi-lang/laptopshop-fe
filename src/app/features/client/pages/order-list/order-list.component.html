@@ -1,0 +1,34 @@
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <app-breadcrumb
+    [items]="[{ label: 'Trang chủ', link: '/' }, { label: 'Đơn hàng của tôi' }]"
+    class="block mb-6"
+  />
+
+  <h1 class="text-2xl font-bold mb-6">Đơn hàng của tôi</h1>
+
+  @if (isLoading()) {
+    <app-loading />
+  } @else if (orders().length === 0) {
+    <app-empty-state
+      icon="receipt_long"
+      title="Chưa có đơn hàng nào"
+      description="Đơn hàng của bạn sẽ xuất hiện ở đây sau khi mua sắm."
+      [actionLabel]="'Khám phá sản phẩm'"
+      [actionIcon]="'storefront'"
+      (actionClick)="goShop()"
+    />
+  } @else {
+    <div class="space-y-4">
+      @for (order of orders(); track order.id) {
+        <app-order-card [order]="order" (viewDetail)="openDetail(order)" />
+      }
+    </div>
+
+    <app-pagination
+      [page]="page()"
+      [totalPages]="totalPages()"
+      (pageChange)="changePage($event)"
+      class="block mt-8"
+    />
+  }
+</div>

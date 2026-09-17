@@ -3,14 +3,20 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { ClientProductService } from '@core/services/client-product.service';
+import { ClientCartService } from '@core/services/client-cart.service';
+import { ClientAuthService } from '@core/services/client-auth.service';
 import { ProductResponse } from '@core/models/product.model';
 import { NotificationService } from '@core/services/notification.service';
 import {
   BadgeComponent,
+  BreadcrumbComponent,
   ButtonComponent,
   CardComponent,
   EmptyStateComponent,
   LoadingComponent,
+  PriceComponent,
+  ProductCardComponent,
+  QtyStepperComponent,
 } from '@shared/components';
 
 @Component({
@@ -21,10 +27,14 @@ import {
     RouterModule,
     MatIconModule,
     BadgeComponent,
+    BreadcrumbComponent,
     ButtonComponent,
     CardComponent,
     EmptyStateComponent,
     LoadingComponent,
+    PriceComponent,
+    ProductCardComponent,
+    QtyStepperComponent,
   ],
   templateUrl: './product-detail.component.html',
   styleUrl: './product-detail.component.css',
@@ -33,6 +43,8 @@ export class ProductDetailComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly productService = inject(ClientProductService);
+  private readonly cartService = inject(ClientCartService);
+  private readonly auth = inject(ClientAuthService);
   private readonly notification = inject(NotificationService);
 
   readonly isLoading = signal(true);
@@ -67,30 +79,34 @@ export class ProductDetailComponent implements OnInit {
     });
   }
 
-  incQty(): void {
-    const max = this.product()?.quantity ?? 1;
-    if (this.quantity() < max) this.quantity.update((q) => q + 1);
-  }
-
-  decQty(): void {
-    if (this.quantity() > 1) this.quantity.update((q) => q - 1);
-  }
-
-  // Sprint 2 sẽ wire với cart service. Hiện tại chỉ thông báo.
+  // Thêm vào giỏ: khách đã login → giỏ server; chưa login → localStorage.
   onAddToCart(): void {
-    this.notification.info('Chức năng giỏ hàng sẽ có ở Sprint 2');
+    const p = this.product();
+    if (!p) return;
+    const qty = this.quantity();
+
+    if (this.auth.isAuthenticated()) {
+      this.cartService.addItem({ productId: p.id, quantity: qty }).subscribe({
+        next: () => this.notification.success(`Đã thêm "${p.name}" vào giỏ hàng`),
+        error: (err) => this.notification.error(this.notification.extractError(err)),
+      });
+      return;
+    }
+
+    const items = this.cartService.getGuestCart();
+    const existing = items.find((i) => i.productId === p.id);
+    if (existing) {
+      existing.quantity = Math.min(existing.quantity + qty, p.quantity);
+    } else {
+      items.push({ productId: p.id, quantity: qty });
+    }
+    this.cartService.setGuestCart(items);
+    this.notification.success(`Đã thêm "${p.name}" vào giỏ hàng`);
   }
 
   onBuyNow(): void {
-    this.notification.info('Chức năng thanh toán sẽ có ở Sprint 2');
-  }
-
-  formatPrice(value: number): string {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND',
-      maximumFractionDigits: 0,
-    }).format(value);
+    this.onAddToCart();
+    this.router.navigate(['/cart']);
   }
 
   // Có đang giảm giá không (giá gốc > giá bán)
@@ -99,7 +115,7 @@ export class ProductDetailComponent implements OnInit {
     return !!p && !!p.originalPrice && p.originalPrice > p.price;
   }
 
-  // Phần trăm giảm giá (làm tròn xuống), chỉ gọi khi hasDiscount() true
+  // Phần trăm giảm giá (làm tròn), chỉ gọi khi hasDiscount() true
   discountPercent(): number {
     const p = this.product()!;
     return Math.round(((p.originalPrice! - p.price) / p.originalPrice!) * 100);

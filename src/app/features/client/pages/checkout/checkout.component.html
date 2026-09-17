@@ -1,0 +1,138 @@
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <app-breadcrumb
+    [items]="[
+      { label: 'Trang chủ', link: '/' },
+      { label: 'Giỏ hàng', link: '/cart' },
+      { label: 'Thanh toán' }
+    ]"
+    class="block mb-6"
+  />
+
+  <app-checkout-steps [current]="1" class="block mb-8" />
+
+  @if (isLoading()) {
+    <app-loading />
+  } @else if (cart()) {
+    <div class="grid lg:grid-cols-[1fr_360px] gap-6 items-start">
+      <div class="space-y-6">
+        <!-- Thông tin giao hàng -->
+        <section class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-5">
+          <h2 class="font-semibold mb-4">Thông tin giao hàng</h2>
+          <div class="grid sm:grid-cols-2 gap-4">
+            <div class="sm:col-span-2">
+              <label class="block text-sm font-medium mb-1.5">Họ và tên *</label>
+              <input [(ngModel)]="receiverFullName" type="text" autocomplete="name" placeholder="Nguyễn Văn A"
+                class="w-full h-11 px-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-1.5">Số điện thoại *</label>
+              <input [(ngModel)]="receiverPhone" type="tel" autocomplete="tel" placeholder="09xxxxxxxx"
+                class="w-full h-11 px-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-1.5">Email</label>
+              <input [(ngModel)]="receiverEmail" type="email" autocomplete="email" placeholder="ban@example.com"
+                class="w-full h-11 px-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-1.5">Tỉnh / Thành phố *</label>
+              <select [(ngModel)]="receiverProvince"
+                class="w-full h-11 px-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800">
+                <option value="">Chọn tỉnh/thành</option>
+                @for (p of provinces; track p) {
+                  <option [value]="p">{{ p }}</option>
+                }
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-1.5">Quận / Huyện *</label>
+              <input [(ngModel)]="receiverDistrict" type="text" placeholder="Nhập quận/huyện"
+                class="w-full h-11 px-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800" />
+            </div>
+            <div class="sm:col-span-2">
+              <label class="block text-sm font-medium mb-1.5">Địa chỉ cụ thể *</label>
+              <input [(ngModel)]="receiverAddress" type="text" autocomplete="street-address"
+                placeholder="Số nhà, tên đường, phường/xã"
+                class="w-full h-11 px-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800" />
+            </div>
+            <div class="sm:col-span-2">
+              <label class="block text-sm font-medium mb-1.5">Ghi chú (tùy chọn)</label>
+              <textarea [(ngModel)]="note" rows="3" placeholder="Ghi chú giao hàng, thời gian nhận hàng…"
+                class="w-full px-3 py-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 resize-y"></textarea>
+            </div>
+          </div>
+        </section>
+
+        <!-- Phương thức thanh toán -->
+        <section class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-5">
+          <h2 class="font-semibold mb-4">Phương thức thanh toán</h2>
+          <div class="space-y-3">
+            <label class="flex items-center gap-3 p-3 rounded-lg border-2 cursor-pointer transition-colors"
+              [class]="paymentMethod === 'COD'
+                ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
+                : 'border-slate-200 dark:border-slate-700'">
+              <input type="radio" name="pay" value="COD" [(ngModel)]="paymentMethod" class="w-4 h-4" />
+              <span class="flex-1">
+                <b class="block text-sm">Thanh toán khi nhận hàng (COD)</b>
+                <span class="text-xs text-slate-500">Trả tiền mặt khi nhận hàng</span>
+              </span>
+              <span class="w-9 h-9 rounded-lg flex items-center justify-center bg-amber-50 text-amber-500">💵</span>
+            </label>
+
+            <button type="button" (click)="selectComingSoon('VNPay')"
+              class="w-full flex items-center gap-3 p-3 rounded-lg border-2 border-slate-200 dark:border-slate-700 opacity-60 text-left">
+              <span class="w-4 h-4 rounded-full border-2 border-slate-300"></span>
+              <span class="flex-1">
+                <b class="block text-sm">VNPay</b>
+                <span class="text-xs text-slate-500">Sắp ra mắt</span>
+              </span>
+              <span class="w-9 h-9 rounded-lg flex items-center justify-center bg-blue-50 text-blue-500">💳</span>
+            </button>
+
+            <button type="button" (click)="selectComingSoon('Momo')"
+              class="w-full flex items-center gap-3 p-3 rounded-lg border-2 border-slate-200 dark:border-slate-700 opacity-60 text-left">
+              <span class="w-4 h-4 rounded-full border-2 border-slate-300"></span>
+              <span class="flex-1">
+                <b class="block text-sm">Momo</b>
+                <span class="text-xs text-slate-500">Sắp ra mắt</span>
+              </span>
+              <span class="w-9 h-9 rounded-lg flex items-center justify-center bg-rose-50 text-rose-500">📱</span>
+            </button>
+
+            <button type="button" (click)="selectComingSoon('Chuyển khoản ngân hàng')"
+              class="w-full flex items-center gap-3 p-3 rounded-lg border-2 border-slate-200 dark:border-slate-700 opacity-60 text-left">
+              <span class="w-4 h-4 rounded-full border-2 border-slate-300"></span>
+              <span class="flex-1">
+                <b class="block text-sm">Chuyển khoản ngân hàng</b>
+                <span class="text-xs text-slate-500">Sắp ra mắt</span>
+              </span>
+              <span class="w-9 h-9 rounded-lg flex items-center justify-center bg-teal-50 text-teal-500">🏦</span>
+            </button>
+          </div>
+        </section>
+      </div>
+
+      <!-- Tóm tắt -->
+      <aside class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-5">
+        <h2 class="font-semibold mb-4">Tóm tắt đơn hàng</h2>
+        <app-order-summary
+          [subtotal]="cart()!.subtotal"
+          [discount]="couponDiscount()"
+          [shippingFee]="cart()!.shippingFee"
+          [total]="finalTotal(cart()!)"
+        />
+
+        <app-button
+          label="Đặt hàng"
+          variant="primary"
+          class="block mt-5"
+          [loading]="isSubmitting()"
+          (click)="submit()"
+        />
+        <p class="text-xs text-slate-400 text-center mt-2.5">
+          Bằng việc đặt hàng, bạn đồng ý với điều khoản mua bán của LaptopShop.
+        </p>
+      </aside>
+    </div>
+  }
+</div>
