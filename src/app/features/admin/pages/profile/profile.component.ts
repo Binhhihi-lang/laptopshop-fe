@@ -9,6 +9,7 @@ import {
 } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatDialog } from '@angular/material/dialog';
 import { UserService } from '@core/services/user.service';
 import { AuthService } from '@core/services/auth.service';
@@ -39,6 +40,7 @@ import {
     ReactiveFormsModule,
     RouterModule,
     MatIconModule,
+    MatCheckboxModule,
     CardComponent,
     ButtonComponent,
     InputComponent,
@@ -72,6 +74,9 @@ export class ProfileComponent implements OnInit {
   isLoadingDevices = signal(false);
   revokingDeviceId = signal<string | null>(null);
   isRevokingOthers = signal(false);
+  isRevokingSelected = signal(false);
+  /** deviceId của các thiết bị user tích chọn để đăng xuất. */
+  selectedDeviceIds = signal<string[]>([]);
 
   // Form: CHỈ các trường cho phép sửa (không email/role/active/password)
   profileForm: FormGroup = this.fb.group({
@@ -93,6 +98,7 @@ export class ProfileComponent implements OnInit {
       next: (devices) => {
         this.devices.set(devices);
         this.isLoadingDevices.set(false);
+        this.selectedDeviceIds.set([]); // reset chọn khi tải lại danh sách
       },
       error: () => {
         // Không chặn trang hồ sơ nếu tải danh sách thiết bị lỗi.
@@ -156,6 +162,63 @@ export class ProfileComponent implements OnInit {
           },
           error: (err) => {
             this.isRevokingOthers.set(false);
+            this.notification.error(this.notification.extractError(err));
+          },
+        });
+      });
+  }
+
+  isDeviceSelected(deviceId: string): boolean {
+    return this.selectedDeviceIds().includes(deviceId);
+  }
+
+  toggleDeviceSelected(deviceId: string, checked: boolean): void {
+    this.selectedDeviceIds.set(
+      checked
+        ? [...this.selectedDeviceIds(), deviceId]
+        : this.selectedDeviceIds().filter((id) => id !== deviceId),
+    );
+  }
+
+  /** True khi đã tích hết thiết bị khác (dùng cho nút "Chọn tất cả"). */
+  allNonCurrentSelected(): boolean {
+    return (
+      this.otherDeviceCount > 0 && this.selectedDeviceIds().length === this.otherDeviceCount
+    );
+  }
+
+  toggleSelectAll(checked: boolean): void {
+    this.selectedDeviceIds.set(
+      checked
+        ? this.devices().filter((d) => !d.current).map((d) => d.deviceId)
+        : [],
+    );
+  }
+
+  /** Thu hồi hàng loạt các thiết bị đã tích chọn. */
+  revokeSelected(): void {
+    const ids = this.selectedDeviceIds();
+    if (ids.length === 0) return;
+    this.dialog
+      .open(ConfirmDialogComponent, {
+        width: '380px',
+        data: {
+          title: 'Đăng xuất các thiết bị đã chọn',
+          message: `Bạn có chắc muốn đăng xuất ${ids.length} thiết bị đã chọn? Chúng sẽ phải đăng nhập lại.`,
+        },
+      })
+      .afterClosed()
+      .subscribe((confirmed: boolean) => {
+        if (!confirmed) return;
+        this.isRevokingSelected.set(true);
+        this.deviceService.revokeSelected('admin', ids).subscribe({
+          next: () => {
+            this.notification.success('Đã đăng xuất các thiết bị đã chọn');
+            this.isRevokingSelected.set(false);
+            this.loadDevices();
+          },
+          error: (err) => {
+            this.isRevokingSelected.set(false);
             this.notification.error(this.notification.extractError(err));
           },
         });

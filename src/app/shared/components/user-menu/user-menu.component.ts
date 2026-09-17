@@ -2,8 +2,10 @@ import { Component, input, output, signal, HostListener, inject, computed } from
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
+import { MatDialog } from '@angular/material/dialog';
 import { AvatarComponent } from '@shared/components/avatar/avatar.component';
 import { BadgeComponent } from '@shared/components/badge/badge.component';
+import { ConfirmDialogComponent } from '@shared/confirm-dialog/confirm-dialog.component';
 import { UserInfo, getInitials, getPrimaryRole } from '@core/models/user.model';
 
 @Component({
@@ -15,6 +17,7 @@ import { UserInfo, getInitials, getPrimaryRole } from '@core/models/user.model';
 })
 export class UserMenuComponent {
   private readonly router = inject(Router);
+  private readonly dialog = inject(MatDialog);
 
   // User tóm tắt truyền từ layout (Header/Sidebar/Client)
   user = input<UserInfo | null>(null);
@@ -40,7 +43,21 @@ export class UserMenuComponent {
   }
 
   onLogout(): void {
-    this.logout.emit();
+    // Hỏi xác nhận trước khi đăng xuất — hành động mất phiên không hoàn tác được.
+    this.dialog
+      .open(ConfirmDialogComponent, {
+        width: '380px',
+        data: {
+          title: 'Đăng xuất',
+          message: 'Bạn có chắc muốn đăng xuất khỏi tài khoản?',
+        },
+      })
+      .afterClosed()
+      .subscribe((confirmed: boolean) => {
+        if (confirmed) {
+          this.logout.emit();
+        }
+      });
   }
 
   @HostListener('document:click', ['$event'])

@@ -38,17 +38,28 @@
 
         <!-- Right actions -->
         <div class="flex items-center gap-2">
-          <a
-            routerLink="/cart"
+          <button
+            type="button"
+            class="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
+            (click)="toggleTheme()"
+            [attr.aria-label]="theme.isDark() ? 'Chuyển giao diện sáng' : 'Chuyển giao diện tối'"
+          >
+            <mat-icon>{{ theme.isDark() ? 'light_mode' : 'dark_mode' }}</mat-icon>
+          </button>
+
+          <button
+            type="button"
             class="relative p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
+            (click)="goToCart()"
             aria-label="Giỏ hàng"
           >
             <mat-icon>shopping_cart</mat-icon>
-            <!-- Badge số lượng — Sprint 2 sẽ sync với cart service -->
-            <span class="absolute -top-1 -right-1 bg-primary-600 text-white text-[10px] rounded-full px-1.5 min-w-[18px] h-[18px] flex items-center justify-center">
-              0
-            </span>
-          </a>
+            @if (cartCount() > 0) {
+              <span class="absolute -top-1 -right-1 bg-rose-500 text-white text-[10px] rounded-full px-1.5 min-w-[18px] h-[18px] flex items-center justify-center">
+                {{ cartCount() }}
+              </span>
+            }
+          </button>
 
           @if (isAuthenticated()) {
             <div class="relative">
@@ -152,6 +163,8 @@
           <ul class="space-y-1.5 text-slate-500">
             <li>Hotline: 1900-xxxx</li>
             <li>Email: support@laptopshop.vn</li>
+            <li><a routerLink="/guide" class="hover:text-primary-600">Hướng dẫn mua hàng</a></li>
+            <li><a routerLink="/warranty" class="hover:text-primary-600">Chính sách bảo hành</a></li>
           </ul>
         </div>
         <div>

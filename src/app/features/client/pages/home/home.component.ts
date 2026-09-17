@@ -1,12 +1,17 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { ClientCategoryService } from '@core/services/client-category.service';
 import { ClientProductService } from '@core/services/client-product.service';
 import { CategoryResponse } from '@core/models/category.model';
 import { ProductResponse } from '@core/models/product.model';
-import { EmptyStateComponent, LoadingComponent } from '@shared/components';
+import {
+  CategoryTileComponent,
+  EmptyStateComponent,
+  LoadingComponent,
+  ProductCardComponent,
+} from '@shared/components';
 
 /**
  * Trang chủ storefront:
@@ -20,13 +25,32 @@ import { EmptyStateComponent, LoadingComponent } from '@shared/components';
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, RouterModule, MatIconModule, EmptyStateComponent, LoadingComponent],
+  imports: [
+    CommonModule,
+    RouterModule,
+    MatIconModule,
+    CategoryTileComponent,
+    EmptyStateComponent,
+    LoadingComponent,
+    ProductCardComponent,
+  ],
   templateUrl: './home.component.html',
   styleUrl: './home.component.css',
 })
 export class HomeComponent implements OnInit {
+  private readonly router = inject(Router);
   private readonly categoryService = inject(ClientCategoryService);
   private readonly productService = inject(ClientProductService);
+
+  // Bảng màu xoay vòng cho ô danh mục (khớp mockup).
+  private static readonly CATEGORY_TINTS = [
+    '#7c3aed',
+    '#2563eb',
+    '#0891b2',
+    '#0d9488',
+    '#4f46e5',
+    '#d97706',
+  ];
 
   readonly isLoading = signal(true);
   readonly categories = signal<CategoryResponse[]>([]);
@@ -61,12 +85,13 @@ export class HomeComponent implements OnInit {
     });
   }
 
-  // Định dạng giá VND
-  formatPrice(value: number): string {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND',
-      maximumFractionDigits: 0,
-    }).format(value);
+  /** Màu nền cho ô danh mục thứ i — xoay vòng theo bảng màu cố định. */
+  categoryTint(index: number): string {
+    const tints = HomeComponent.CATEGORY_TINTS;
+    return tints[index % tints.length];
+  }
+
+  goCategory(cat: CategoryResponse): void {
+    this.router.navigate(['/products'], { queryParams: { categoryId: cat.id } });
   }
 }

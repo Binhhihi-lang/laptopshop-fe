@@ -15,9 +15,10 @@ export class DeviceLimitDialogService {
   private readonly dialog = inject(MatDialog);
 
   /**
-   * @returns Observable phát ra `deviceId` user chọn, hoặc `undefined` nếu hủy.
+   * @returns Observable phát ra danh sách `deviceId` user chọn (multi-select),
+   * hoặc `undefined` nếu hủy.
    */
-  open(devices: DeviceInfo[], maxSessions: number): Observable<string | undefined> {
+  open(devices: DeviceInfo[], maxSessions: number): Observable<string[] | undefined> {
     const ref = this.dialog.open(DeviceLimitDialogComponent, {
       data: { devices, maxSessions },
       disableClose: true, // buộc chọn Hủy hoặc xác nhận, không đóng bằng ESC/backdrop

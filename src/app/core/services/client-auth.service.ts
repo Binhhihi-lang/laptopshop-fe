@@ -160,20 +160,21 @@ export class ClientAuthService {
   }
 
   /**
-   * Đăng xuất 1 thiết bị đã chọn khi login bị chặn vì vượt giới hạn.
+   * Đăng xuất các thiết bị đã chọn khi login bị chặn vì vượt giới hạn.
    *
    * Xác thực bằng `revokeTicket` (BE cấp kèm lỗi 1013) chứ không phải mật khẩu —
-   * vé dùng 1 lần. BE đá thiết bị được chọn rồi trả luôn cặp token cho thiết bị
-   * đang xin đăng nhập, nên chỉ cần 1 round-trip.
+   * vé dùng 1 lần nên phải đá TẤT CẢ thiết bị trong CÙNG 1 request (list).
+   * BE đá các thiết bị được chọn rồi trả luôn cặp token cho thiết bị đang xin
+   * đăng nhập, nên chỉ cần 1 round-trip.
    */
   revokeDeviceAndLogin(
     revokeTicket: string,
-    targetDeviceId: string,
+    targetDeviceIds: string[],
   ): Observable<ClientLoginResponse> {
     return this.api
-      .post<ClientLoginResponse, { revokeTicket: string; targetDeviceId: string }>(
+      .post<ClientLoginResponse, { revokeTicket: string; targetDeviceIds: string[] }>(
         '/client/auth/devices/revoke-and-login',
-        { revokeTicket, targetDeviceId },
+        { revokeTicket, targetDeviceIds },
       )
       .pipe(tap((res) => this.handleLoginSuccess(res)));
   }

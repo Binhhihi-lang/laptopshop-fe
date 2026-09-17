@@ -92,8 +92,9 @@ export class ClientLoginComponent {
   }
 
   /**
-   * User đã đủ thiết bị: mở dialog chọn thiết bị cần đăng xuất. Nếu user xác
-   * nhận, BE đá máy đó và trả luôn token -> đăng nhập tiếp như bình thường.
+   * User đã đủ thiết bị: mở dialog chọn một hoặc nhiều thiết bị cần đăng xuất.
+   * Nếu user xác nhận, BE đá các máy đó (cùng 1 request — vé dùng 1 lần) và trả
+   * luôn token -> đăng nhập tiếp như bình thường.
    */
   private handleDeviceLimit(payload: DeviceLimitPayload): void {
     if (!payload?.devices?.length || !payload.revokeTicket) {
@@ -103,24 +104,22 @@ export class ClientLoginComponent {
     }
 
     this.deviceLimitDialog.open(payload.devices, payload.maxSessions).subscribe({
-      next: (targetDeviceId) => {
-        if (!targetDeviceId) {
+      next: (targetDeviceIds) => {
+        if (!targetDeviceIds?.length) {
           // Hủy: giữ nguyên form để user tự xử lý.
           this.isSubmitting.set(false);
           return;
         }
-        this.revokeAndLogin(payload.revokeTicket, targetDeviceId);
+        this.revokeAndLogin(payload.revokeTicket, targetDeviceIds);
       },
       error: () => this.isSubmitting.set(false),
     });
   }
 
-  private revokeAndLogin(revokeTicket: string, targetDeviceId: string): void {
-    this.auth.revokeDeviceAndLogin(revokeTicket, targetDeviceId).subscribe({
+  private revokeAndLogin(revokeTicket: string, targetDeviceIds: string[]): void {
+    this.auth.revokeDeviceAndLogin(revokeTicket, targetDeviceIds).subscribe({
       next: () => {
-        // Đăng xuất thiết bị cũ thành công, token mới đã được lưu vào localStorage
-        // bởi handleLoginSuccess trong ClientAuthService.
-        // CHỜ 1 tick để đảm bảo token được lưu hoàn toàn trước khi gọi API tiếp.
+        // Token mới đã lưu vào localStorage; chờ 1 tick trước khi gọi API tiếp.
         setTimeout(() => this.mergeGuestCartAndGo(), 0);
       },
       error: (err) => {

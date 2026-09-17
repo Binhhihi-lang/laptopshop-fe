@@ -10,40 +10,39 @@
   <!-- Content -->
   <div class="dialog-content">
     <p class="dialog-description">
-      Chọn một thiết bị để đăng xuất, sau đó thiết bị này sẽ được đăng nhập.
+      Chọn một hoặc nhiều thiết bị để đăng xuất, sau đó thiết bị này sẽ được đăng nhập.
     </p>
 
-    <mat-radio-group
-      [(ngModel)]="selectedDeviceId"
-      class="device-list"
-      aria-label="Chọn thiết bị cần đăng xuất"
-    >
-      @for (device of data.devices; track device.deviceId) {
+    <div class="device-list" role="group" aria-label="Chọn thiết bị cần đăng xuất">
+      @for (device of selectableDevices(); track device.deviceId) {
         <label
           class="device-item"
-          [class.device-item--current]="device.current"
-          [class.device-item--disabled]="device.current"
+          [class.device-item--selected]="isSelected(device.deviceId)"
         >
-          <mat-radio-button
-            [value]="device.deviceId"
-            [disabled]="device.current"
+          <mat-checkbox
+            [checked]="isSelected(device.deviceId)"
+            (change)="toggleSelected(device.deviceId, $event.checked)"
             color="primary"
-          ></mat-radio-button>
+          ></mat-checkbox>
 
           <div class="device-info">
-            <span class="device-name">
-              {{ device.deviceName }}
-              @if (device.current) {
-                <span class="device-badge">Thiết bị này</span>
-              }
-            </span>
+            <span class="device-name">{{ device.deviceName }}</span>
             <span class="device-meta">
               Đăng nhập: {{ device.createdAt | date: 'dd/MM/yyyy HH:mm' }}
             </span>
           </div>
         </label>
       }
-    </mat-radio-group>
+    </div>
+
+    @if (hasSelectable) {
+      <button
+        class="select-all-link"
+        (click)="toggleAll(selectAllChecked())"
+      >
+        {{ selectAllChecked() ? 'Bỏ chọn tất cả' : 'Chọn tất cả' }}
+      </button>
+    }
 
     @if (!hasSelectable) {
       <div class="dialog-warning">
@@ -61,9 +60,9 @@
     <button
       class="btn-primary"
       (click)="onConfirm()"
-      [disabled]="!selectedDeviceId"
+      [disabled]="selectedDeviceIds.length === 0"
     >
-      Đăng xuất thiết bị đã chọn
+      Đăng xuất ({{ selectedDeviceIds.length }})
     </button>
   </div>
 </div>

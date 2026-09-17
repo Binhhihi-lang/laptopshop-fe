@@ -32,7 +32,7 @@
 
   @if (isLoading()) {
     <div class="max-w-7xl mx-auto px-4 py-12">
-      <app-loading message="Đang tải..."></app-loading>
+      <app-loading text="Đang tải..."></app-loading>
     </div>
   } @else {
     <!-- Categories -->
@@ -41,18 +41,11 @@
         <h2 class="text-2xl font-bold mb-6 text-slate-900 dark:text-white">Danh mục nổi bật</h2>
         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
           @for (cat of categories(); track cat.id) {
-            <a
-              [routerLink]="['/products']"
-              [queryParams]="{ categoryId: cat.id }"
-              class="group flex flex-col items-center justify-center p-4 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-primary-500 hover:shadow-sm transition-all bg-white dark:bg-slate-900"
-            >
-              <mat-icon class="!w-7 !h-7 text-primary-600 group-hover:scale-110 transition-transform">
-                category
-              </mat-icon>
-              <span class="mt-2 text-sm font-medium text-center line-clamp-1">
-                {{ cat.name }}
-              </span>
-            </a>
+            <app-category-tile
+              [category]="cat"
+              [tint]="categoryTint($index)"
+              (select)="goCategory(cat)"
+            />
           }
         </div>
       </section>
@@ -74,45 +67,12 @@
         <app-empty-state
           icon="inventory_2"
           title="Chưa có sản phẩm mới"
-          message="Vui lòng quay lại sau."
+          description="Vui lòng quay lại sau."
         ></app-empty-state>
       } @else {
         <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
           @for (p of newProducts(); track p.id) {
-            <a
-              [routerLink]="['/products', p.code]"
-              class="group block rounded-xl border border-slate-200 dark:border-slate-700 hover:border-primary-500 hover:shadow-md transition-all overflow-hidden bg-white dark:bg-slate-900"
-            >
-              <div class="aspect-square bg-slate-100 dark:bg-slate-800 overflow-hidden">
-                @if (p.image) {
-                  <img
-                    [src]="p.image"
-                    [alt]="p.name"
-                    class="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                    loading="lazy"
-                  />
-                } @else {
-                  <div class="w-full h-full flex items-center justify-center">
-                    <mat-icon class="!w-16 !h-16 text-slate-300">image</mat-icon>
-                  </div>
-                }
-              </div>
-              <div class="p-3">
-                <h3 class="text-sm font-medium line-clamp-2 min-h-[2.5rem]">
-                  {{ p.name }}
-                </h3>
-                <p class="mt-1 flex items-baseline gap-2">
-                  <span class="text-base font-bold text-primary-600">
-                    {{ formatPrice(p.price) }}
-                  </span>
-                  @if (p.originalPrice && p.originalPrice > p.price) {
-                    <span class="text-xs text-slate-400 line-through">
-                      {{ formatPrice(p.originalPrice) }}
-                    </span>
-                  }
-                </p>
-              </div>
-            </a>
+            <app-product-card [product]="p" />
           }
         </div>
       }
@@ -133,40 +93,7 @@
         </div>
         <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
           @for (p of bestSellers(); track p.id) {
-            <a
-              [routerLink]="['/products', p.code]"
-              class="group block rounded-xl border border-slate-200 dark:border-slate-700 hover:border-primary-500 hover:shadow-md transition-all overflow-hidden bg-white dark:bg-slate-900 relative"
-            >
-              <span
-                class="absolute top-2 left-2 z-10 px-2 py-0.5 text-[10px] font-semibold rounded-full bg-danger-100 text-danger-700"
-              >
-                HOT
-              </span>
-              <div class="aspect-square bg-slate-100 dark:bg-slate-800 overflow-hidden">
-                @if (p.image) {
-                  <img
-                    [src]="p.image"
-                    [alt]="p.name"
-                    class="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                    loading="lazy"
-                  />
-                }
-              </div>
-              <div class="p-3">
-                <h3 class="text-sm font-medium line-clamp-2 min-h-[2.5rem]">{{ p.name }}</h3>
-                <p class="mt-1 flex items-baseline gap-2">
-                  <span class="text-base font-bold text-primary-600">
-                    {{ formatPrice(p.price) }}
-                  </span>
-                  @if (p.originalPrice && p.originalPrice > p.price) {
-                    <span class="text-xs text-slate-400 line-through">
-                      {{ formatPrice(p.originalPrice) }}
-                    </span>
-                  }
-                </p>
-                <p class="mt-1 text-xs text-slate-500">Đã bán {{ p.sold }}</p>
-              </div>
-            </a>
+            <app-product-card [product]="p" [showSoldCount]="true" />
           }
         </div>
       </section>

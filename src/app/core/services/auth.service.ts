@@ -84,15 +84,18 @@ export class AuthService {
   }
 
   /**
-   * Đăng xuất 1 thiết bị đã chọn khi login bị chặn vì vượt giới hạn. Xác thực
+   * Đăng xuất các thiết bị đã chọn khi login bị chặn vì vượt giới hạn. Xác thực
    * bằng `revokeTicket` (BE cấp kèm lỗi 1013). Dự phòng cho admin — hiện admin
    * được miễn giới hạn nên ít dùng, nhưng giữ cho nhất quán với client.
    */
-  revokeDeviceAndLogin(revokeTicket: string, targetDeviceId: string): Observable<LoginResponse> {
+  revokeDeviceAndLogin(
+    revokeTicket: string,
+    targetDeviceIds: string[],
+  ): Observable<LoginResponse> {
     return this.api
-      .post<LoginResponse, { revokeTicket: string; targetDeviceId: string }>(
+      .post<LoginResponse, { revokeTicket: string; targetDeviceIds: string[] }>(
         API_ENDPOINTS.AUTH.DEVICES_REVOKE_AND_LOGIN,
-        { revokeTicket, targetDeviceId },
+        { revokeTicket, targetDeviceIds },
       )
       .pipe(
         tap((response) => {

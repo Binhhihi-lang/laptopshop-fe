@@ -155,10 +155,41 @@
                 Chưa có thiết bị nào đang đăng nhập.
               </p>
             } @else {
+              @if (otherDeviceCount > 0) {
+                <div class="flex items-center justify-between gap-3 mb-3">
+                  <button
+                    type="button"
+                    class="text-sm font-medium text-primary-600 hover:underline"
+                    (click)="toggleSelectAll(!allNonCurrentSelected())"
+                  >
+                    {{ allNonCurrentSelected() ? 'Bỏ chọn tất cả' : 'Chọn tất cả' }}
+                  </button>
+                  @if (selectedDeviceIds().length > 0) {
+                    <app-button
+                      variant="danger"
+                      icon="logout"
+                      [label]="'Đăng xuất (' + selectedDeviceIds().length + ')'"
+                      (click)="revokeSelected()"
+                      [loading]="isRevokingSelected()"
+                      [disabled]="isRevokingSelected()"
+                    ></app-button>
+                  }
+                </div>
+              }
+
               <ul class="divide-y divide-slate-200 dark:divide-slate-700">
                 @for (device of devices(); track device.deviceId) {
                   <li class="flex items-center gap-4 py-3 first:pt-0 last:pb-0">
-                    <mat-icon class="w-5 h-5 shrink-0 text-slate-400">computer</mat-icon>
+                    @if (!device.current) {
+                      <mat-checkbox
+                        color="primary"
+                        [checked]="isDeviceSelected(device.deviceId)"
+                        (change)="toggleDeviceSelected(device.deviceId, $event.checked)"
+                        aria-label="Chọn thiết bị để đăng xuất"
+                      ></mat-checkbox>
+                    } @else {
+                      <mat-icon class="w-5 h-5 shrink-0 text-slate-400">computer</mat-icon>
+                    }
                     <div class="flex-1 min-w-0">
                       <div class="flex items-center gap-2 flex-wrap">
                         <span class="font-medium text-slate-900 dark:text-white truncate">
@@ -186,7 +217,7 @@
                         label="Đăng xuất"
                         (click)="revokeDevice(device)"
                         [loading]="revokingDeviceId() === device.deviceId"
-                        [disabled]="revokingDeviceId() !== null || isRevokingOthers()"
+                        [disabled]="revokingDeviceId() !== null || isRevokingOthers() || isRevokingSelected()"
                       ></app-button>
                     }
                   </li>

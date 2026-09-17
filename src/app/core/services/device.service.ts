@@ -34,4 +34,11 @@ export class DeviceService {
   revokeOthers(mode: DeviceApiMode): Observable<void> {
     return this.api.post<void, Record<string, never>>(`${this.base(mode)}/revoke-others`, {});
   }
+
+  /** Đăng xuất các thiết bị đã CHỌN. BE tự loại thiết bị hiện tại (không tự đá mình). */
+  revokeSelected(mode: DeviceApiMode, deviceIds: string[]): Observable<void> {
+    return this.api.post<void, { deviceIds: string[] }>(`${this.base(mode)}/revoke-selected`, {
+      deviceIds,
+    });
+  }
 }
