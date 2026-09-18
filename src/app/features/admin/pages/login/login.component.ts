@@ -10,11 +10,7 @@ import { Router } from '@angular/router';
   templateUrl: './login.html',
   styleUrl: './login.css',
   standalone: true,
-  imports: [
-    FormsModule,
-    CommonModule,
-    MaterialModule,
-  ],
+  imports: [FormsModule, CommonModule, MaterialModule],
 })
 export class LoginComponent {
   email = '';
@@ -38,6 +34,17 @@ export class LoginComponent {
 
     this.authService.login(this.email, this.password).subscribe({
       next: () => {
+        // Chốt chặn thứ hai sau adminGuard: trang này dành riêng cho quản trị nên
+        // token không có ROLE_ADMIN/ROLE_STAFF (vd CUSTOMER) bị dọn phiên ngay,
+        // không đi tiếp vào dashboard.
+        if (!this.authService.hasRole('ADMIN') && !this.authService.hasRole('STAFF')) {
+          this.loading = false;
+          this.errorMessage = 'Tài khoản này không có quyền truy cập trang quản trị';
+          this.authService.clearTokens();
+          this.authService.clearUserInfo();
+          return;
+        }
+
         // Login successful, redirect to admin dashboard
         this.router.navigate(['/admin/dashboard']);
       },

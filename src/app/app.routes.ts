@@ -1,6 +1,6 @@
 import { Routes } from '@angular/router';
 import { adminGuard } from '@core/guards/admin-guard';
-import { authGuard } from '@core/guards/auth-guard';
+import { adminGuestGuard } from '@core/guards/admin-guest-guard';
 
 // Import layout and page components
 import { AdminLayoutComponent } from '@features/admin/layout/admin-layout/admin-layout.component';
@@ -19,27 +19,28 @@ import { CategoryDetailComponent } from '@features/admin/pages/category-detail/c
 import { CouponsComponent } from '@features/admin/pages/coupons/coupons.component';
 import { CouponFormComponent } from '@features/admin/pages/coupon-form/coupon-form.component';
 import { CouponDetailComponent } from '@features/admin/pages/coupon-detail/coupon-detail.component';
+import { OrdersComponent } from '@features/admin/pages/orders/orders.component';
+import { OrderDetailComponent } from '@features/admin/pages/order-detail/order-detail.component';
 import { RolesComponent } from '@features/admin/pages/roles/roles.component';
 import { RoleFormComponent } from '@features/admin/pages/role-form/role-form.component';
 import { RoleDetailComponent } from '@features/admin/pages/role-detail/role-detail.component';
 import { PermissionsComponent } from '@features/admin/pages/permissions/permissions.component';
 
-// import { HomeComponent } from './features/client/pages/home/home.component';
-// import { ProductDetailComponent } from './features/client/pages/product-detail/product-detail.component';
-// import { CartComponent } from './features/client/pages/cart/cart.component';
-
 export const routes: Routes = [
   // Admin login: đặt NGOÀI block /admin để không bị AdminLayoutComponent
   // bọc quanh (form login nên đứng riêng, không có header/sidebar). URL là
-  // /admin/login nhưng không có layout. Đăng ký TRƯỚC block /admin để
-  // first-match-wins khớp chính xác /admin/login.
-  { path: 'admin/login', component: LoginComponent, canActivate: [authGuard] },
+  // /admin/login nhưng không có ADMIN layout bên ngoài nên không thể  bao được Role trong này cần có cơ chế check quyền ở đây
+  { path: 'admin/login', component: LoginComponent, canActivate: [adminGuestGuard] },
 
   // Admin routes (protected) — bọc trong AdminLayoutComponent (header + sidebar).
   {
     path: 'admin',
     component: AdminLayoutComponent,
     canActivate: [adminGuard],
+    // Chặn CUSTOMER ngay route cha: adminGuard chỉ kiểm tra role/permission khi
+    // route có khai báo `data`. Nếu thiếu, mọi tài khoản còn token đều vào được
+    // trang quản trị (API trả 403 nhưng layout + trang vẫn render).
+    data: { roles: ['ADMIN', 'STAFF'] },
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       { path: 'dashboard', component: DashboardComponent },
@@ -78,6 +79,16 @@ export const routes: Routes = [
       { path: 'coupons/create', component: CouponFormComponent },
       { path: 'coupons/:id/edit', component: CouponFormComponent },
       { path: 'coupons/:id', component: CouponDetailComponent },
+      {
+        path: 'orders',
+        component: OrdersComponent,
+        data: { permissions: ['READ_ORDER'] },
+      },
+      {
+        path: 'orders/:id',
+        component: OrderDetailComponent,
+        data: { permissions: ['READ_ORDER'] },
+      },
       {
         path: 'roles',
         component: RolesComponent,

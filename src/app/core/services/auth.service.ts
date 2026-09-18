@@ -6,9 +6,6 @@ import {
   Observable,
   of,
   throwError,
-  filter,
-  take,
-  switchMap,
   catchError,
   tap,
 } from 'rxjs';
@@ -27,7 +24,7 @@ export class AuthService {
   // Subject để emit token mới cho các request đang chờ (single-flight pattern)
   private refreshResultSubject = new BehaviorSubject<string | null>(null);
 
-  // Subject để emit khi userInfo đổi (vd: profile update ở admin/client).
+  // Subject để emit khi userInfo đổi (vd: profile update ở admin).
   // Layout admin (AdminLayoutComponent) subscribe userInfo$ để sync signal.
   private userInfoSubject = new BehaviorSubject<UserInfo | null>(
     (() => {
@@ -88,10 +85,7 @@ export class AuthService {
    * bằng `revokeTicket` (BE cấp kèm lỗi 1013). Dự phòng cho admin — hiện admin
    * được miễn giới hạn nên ít dùng, nhưng giữ cho nhất quán với client.
    */
-  revokeDeviceAndLogin(
-    revokeTicket: string,
-    targetDeviceIds: string[],
-  ): Observable<LoginResponse> {
+  revokeDeviceAndLogin(revokeTicket: string, targetDeviceIds: string[]): Observable<LoginResponse> {
     return this.api
       .post<LoginResponse, { revokeTicket: string; targetDeviceIds: string[] }>(
         API_ENDPOINTS.AUTH.DEVICES_REVOKE_AND_LOGIN,
