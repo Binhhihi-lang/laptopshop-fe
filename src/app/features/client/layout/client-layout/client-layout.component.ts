@@ -8,13 +8,14 @@ import { ClientAuthService } from '@core/services/client-auth.service';
 import { ClientCartService } from '@core/services/client-cart.service';
 import { ThemeService } from '@core/services/theme.service';
 import { ConfirmDialogComponent } from '@shared/confirm-dialog/confirm-dialog.component';
-import { UserInfo, getInitials, getPrimaryRole } from '@core/models/user.model';
+import { NotificationBellComponent } from '@shared/components';
+import { UserInfo, getInitials } from '@core/models/user.model';
 
 /** Storefront layout: header (search + cart + user) + outlet + footer. */
 @Component({
   selector: 'app-client-layout',
   standalone: true,
-  imports: [CommonModule, RouterModule, RouterOutlet, MatIconModule],
+  imports: [CommonModule, RouterModule, RouterOutlet, MatIconModule, NotificationBellComponent],
   templateUrl: './client-layout.component.html',
   styleUrl: './client-layout.component.css',
 })
@@ -34,7 +35,6 @@ export class ClientLayoutComponent {
   readonly cartCount = signal<number>(0);
 
   getInitials = getInitials;
-  getPrimaryRole = getPrimaryRole;
 
   constructor() {
     // Sync khi auth state đổi (login / logout / register).

@@ -2,19 +2,12 @@ import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { MatIconModule } from '@angular/material/icon';
 import { ClientAuthService } from '@core/services/client-auth.service';
 import { ClientCartService } from '@core/services/client-cart.service';
 import { DeviceLimitDialogService } from '@core/services/device-limit-dialog.service';
 import { NotificationService } from '@core/services/notification.service';
 import { DeviceLimitPayload } from '@core/models/device.model';
-import {
-  ButtonComponent,
-  CardComponent,
-  CardHeaderComponent,
-  FormFieldComponent,
-  InputComponent,
-} from '@shared/components';
+import { ButtonComponent, FormFieldComponent, InputComponent } from '@shared/components';
 
 /**
  * Trang đăng nhập storefront. Guest only — `clientGuestGuard` chặn customer
@@ -31,10 +24,7 @@ import {
     CommonModule,
     ReactiveFormsModule,
     RouterModule,
-    MatIconModule,
     ButtonComponent,
-    CardComponent,
-    CardHeaderComponent,
     FormFieldComponent,
     InputComponent,
   ],
@@ -54,6 +44,8 @@ export class ClientLoginComponent {
   private readonly DEVICE_LIMIT_ERROR_CODE = 1013;
 
   readonly isSubmitting = signal(false);
+  /** Checkbox "Ghi nhớ đăng nhập" — chỉ là UI, chưa triển khai gia hạn phiên. */
+  readonly rememberMe = signal(true);
   readonly form: FormGroup = this.fb.group({
     email: ['', [Validators.required, Validators.email]],
     password: ['', [Validators.required, Validators.minLength(6)]],

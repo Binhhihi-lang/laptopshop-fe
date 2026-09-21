@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
@@ -8,6 +8,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { ClientAuthService } from '@core/services/client-auth.service';
 import { ClientUserService } from '@core/services/client-user.service';
 import { DeviceService } from '@core/services/device.service';
+import { LocationService, Commune, Province } from '@core/services/location.service';
 import { NotificationService } from '@core/services/notification.service';
 import { UserResponse, UserProfileUpdateRequest, getInitials } from '@core/models/user.model';
 import { DeviceInfo } from '@core/models/device.model';
@@ -21,6 +22,8 @@ import {
   InputComponent,
   LoadingComponent,
   PageHeaderComponent,
+  SelectComponent,
+  SelectOption,
 } from '@shared/components';
 
 /**
@@ -45,6 +48,7 @@ import {
     InputComponent,
     LoadingComponent,
     PageHeaderComponent,
+    SelectComponent,
   ],
   templateUrl: './profile.component.html',
   styleUrl: './profile.component.css',
@@ -54,6 +58,7 @@ export class ClientProfileComponent implements OnInit {
   private readonly userService = inject(ClientUserService);
   private readonly auth = inject(ClientAuthService);
   private readonly deviceService = inject(DeviceService);
+  private readonly locationService = inject(LocationService);
   private readonly dialog = inject(MatDialog);
   private readonly notification = inject(NotificationService);
   private readonly router = inject(Router);
@@ -73,16 +78,66 @@ export class ClientProfileComponent implements OnInit {
   /** deviceId của các thiết bị user tích chọn để đăng xuất. */
   readonly selectedDeviceIds = signal<string[]>([]);
 
+  // Địa chỉ 2 cấp sau sáp nhập 2025: Tỉnh/Thành phố → Phường/Xã
+  readonly provinces = signal<Province[]>([]);
+  readonly communes = signal<Commune[]>([]);
+  readonly isLoadingCommunes = signal(false);
+
+  readonly provinceOptions = computed<SelectOption[]>(() =>
+    this.provinces().map((p) => ({ value: String(p.code), label: p.name })),
+  );
+  readonly communeOptions = computed<SelectOption[]>(() =>
+    this.communes().map((c) => ({ value: String(c.code), label: c.name })),
+  );
+
   // Form: chỉ các trường cho phép sửa (giống admin profile)
   readonly form: FormGroup = this.fb.group({
     fullName: ['', [Validators.required, Validators.minLength(2)]],
     phone: ['', [Validators.pattern(/^[0-9]{10,11}$/)]],
+    provinceCode: [''],
+    communeCode: [''],
     address: [''],
   });
 
   ngOnInit(): void {
+    this.loadProvinces();
     this.loadProfile();
     this.loadDevices();
+  }
+
+  // ================== ĐỊA CHỈ 2 CẤP ==================
+
+  /** 34 tỉnh/thành sau sáp nhập — gọi API công khai, không qua BE. */
+  loadProvinces(): void {
+    this.locationService.getProvinces().subscribe({
+      next: (list) => this.provinces.set(list),
+      error: () => this.notification.error('Không tải được danh sách tỉnh/thành'),
+    });
+  }
+
+  /** Đổi tỉnh → xóa phường/xã đã chọn rồi nạp lại danh sách phường/xã. */
+  onProvinceChange(code: string): void {
+    this.form.get('communeCode')?.setValue('');
+    this.communes.set([]);
+    this.loadCommunesFor(code);
+  }
+
+  loadCommunesFor(provinceCode: string): void {
+    if (!provinceCode) {
+      this.communes.set([]);
+      return;
+    }
+    this.isLoadingCommunes.set(true);
+    this.locationService.getCommunes(provinceCode).subscribe({
+      next: (list) => {
+        this.communes.set(list);
+        this.isLoadingCommunes.set(false);
+      },
+      error: () => {
+        this.isLoadingCommunes.set(false);
+        this.notification.error('Không tải được danh sách phường/xã');
+      },
+    });
   }
 
   // ================== THIẾT BỊ ĐANG ĐĂNG NHẬP ==================
@@ -228,8 +283,14 @@ export class ClientProfileComponent implements OnInit {
         this.form.patchValue({
           fullName: user.fullName,
           phone: user.phone || '',
+          provinceCode: user.provinceCode || '',
+          communeCode: user.communeCode || '',
           address: user.address || '',
         });
+        // Nạp phường/xã của tỉnh đã lưu để select hiển thị đúng lựa chọn cũ
+        if (user.provinceCode) {
+          this.loadCommunesFor(user.provinceCode);
+        }
         if (user.avatar) {
           this.avatarPreview.set(user.avatar);
         }
@@ -275,10 +336,29 @@ export class ClientProfileComponent implements OnInit {
     }
     this.isSubmitting.set(true);
     const v = this.form.value;
+
+    // Tên tỉnh/phường suy từ code đang chọn; nếu danh sách chưa tải được thì
+    // giữ nguyên tên đã lưu trước đó để không mất dữ liệu.
+    const provinceName =
+      this.provinces().find((p) => String(p.code) === v.provinceCode)?.name ??
+      this.currentUser()?.provinceName ??
+      '';
+    const communeName =
+      this.communes().find((c) => String(c.code) === v.communeCode)?.name ??
+      this.currentUser()?.communeName ??
+      '';
+
+    // Ghép chuỗi địa chỉ đầy đủ để cột address cũ vẫn dùng được cho hiển thị
+    const fullAddress = [v.address?.trim(), communeName, provinceName].filter(Boolean).join(', ');
+
     const data: UserProfileUpdateRequest = {
       fullName: v.fullName,
       phone: v.phone || undefined,
-      address: v.address || undefined,
+      address: fullAddress || undefined,
+      provinceCode: v.provinceCode || undefined,
+      provinceName: provinceName || undefined,
+      communeCode: v.communeCode || undefined,
+      communeName: communeName || undefined,
     };
     if (this.selectedAvatar()) {
       data.avatar = this.selectedAvatar()!;
@@ -316,6 +396,12 @@ export class ClientProfileComponent implements OnInit {
   }
   get addressControl() {
     return this.form.get('address');
+  }
+  get provinceCodeControl() {
+    return this.form.get('provinceCode');
+  }
+  get communeCodeControl() {
+    return this.form.get('communeCode');
   }
 
   hasError(name: string, err: string): boolean {

@@ -52,9 +52,11 @@ export class Sidebar {
   readonly nav = computed<NavItem[]>(() => {
     const canManage = this.authService.hasPermission('MANAGE_ROLES_PERMISSIONS');
     const canViewUsers = this.authService.hasPermission('READ_USER');
+    const canViewOrders = this.authService.hasPermission('READ_ORDER');
     const all: NavItem[] = [
       { path: '/admin/dashboard', label: 'Dashboard', icon: 'dashboard', badge: 'new' },
       { path: '/admin/users', label: 'Người dùng', icon: 'people' },
+      { path: '/admin/orders', label: 'Đơn hàng', icon: 'receipt_long' },
       { path: '/admin/products', label: 'Sản phẩm', icon: 'inventory_2' },
       { path: '/admin/categories', label: 'Danh mục', icon: 'category' },
       { path: '/admin/coupons', label: 'Mã giảm giá', icon: 'local_offer' },
@@ -67,6 +69,9 @@ export class Sidebar {
       }
       if (item.path === '/admin/users') {
         return canViewUsers;
+      }
+      if (item.path === '/admin/orders') {
+        return canViewOrders;
       }
       return true;
     });

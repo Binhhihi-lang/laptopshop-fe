@@ -99,12 +99,39 @@
               ></app-input>
             </app-form-field>
 
-            <app-form-field id="address" label="Địa chỉ">
+            <!-- Địa chỉ 2 cấp sau sáp nhập 2025: Tỉnh/Thành phố → Phường/Xã -->
+            <div class="grid sm:grid-cols-2 gap-4">
+              <app-form-field id="provinceCode" label="Tỉnh / Thành phố">
+                <app-select
+                  id="provinceCode"
+                  formControlName="provinceCode"
+                  [options]="provinceOptions()"
+                  placeholder="Chọn tỉnh/thành"
+                  (valueChange)="onProvinceChange($event)"
+                ></app-select>
+              </app-form-field>
+
+              <app-form-field
+                id="communeCode"
+                label="Phường / Xã"
+                [hint]="!provinceCodeControl?.value ? 'Chọn tỉnh/thành trước' : ''"
+              >
+                <app-select
+                  id="communeCode"
+                  formControlName="communeCode"
+                  [options]="communeOptions()"
+                  [disabled]="!provinceCodeControl?.value || isLoadingCommunes()"
+                  [placeholder]="isLoadingCommunes() ? 'Đang tải…' : 'Chọn phường/xã'"
+                ></app-select>
+              </app-form-field>
+            </div>
+
+            <app-form-field id="address" label="Địa chỉ cụ thể">
               <app-input
                 id="address"
                 type="textarea"
                 formControlName="address"
-                placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành"
+                placeholder="Số nhà, tên đường, thôn/ấp…"
                 [rows]="3"
               ></app-input>
             </app-form-field>

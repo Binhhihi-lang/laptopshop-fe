@@ -5,6 +5,7 @@ import { switchMap, catchError, filter, take } from 'rxjs/operators';
 import { AuthService } from '@core/services/auth.service';
 import { DEVICE_ID_HEADER } from '@core/utils/constants';
 import { getOrCreateDeviceId } from '@core/utils/device-id.util';
+import { environment } from '@environments/environment';
 
 @Injectable()
 export class JwtInterceptor implements HttpInterceptor {
@@ -20,6 +21,15 @@ export class JwtInterceptor implements HttpInterceptor {
     // refreshToken() của ADMIN → khách bị đá về /admin/login. Ngoài ra addToken()
     // bên dưới sẽ ghi đè header Authorization của khách bằng token admin.
     if (req.url.includes('/api/v1/client/')) {
+      return next.handle(req);
+    }
+
+    // Request ra domain NGOÀI (vd API địa chỉ provinces.open-api.vn) phải đi
+    // thẳng, KHÔNG gắn header nào: X-Device-Id là custom header nên trình duyệt
+    // buộc phải gửi CORS preflight (OPTIONS) trước, mà server ngoài trả 405 cho
+    // OPTIONS → request bị chặn với lỗi CORS. Ngoài ra cũng tránh rò rỉ
+    // deviceId/token của mình ra bên thứ ba.
+    if (!this.isBackendRequest(req.url)) {
       return next.handle(req);
     }
 
@@ -45,6 +55,15 @@ export class JwtInterceptor implements HttpInterceptor {
         return throwError(() => error);
       }),
     );
+  }
+
+  /**
+   * Request tới backend của mình hay không. Backend được gọi qua
+   * `environment.apiUrl` (URL tuyệt đối); URL bắt đầu bằng '/' là trường hợp
+   * gọi qua proxy dev server — cũng là nội bộ.
+   */
+  private isBackendRequest(url: string): boolean {
+    return url.startsWith(environment.apiUrl) || url.startsWith('/');
   }
 
   private addToken(request: HttpRequest<any>, token: string): HttpRequest<any> {

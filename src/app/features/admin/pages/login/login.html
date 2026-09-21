@@ -1,51 +1,115 @@
-<div class="login-container">
-  <mat-card class="login-card">
-    <mat-card-header>
-      <mat-card-title>LaptopShop Admin</mat-card-title>
-      <mat-card-subtitle>Sign in</mat-card-subtitle>
-    </mat-card-header>
-    <mat-card-content>
-      <form #loginForm="ngForm" (ngSubmit)="onSubmit()">
-        <mat-form-field appearance="fill">
-          <mat-label>Email</mat-label>
-          <input matInput type="email" [(ngModel)]="email" name="email" required email>
-          @if (loginForm.controls['email']?.hasError('required') && loginForm.controls['email']?.touched) {
-            <mat-error>
-              Email is required
-            </mat-error>
-          }
-          @if (loginForm.controls['email']?.hasError('email') && loginForm.controls['email']?.touched) {
-            <mat-error>
-              Please enter a valid email
-            </mat-error>
-          }
-        </mat-form-field>
+<!-- Trang đăng nhập quản trị: split-screen, tông slate + primary blue
+     (khác gradient tím-violet của storefront) để phân biệt rõ khu vực admin. -->
+<div class="min-h-screen grid lg:grid-cols-2">
+  <!-- Brand panel: chỉ hiện từ lg -->
+  <aside
+    class="hidden lg:flex flex-col justify-center gap-5 p-14 text-white relative overflow-hidden
+      bg-[radial-gradient(70%_50%_at_80%_5%,rgba(59,130,246,0.35),transparent_60%),linear-gradient(160deg,#0f172a_0%,#1e293b_55%,#0f172a_100%)]"
+  >
+    <div class="inline-flex items-center gap-2.5 font-extrabold text-lg">
+      <span class="w-9 h-9 rounded-[10px] bg-primary-600 grid place-items-center">
+        <mat-icon class="!w-5 !h-5 !text-xl">admin_panel_settings</mat-icon>
+      </span>
+      LaptopShop Admin
+    </div>
 
-        <mat-form-field appearance="fill">
-          <mat-label>Password</mat-label>
-          <input matInput type="password" [(ngModel)]="password" name="password" required>
-          @if (loginForm.controls['password']?.hasError('required') && loginForm.controls['password']?.touched) {
-            <mat-error>
-              Password is required
-            </mat-error>
+    <h2 class="text-3xl font-extrabold tracking-tight leading-tight">
+      Trung tâm quản trị<br />LaptopShop
+    </h2>
+    <p class="text-base text-white/70 max-w-[42ch]">
+      Khu vực dành riêng cho quản trị viên và nhân viên vận hành. Mọi thao tác tại đây đều được ghi nhận.
+    </p>
+
+    <ul class="flex flex-col gap-2.5 text-sm text-white/85">
+      @for (perk of perks; track perk.label) {
+        <li class="flex items-center gap-2.5">
+          <span class="w-[22px] h-[22px] rounded-full bg-white/10 grid place-items-center shrink-0">
+            <mat-icon class="!w-3 !h-3 !text-xs">{{ perk.icon }}</mat-icon>
+          </span>
+          {{ perk.label }}
+        </li>
+      }
+    </ul>
+  </aside>
+
+  <!-- Panel form -->
+  <div class="flex items-center justify-center px-4 py-10 bg-slate-50 dark:bg-slate-950">
+    <div class="w-full max-w-[400px]">
+      <div class="lg:hidden inline-flex items-center gap-2 mb-6">
+        <mat-icon class="!w-7 !h-7 !text-3xl text-primary-600">admin_panel_settings</mat-icon>
+        <span class="text-lg font-bold text-slate-900 dark:text-white">LaptopShop Admin</span>
+      </div>
+
+      <div
+        class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm p-7"
+      >
+        <h1 class="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+          Đăng nhập quản trị
+        </h1>
+        <p class="text-sm text-slate-500 mt-1.5 mb-5">
+          Dùng tài khoản ADMIN hoặc STAFF để tiếp tục.
+        </p>
+
+        <form (ngSubmit)="onSubmit()" class="space-y-4">
+          <app-form-field
+            id="adminEmail"
+            label="Email"
+            [required]="true"
+            [error]="emailTouched && !email ? 'Vui lòng nhập email' : emailTouched && !isEmailValid() ? 'Email không hợp lệ' : ''"
+          >
+            <app-input
+              id="adminEmail"
+              type="email"
+              [(ngModel)]="email"
+              name="email"
+              [required]="true"
+              placeholder="admin@laptopshop.vn"
+              autocomplete="email"
+              icon="mail"
+              (blurEvent)="emailTouched = true"
+            ></app-input>
+          </app-form-field>
+
+          <app-form-field
+            id="adminPassword"
+            label="Mật khẩu"
+            [required]="true"
+            [error]="passwordTouched && !password ? 'Vui lòng nhập mật khẩu' : ''"
+          >
+            <app-input
+              id="adminPassword"
+              type="password"
+              [(ngModel)]="password"
+              name="password"
+              [required]="true"
+              placeholder="Nhập mật khẩu"
+              autocomplete="current-password"
+              icon="lock"
+              [showPasswordToggle]="true"
+              (blurEvent)="passwordTouched = true"
+            ></app-input>
+          </app-form-field>
+
+          @if (errorMessage) {
+            <p class="text-sm text-danger-600" role="alert">{{ errorMessage }}</p>
           }
-        </mat-form-field>
 
-        <div class="button-row">
-          <button mat-flat-button color="primary" type="submit" [disabled]="loading">
-            @if (loading) {
-              <span class="spinner mat-progress-spinner mat-progress-spinner-sm"></span>
-            }
-            Sign In
-          </button>
-        </div>
+          <app-button
+            type="submit"
+            label="Đăng nhập"
+            variant="primary"
+            size="lg"
+            class="w-full"
+            [loading]="loading"
+            [disabled]="loading"
+          ></app-button>
+        </form>
+      </div>
 
-        @if (errorMessage) {
-          <div class="error-message">
-            {{ errorMessage }}
-          </div>
-        }
-      </form>
-    </mat-card-content>
-  </mat-card>
+      <p class="text-xs text-slate-400 text-center mt-4">
+        Không phải quản trị viên?
+        <a routerLink="/login" class="text-primary-600 hover:underline">Về trang khách hàng</a>
+      </p>
+    </div>
+  </div>
 </div>

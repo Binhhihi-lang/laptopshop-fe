@@ -4,6 +4,11 @@ export interface UserResponse {
   fullName: string;
   phone: string;
   address: string;
+  // Địa chỉ 2 cấp sau sáp nhập 2025 (Tỉnh/Thành phố → Phường/Xã)
+  provinceCode?: string;
+  provinceName?: string;
+  communeCode?: string;
+  communeName?: string;
   avatar: string;
   roleNames: string[];
   active?: boolean;
@@ -40,6 +45,10 @@ export interface UserProfileUpdateRequest {
   fullName?: string;
   phone?: string;
   address?: string;
+  provinceCode?: string;
+  provinceName?: string;
+  communeCode?: string;
+  communeName?: string;
   avatar?: string | File;
 }
 

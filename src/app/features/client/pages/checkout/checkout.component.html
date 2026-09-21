@@ -36,23 +36,28 @@
             </div>
             <div>
               <label class="block text-sm font-medium mb-1.5">Tỉnh / Thành phố *</label>
-              <select [(ngModel)]="receiverProvince"
-                class="w-full h-11 px-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800">
-                <option value="">Chọn tỉnh/thành</option>
-                @for (p of provinces; track p) {
-                  <option [value]="p">{{ p }}</option>
-                }
-              </select>
+              <app-select
+                id="checkoutProvince"
+                [(ngModel)]="receiverProvinceCode"
+                [options]="provinceOptions()"
+                placeholder="Chọn tỉnh/thành"
+                (valueChange)="onProvinceChange()"
+              ></app-select>
             </div>
             <div>
-              <label class="block text-sm font-medium mb-1.5">Quận / Huyện *</label>
-              <input [(ngModel)]="receiverDistrict" type="text" placeholder="Nhập quận/huyện"
-                class="w-full h-11 px-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800" />
+              <label class="block text-sm font-medium mb-1.5">Phường / Xã *</label>
+              <app-select
+                id="checkoutCommune"
+                [(ngModel)]="receiverCommuneCode"
+                [options]="communeOptions()"
+                [disabled]="!receiverProvinceCode || isLoadingCommunes()"
+                [placeholder]="isLoadingCommunes() ? 'Đang tải…' : 'Chọn phường/xã'"
+              ></app-select>
             </div>
             <div class="sm:col-span-2">
               <label class="block text-sm font-medium mb-1.5">Địa chỉ cụ thể *</label>
               <input [(ngModel)]="receiverAddress" type="text" autocomplete="street-address"
-                placeholder="Số nhà, tên đường, phường/xã"
+                placeholder="Số nhà, tên đường, thôn/ấp…"
                 class="w-full h-11 px-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800" />
             </div>
             <div class="sm:col-span-2">

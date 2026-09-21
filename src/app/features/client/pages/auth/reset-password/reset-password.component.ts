@@ -5,13 +5,7 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { ClientAuthService } from '@core/services/client-auth.service';
 import { NotificationService } from '@core/services/notification.service';
-import {
-  ButtonComponent,
-  CardComponent,
-  CardHeaderComponent,
-  FormFieldComponent,
-  InputComponent,
-} from '@shared/components';
+import { ButtonComponent, FormFieldComponent, InputComponent } from '@shared/components';
 
 /**
  * Đặt lại mật khẩu bằng token nhận từ email. Token đọc từ query `?token=`.
@@ -27,8 +21,6 @@ import {
     RouterModule,
     MatIconModule,
     ButtonComponent,
-    CardComponent,
-    CardHeaderComponent,
     FormFieldComponent,
     InputComponent,
   ],

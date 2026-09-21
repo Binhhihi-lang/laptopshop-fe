@@ -63,15 +63,17 @@
         }
       </div>
 
-      <!-- Footer -->
-      <div class="px-4 py-2 border-t border-slate-200 dark:border-slate-700">
-        <a
-          routerLink="/admin/notifications"
-          class="text-sm font-medium text-primary hover:text-primary-hover flex items-center gap-2">
-          Xem tất cả thông báo
-          <mat-icon class="w-4 h-4">chevron_right</mat-icon>
-        </a>
-      </div>
+      <!-- Footer: chỉ hiện khi có trang "xem tất cả" (storefront chưa có) -->
+      @if (viewAllLink()) {
+        <div class="px-4 py-2 border-t border-slate-200 dark:border-slate-700">
+          <a
+            [routerLink]="viewAllLink()"
+            class="text-sm font-medium text-primary hover:text-primary-hover flex items-center gap-2">
+            Xem tất cả thông báo
+            <mat-icon class="w-4 h-4">chevron_right</mat-icon>
+          </a>
+        </div>
+      }
     </div>
   }
 </div>

@@ -5,20 +5,71 @@ import {
   clientGuestGuard,
 } from '@core/guards/client-guard';
 import { ClientLayoutComponent } from './layout/client-layout/client-layout.component';
+import { AuthLayoutComponent } from './layout/auth-layout/auth-layout.component';
 
 /**
- * Routes cho nhánh client (storefront). Mount ở `path: 'client'` trong
- * `app.routes.ts` → mọi URL `/client/...` sẽ render `ClientLayoutComponent`
- * (header + outlet + footer) với page tương ứng ở <router-outlet/>.
- *
- * Sprint 1 bao gồm:
- *  - Browse: home, product-list, product-detail
- *  - Auth:   login, register, forgot-password, reset-password
- *  - Account: profile, change-password
- *  - Cart (Sprint 2): cart, checkout, orders — đã khai báo redirect để tránh
- *    broken link trong header; trang thật sẽ thêm ở Sprint 2.
+ * Routes cho nhánh client (storefront). Mount ở `path: ''` trong
+ * `app.routes.ts` (đăng ký sau block /admin nên first-match-wins). Có 2 layout:
+ *  - `AuthLayoutComponent` (split-screen, không header/footer) cho login /
+ *    register / forgot-password / reset-password.
+ *  - `ClientLayoutComponent` (header + outlet + footer) cho mọi trang còn lại.
  */
 export const CLIENT_ROUTES: Routes = [
+  // Auth: layout riêng split-screen, KHÔNG header/footer của storefront.
+  // Mỗi route khai path cụ thể (không dùng route cha `path: ''`) vì route cha
+  // rỗng sẽ khớp tiền tố MỌI url và nuốt luôn trang chủ `/` → outlet trống.
+  {
+    path: 'login',
+    component: AuthLayoutComponent,
+    canActivate: [clientGuestGuard],
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./pages/auth/login/login.component').then((m) => m.ClientLoginComponent),
+      },
+    ],
+  },
+  {
+    path: 'register',
+    component: AuthLayoutComponent,
+    canActivate: [clientGuestGuard],
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./pages/auth/register/register.component').then((m) => m.ClientRegisterComponent),
+      },
+    ],
+  },
+  {
+    path: 'forgot-password',
+    component: AuthLayoutComponent,
+    canActivate: [clientGuestGuard],
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./pages/auth/forgot-password/forgot-password.component').then(
+            (m) => m.ClientForgotPasswordComponent,
+          ),
+      },
+    ],
+  },
+  {
+    path: 'reset-password',
+    component: AuthLayoutComponent,
+    canActivate: [clientGuestGuard],
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./pages/auth/reset-password/reset-password.component').then(
+            (m) => m.ClientResetPasswordComponent,
+          ),
+      },
+    ],
+  },
   {
     path: '',
     component: ClientLayoutComponent,
@@ -42,36 +93,6 @@ export const CLIENT_ROUTES: Routes = [
             (m) => m.ProductDetailComponent,
           ),
         canActivate: [clientGuestBrowseGuard],
-      },
-
-      // Auth (guest only)
-      {
-        path: 'login',
-        loadComponent: () =>
-          import('./pages/auth/login/login.component').then((m) => m.ClientLoginComponent),
-        canActivate: [clientGuestGuard],
-      },
-      {
-        path: 'register',
-        loadComponent: () =>
-          import('./pages/auth/register/register.component').then((m) => m.ClientRegisterComponent),
-        canActivate: [clientGuestGuard],
-      },
-      {
-        path: 'forgot-password',
-        loadComponent: () =>
-          import('./pages/auth/forgot-password/forgot-password.component').then(
-            (m) => m.ClientForgotPasswordComponent,
-          ),
-        canActivate: [clientGuestGuard],
-      },
-      {
-        path: 'reset-password',
-        loadComponent: () =>
-          import('./pages/auth/reset-password/reset-password.component').then(
-            (m) => m.ClientResetPasswordComponent,
-          ),
-        canActivate: [clientGuestGuard],
       },
 
       // Account (auth required)

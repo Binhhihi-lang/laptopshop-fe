@@ -19,7 +19,7 @@
     />
   } @else if (cart() && cart()!.items.length > 0) {
     <div class="grid lg:grid-cols-[1fr_360px] gap-6 items-start">
-      <div class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 divide-y divide-slate-200 dark:divide-slate-700">
+      <div class="flex flex-col gap-3.5">
         @for (item of cart()!.items; track item.id) {
           <app-cart-line-item
             [item]="item"

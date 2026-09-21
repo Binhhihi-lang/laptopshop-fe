@@ -1,17 +1,24 @@
 import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  AbstractControl,
+  FormBuilder,
+  FormGroup,
+  ReactiveFormsModule,
+  ValidationErrors,
+  Validators,
+} from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
-import { MatIconModule } from '@angular/material/icon';
 import { ClientAuthService } from '@core/services/client-auth.service';
 import { NotificationService } from '@core/services/notification.service';
-import {
-  ButtonComponent,
-  CardComponent,
-  CardHeaderComponent,
-  FormFieldComponent,
-  InputComponent,
-} from '@shared/components';
+import { ButtonComponent, FormFieldComponent, InputComponent } from '@shared/components';
+
+/** Xác nhận mật khẩu phải khớp — kiểm tra ở FE, BE không nhận trường này. */
+function passwordMatchValidator(group: AbstractControl): ValidationErrors | null {
+  const password = group.get('password')?.value;
+  const confirm = group.get('confirmPassword')?.value;
+  return password && confirm && password !== confirm ? { passwordMismatch: true } : null;
+}
 
 /**
  * Đăng ký tài khoản customer. BE tự gán role CUSTOMER và `active=true` qua
@@ -25,10 +32,7 @@ import {
     CommonModule,
     ReactiveFormsModule,
     RouterModule,
-    MatIconModule,
     ButtonComponent,
-    CardComponent,
-    CardHeaderComponent,
     FormFieldComponent,
     InputComponent,
   ],
@@ -42,12 +46,15 @@ export class ClientRegisterComponent {
   private readonly notification = inject(NotificationService);
 
   readonly isSubmitting = signal(false);
-  readonly form: FormGroup = this.fb.group({
-    fullName: ['', [Validators.required, Validators.minLength(2)]],
-    email: ['', [Validators.required, Validators.email]],
-    password: ['', [Validators.required, Validators.minLength(6)]],
-    phone: ['', [Validators.pattern(/^[0-9]{10,11}$/)]],
-  });
+  readonly form: FormGroup = this.fb.group(
+    {
+      fullName: ['', [Validators.required, Validators.minLength(2)]],
+      email: ['', [Validators.required, Validators.email]],
+      password: ['', [Validators.required, Validators.minLength(6)]],
+      confirmPassword: ['', [Validators.required]],
+    },
+    { validators: passwordMatchValidator },
+  );
 
   get fullNameControl() {
     return this.form.get('fullName');
@@ -58,8 +65,8 @@ export class ClientRegisterComponent {
   get passwordControl() {
     return this.form.get('password');
   }
-  get phoneControl() {
-    return this.form.get('phone');
+  get confirmPasswordControl() {
+    return this.form.get('confirmPassword');
   }
 
   onSubmit(): void {
@@ -74,7 +81,6 @@ export class ClientRegisterComponent {
         fullName: v.fullName,
         email: v.email,
         password: v.password,
-        phone: v.phone || undefined,
       })
       .subscribe({
         next: () => {

@@ -1,4 +1,4 @@
-import { Component, signal, HostListener, inject } from '@angular/core';
+import { Component, input, signal, HostListener, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
@@ -17,6 +17,9 @@ import {
 })
 export class NotificationBellComponent {
   private readonly svc = inject(UserNotificationService);
+
+  /** Link "Xem tất cả thông báo" — để trống thì ẩn footer (storefront chưa có trang này). */
+  viewAllLink = input<string>('');
 
   readonly notifications = this.svc.notifications;
   readonly unreadCount = this.svc.unreadCount;

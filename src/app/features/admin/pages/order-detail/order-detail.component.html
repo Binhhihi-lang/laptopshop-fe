@@ -1,0 +1,322 @@
+<div class="detail-container min-h-screen bg-slate-50 dark:bg-slate-950">
+  @if (isLoading()) {
+    <!-- Skeleton loading -->
+    <div class="max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-8" aria-hidden="true">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2 space-y-6">
+          <app-skeleton-card>
+            <app-skeleton width="w-48" height="h-8" class="mb-4" />
+            <app-skeleton width="w-64" height="h-4" />
+          </app-skeleton-card>
+          <app-skeleton-card>
+            <app-skeleton width="w-40" height="h-5" class="mb-4" />
+            <div class="space-y-3">
+              <app-skeleton width="w-full" height="h-4" />
+              <app-skeleton width="w-2/3" height="h-4" />
+              <app-skeleton width="w-3/4" height="h-4" />
+            </div>
+          </app-skeleton-card>
+          <app-skeleton-card>
+            <app-skeleton width="w-40" height="h-5" class="mb-4" />
+            <div class="space-y-3">
+              <app-skeleton width="w-full" height="h-12" />
+              <app-skeleton width="w-full" height="h-12" />
+            </div>
+          </app-skeleton-card>
+        </div>
+        <div class="space-y-6">
+          <app-skeleton-card>
+            <app-skeleton width="w-32" height="h-5" class="mb-4" />
+            <div class="space-y-3">
+              <app-skeleton width="w-full" height="h-8" />
+              <app-skeleton width="w-full" height="h-8" />
+              <app-skeleton width="w-full" height="h-8" />
+            </div>
+          </app-skeleton-card>
+          <app-skeleton-card>
+            <app-skeleton width="w-32" height="h-5" class="mb-4" />
+            <app-skeleton width="w-full" height="h-20" />
+          </app-skeleton-card>
+        </div>
+      </div>
+    </div>
+  } @else if (permissionDenied()) {
+    <app-detail-header
+      title="Chi tiết đơn hàng"
+      backAriaLabel="Quay về danh sách đơn hàng"
+      (backClick)="goBack()"
+    />
+    <div class="max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-8">
+      <app-empty-state
+        variant="permission"
+        icon="lock"
+        title="Bạn không có quyền xem chi tiết đơn hàng"
+        description="Quyền xem mục này đã bị thu hồi bởi quản trị viên. Vui lòng liên hệ quản trị viên nếu bạn cần truy cập."
+      />
+    </div>
+  } @else if (order(); as order) {
+    <app-detail-header
+      [title]="'Đơn hàng ' + order.orderCode"
+      backAriaLabel="Quay về danh sách đơn hàng"
+      (backClick)="goBack()"
+    >
+      <app-badge
+        headerIdentity
+        [label]="formatDate(order.orderDate)"
+        [variant]="'neutral'"
+        [size]="'sm'"
+      />
+      <div headerBadges class="flex items-center gap-3">
+        <app-badge
+          [label]="statusBadge().label"
+          [variant]="statusBadge().variant"
+          [size]="'default'"
+        />
+        <app-badge
+          [label]="paymentStatusBadge().label"
+          [variant]="paymentStatusBadge().variant"
+          [size]="'default'"
+        />
+      </div>
+      <div headerActions class="flex items-center gap-2 sm:ml-auto">
+        @if (canChangeStatus()) {
+          <div class="flex items-center gap-2">
+            <app-select
+              id="next-status"
+              name="nextStatus"
+              [options]="nextStatuses()"
+              [placeholder]="'Chọn trạng thái...'"
+              [value]="targetStatus()"
+              (valueChange)="onSelectStatus($event)"
+              [ariaLabel]="'Trạng thái mới'"
+              class="w-44"
+            />
+            <app-button
+              [variant]="targetStatus() === 'CANCELLED' ? 'danger' : 'primary'"
+              icon="compare_arrows"
+              label="Cập nhật"
+              [disabled]="!targetStatus()"
+              [loading]="isUpdating()"
+              (click)="updateStatus()"
+            />
+          </div>
+        }
+      </div>
+    </app-detail-header>
+
+    <!-- Main Content -->
+    <div class="max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-8">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Left: 2-column info -->
+        <div class="lg:col-span-2 space-y-6">
+          <!-- Khách hàng -->
+          <app-card [padding]="'default'">
+            <h3 class="text-title font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+              <mat-icon class="w-5 h-5 text-slate-400 dark:text-slate-500">person</mat-icon>
+              Khách hàng
+            </h3>
+            <dl class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div class="flex justify-between gap-3">
+                <dt class="text-slate-500 dark:text-slate-400">Họ tên</dt>
+                <dd class="font-medium text-slate-900 dark:text-white text-right">
+                  {{ order.customerName || '—' }}
+                </dd>
+              </div>
+              <div class="flex justify-between gap-3">
+                <dt class="text-slate-500 dark:text-slate-400">Số điện thoại</dt>
+                <dd class="font-medium text-slate-900 dark:text-white tabular-nums text-right">
+                  {{ order.customerPhone || '—' }}
+                </dd>
+              </div>
+              <div class="flex justify-between gap-3">
+                <dt class="text-slate-500 dark:text-slate-400">Email</dt>
+                <dd class="font-medium text-slate-900 dark:text-white text-right truncate max-w-[220px]">
+                  {{ order.customerEmail || '—' }}
+                </dd>
+              </div>
+              @if (order.userId) {
+                <div class="flex justify-between gap-3">
+                  <dt class="text-slate-500 dark:text-slate-400">User ID</dt>
+                  <dd class="font-medium text-slate-900 dark:text-white font-mono text-sm text-right">
+                    {{ order.userId }}
+                  </dd>
+                </div>
+              }
+            </dl>
+          </app-card>
+
+          <!-- Giao hàng -->
+          <app-card [padding]="'default'">
+            <h3 class="text-title font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+              <mat-icon class="w-5 h-5 text-slate-400 dark:text-slate-500">local_shipping</mat-icon>
+              Thông tin giao hàng
+            </h3>
+            <dl class="space-y-3">
+              <div class="flex justify-between gap-3">
+                <dt class="text-slate-500 dark:text-slate-400 shrink-0">Người nhận</dt>
+                <dd class="font-medium text-slate-900 dark:text-white text-right">
+                  {{ order.receiverFullName }} · {{ order.receiverPhone }}
+                </dd>
+              </div>
+              <div class="flex justify-between gap-3">
+                <dt class="text-slate-500 dark:text-slate-400 shrink-0">Địa chỉ</dt>
+                <dd class="font-medium text-slate-900 dark:text-white text-right">
+                  {{ order.receiverAddress }}
+                </dd>
+              </div>
+              @if (order.note) {
+                <div class="flex justify-between gap-3">
+                  <dt class="text-slate-500 dark:text-slate-400 shrink-0">Ghi chú</dt>
+                  <dd class="font-medium text-slate-900 dark:text-white text-right whitespace-pre-wrap">
+                    {{ order.note }}
+                  </dd>
+                </div>
+              }
+            </dl>
+          </app-card>
+
+          <!-- Sản phẩm -->
+          <app-card [padding]="'none'">
+            <h3 class="text-title font-semibold text-slate-900 dark:text-white px-4 md:px-6 pt-5 pb-4 flex items-center gap-2">
+              <mat-icon class="w-5 h-5 text-slate-400 dark:text-slate-500">inventory_2</mat-icon>
+              Sản phẩm ({{ order.items.length }})
+            </h3>
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm">
+                <thead>
+                  <tr class="border-y border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50">
+                    <th class="px-4 md:px-6 py-3 text-left font-medium text-slate-500 dark:text-slate-400">Sản phẩm</th>
+                    <th class="px-4 py-3 text-right font-medium text-slate-500 dark:text-slate-400">Đơn giá</th>
+                    <th class="px-4 py-3 text-center font-medium text-slate-500 dark:text-slate-400">SL</th>
+                    <th class="px-4 md:px-6 py-3 text-right font-medium text-slate-500 dark:text-slate-400">Thành tiền</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (item of order.items; track item.productId) {
+                    <tr class="border-b border-slate-100 dark:border-slate-800/60 last:border-0">
+                      <td class="px-4 md:px-6 py-3">
+                        <div class="flex items-center gap-3 min-w-0">
+                          <div class="w-12 h-12 rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0">
+                            @if (item.productImage) {
+                              <img [src]="item.productImage" [alt]="item.productName" loading="lazy" class="w-full h-full object-cover" />
+                            } @else {
+                              <mat-icon class="w-6 h-6 text-slate-400 dark:text-slate-500">laptop_mac</mat-icon>
+                            }
+                          </div>
+                          <div class="min-w-0">
+                            <p class="font-medium text-slate-900 dark:text-white truncate max-w-[260px]">
+                              {{ item.productName }}
+                            </p>
+                            <code class="text-xs font-mono text-slate-500 dark:text-slate-400">{{ item.productCode }}</code>
+                          </div>
+                        </div>
+                      </td>
+                      <td class="px-4 py-3 text-right tabular-nums text-slate-600 dark:text-slate-400">
+                        {{ formatPrice(item.price) }}
+                      </td>
+                      <td class="px-4 py-3 text-center tabular-nums font-medium text-slate-900 dark:text-white">
+                        {{ item.quantity }}
+                      </td>
+                      <td class="px-4 md:px-6 py-3 text-right tabular-nums font-semibold text-slate-900 dark:text-white">
+                        {{ formatPrice(item.lineTotal) }}
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </app-card>
+        </div>
+
+        <!-- Right: timeline + payment -->
+        <div class="space-y-6">
+          <!-- Trạng thái -->
+          <app-card [padding]="'default'">
+            <h3 class="text-title font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+              <mat-icon class="w-5 h-5 text-slate-400 dark:text-slate-500">timeline</mat-icon>
+              Trạng thái đơn
+            </h3>
+            @if (isCancelled()) {
+              <!-- Đơn hủy không nằm trong luồng 4 bước → banner riêng -->
+              <div class="flex items-start gap-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-4">
+                <mat-icon class="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5">cancel</mat-icon>
+                <div>
+                  <p class="font-semibold text-red-700 dark:text-red-300">Đơn đã bị hủy</p>
+                  <p class="text-sm text-red-600/80 dark:text-red-400/80 mt-0.5">
+                    Tồn kho đã được hoàn lại cho các sản phẩm.
+                    @if (order.paymentStatus === 'REFUNDED') {
+                      Tiền đã được hoàn cho khách.
+                    }
+                  </p>
+                </div>
+              </div>
+            } @else {
+              <app-order-timeline [status]="order.status" />
+            }
+          </app-card>
+
+          <!-- Thanh toán -->
+          <app-card [padding]="'default'">
+            <h3 class="text-title font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+              <mat-icon class="w-5 h-5 text-slate-400 dark:text-slate-500">payments</mat-icon>
+              Thanh toán
+            </h3>
+            <dl class="space-y-3">
+              <div class="flex justify-between">
+                <dt class="text-slate-500 dark:text-slate-400">Phương thức</dt>
+                <dd class="font-medium text-slate-900 dark:text-white">
+                  {{ order.paymentMethod === 'COD' ? 'Thanh toán khi nhận hàng (COD)' : 'VNPay' }}
+                </dd>
+              </div>
+              @if (order.paymentTxnRef) {
+                <div class="flex justify-between gap-3">
+                  <dt class="text-slate-500 dark:text-slate-400 shrink-0">Mã giao dịch</dt>
+                  <dd class="font-mono text-sm text-slate-700 dark:text-slate-300 text-right break-all">
+                    {{ order.paymentTxnRef }}
+                  </dd>
+                </div>
+              }
+              <div class="flex justify-between border-t border-slate-200 dark:border-slate-800 pt-3">
+                <dt class="text-slate-500 dark:text-slate-400">Tạm tính</dt>
+                <dd class="font-medium text-slate-900 dark:text-white tabular-nums">{{ formatPrice(order.subtotal) }}</dd>
+              </div>
+              @if (order.discountAmount > 0) {
+                <div class="flex justify-between">
+                  <dt class="text-slate-500 dark:text-slate-400">
+                    Giảm giá @if (order.couponCode) { ({{ order.couponCode }}) }
+                  </dt>
+                  <dd class="font-medium text-green-600 dark:text-green-400 tabular-nums">
+                    −{{ formatPrice(order.discountAmount) }}
+                  </dd>
+                </div>
+              }
+              <div class="flex justify-between">
+                <dt class="text-slate-500 dark:text-slate-400">Phí vận chuyển</dt>
+                <dd class="font-medium text-slate-900 dark:text-white tabular-nums">
+                  {{ order.shippingFee > 0 ? formatPrice(order.shippingFee) : 'Miễn phí' }}
+                </dd>
+              </div>
+              <div class="flex justify-between border-t border-slate-200 dark:border-slate-800 pt-3">
+                <dt class="font-semibold text-slate-900 dark:text-white">Tổng cộng</dt>
+                <dd class="text-lg font-bold text-primary-600 dark:text-primary-400 tabular-nums">
+                  {{ formatPrice(order.totalPrice) }}
+                </dd>
+              </div>
+            </dl>
+          </app-card>
+        </div>
+      </div>
+    </div>
+  } @else {
+    <app-empty-state
+      variant="no-data"
+      icon="receipt_long"
+      title="Không tìm thấy đơn hàng"
+      description="Đơn hàng này có thể không tồn tại."
+      actionLabel="Quay về danh sách"
+      actionIcon="arrow_back"
+      actionVariant="primary"
+      (actionClick)="goBack()"
+    />
+  }
+</div>

@@ -26,6 +26,10 @@ export class ClientUserService {
     if (data.fullName !== undefined) formData.append('fullName', data.fullName);
     if (data.phone !== undefined) formData.append('phone', data.phone);
     if (data.address !== undefined) formData.append('address', data.address);
+    if (data.provinceCode !== undefined) formData.append('provinceCode', data.provinceCode);
+    if (data.provinceName !== undefined) formData.append('provinceName', data.provinceName);
+    if (data.communeCode !== undefined) formData.append('communeCode', data.communeCode);
+    if (data.communeName !== undefined) formData.append('communeName', data.communeName);
     if (data.avatar instanceof File) {
       formData.append('inputFile', data.avatar);
     }

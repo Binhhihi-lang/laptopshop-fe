@@ -5,14 +5,7 @@ import { Router, RouterModule } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { ClientAuthService } from '@core/services/client-auth.service';
 import { NotificationService } from '@core/services/notification.service';
-import {
-  ButtonComponent,
-  CardComponent,
-  CardHeaderComponent,
-  FormFieldComponent,
-  InputComponent,
-} from '@shared/components';
-
+import { ButtonComponent, FormFieldComponent, InputComponent } from '@shared/components';
 /**
  * Quên mật khẩu — nhập email để nhận link reset. BE luôn trả 200 dù email
  * có/không tồn tại (chống email enumeration), nên UI luôn hiển thị thông báo
@@ -27,8 +20,6 @@ import {
     RouterModule,
     MatIconModule,
     ButtonComponent,
-    CardComponent,
-    CardHeaderComponent,
     FormFieldComponent,
     InputComponent,
   ],

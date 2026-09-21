@@ -1,0 +1,253 @@
+<div class="orders-container min-h-screen bg-slate-50 dark:bg-slate-950">
+  <!-- Page Header -->
+  <div class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-16 z-[90]">
+    <div class="max-w-screen-2xl mx-auto px-4 md:px-6 lg:px-8 py-4">
+      <app-page-header
+        title="Quản lý đơn hàng"
+        [subtitle]="'Tìm kiếm, lọc và xử lý đơn hàng'"
+      />
+    </div>
+  </div>
+
+  <div class="max-w-screen-2xl mx-auto px-4 md:px-6 lg:px-8 py-4">
+    @if (permissionDenied()) {
+      <app-empty-state
+        variant="permission"
+        icon="lock"
+        title="Bạn không có quyền truy cập"
+        description="Tính năng xem đơn hàng đã bị thu hồi quyền bởi quản trị viên. Vui lòng liên hệ quản trị viên nếu bạn cần truy cập."
+      />
+    } @else {
+      <!-- Stats Cards -->
+      @if (stats(); as stats) {
+        <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
+          <app-stat-card
+            label="Tổng đơn"
+            [value]="stats.totalOrders.toString()"
+            icon="receipt_long"
+            iconClass="bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400"
+          />
+          <app-stat-card
+            label="Chờ xử lý"
+            [value]="stats.pendingCount.toString()"
+            icon="schedule"
+            iconClass="bg-amber-50 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400"
+          />
+          <app-stat-card
+            label="Đang giao"
+            [value]="stats.shippingCount.toString()"
+            icon="local_shipping"
+            iconClass="bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400"
+          />
+          <app-stat-card
+            label="Đã giao"
+            [value]="stats.completedCount.toString()"
+            icon="check_circle"
+            iconClass="bg-green-50 text-green-600 dark:bg-green-900/30 dark:text-green-400"
+          />
+          <app-stat-card
+            label="Đã hủy"
+            [value]="stats.cancelledCount.toString()"
+            icon="cancel"
+            iconClass="bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400"
+          />
+          <app-stat-card
+            label="Doanh thu đã giao"
+            [value]="formatPrice(stats.completedRevenue)"
+            icon="payments"
+            iconClass="bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400"
+          />
+        </div>
+      }
+
+      <!-- Filter Bar -->
+      <app-card [padding]="'sm'" [compact]="true">
+        <div class="filter-row flex flex-wrap gap-4 items-end">
+          <!-- Search -->
+          <div class="relative flex-1 min-w-[250px] max-w-[400px]">
+            <app-input
+              id="order-search"
+              name="search"
+              placeholder="Mã đơn, tên hoặc SĐT khách..."
+              [value]="keyword()"
+              [icon]="'search'"
+              (valueChange)="keyword.set($event)"
+              (keydown.enter)="applyFilters()"
+              [ariaLabel]="'Tìm kiếm đơn hàng'"
+            />
+          </div>
+
+          <!-- Status Filter -->
+          <app-select
+            id="status-filter"
+            name="status"
+            [options]="statusOptions()"
+            [placeholder]="'Trạng thái đơn'"
+            [value]="statusFilter()"
+            (valueChange)="onStatusFilterChange($event)"
+            [icon]="'flag'"
+            [ariaLabel]="'Lọc theo trạng thái đơn'"
+          />
+
+          <!-- Payment Status Filter -->
+          <app-select
+            id="payment-status-filter"
+            name="paymentStatus"
+            [options]="paymentStatusOptions()"
+            [placeholder]="'Trạng thái thanh toán'"
+            [value]="paymentStatusFilter()"
+            (valueChange)="onPaymentFilterChange($event)"
+            [icon]="'payments'"
+            [ariaLabel]="'Lọc theo trạng thái thanh toán'"
+          />
+
+          <!-- Date Range -->
+          <div class="flex items-end gap-2">
+            <label class="flex flex-col gap-1 text-xs text-slate-500 dark:text-slate-400">
+              Từ ngày
+              <input
+                type="date"
+                [value]="fromDate()"
+                (change)="fromDate.set($any($event.target).value)"
+                class="px-3 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+              />
+            </label>
+            <label class="flex flex-col gap-1 text-xs text-slate-500 dark:text-slate-400">
+              Đến ngày
+              <input
+                type="date"
+                [value]="toDate()"
+                (change)="toDate.set($any($event.target).value)"
+                class="px-3 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+              />
+            </label>
+            <app-button
+              variant="primary"
+              icon="search"
+              label="Lọc"
+              (click)="applyFilters()"
+            />
+          </div>
+
+          <!-- Clear Filters -->
+          @if (hasActiveFilters()) {
+            <app-button
+              variant="outline"
+              icon="filter_alt_off"
+              label="Xóa bộ lọc"
+              (click)="clearFilters()"
+              class="ml-auto"
+            />
+          }
+        </div>
+      </app-card>
+
+      <!-- Bulk Actions Toolbar -->
+      <app-bulk-toolbar
+        [count]="selectedCount()"
+        itemLabel="đơn hàng"
+        [buttons]="bulkStatusButtons()"
+        (clear)="selectedOrderIds.set([])"
+      />
+
+      <!-- Orders Table -->
+      <div class="pb-8">
+        <app-card [padding]="'none'">
+          <app-table
+            [data]="orders()"
+            [columns]="columns()"
+            [loading]="isLoading()"
+            [loadingText]="'Đang tải đơn hàng...'"
+            [actions]="actions"
+            [trackByFn]="trackByOrderId"
+            [selectable]="canUpdateOrder()"
+            [rowClickable]="true"
+            (rowClick)="viewOrder($event)"
+            [selectedRows]="selectedOrders()"
+            (selectionChange)="onSelectionChange($event)"
+            [sortColumn]="sortColumn()"
+            [sortDirection]="sortDirection()"
+            (sortChange)="onSort($event)"
+            [emptyIcon]="'receipt_long'"
+            [emptyTitle]="'Không tìm thấy đơn hàng'"
+            [emptyDescription]="'Thử thay đổi bộ lọc hoặc khoảng ngày'"
+          >
+            <!-- Product Column Template -->
+            <ng-template #productColumn let-order>
+              <div class="flex items-center gap-3 min-w-0">
+                <div class="w-10 h-10 rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0">
+                  @if (order.firstProductImage) {
+                    <img [src]="order.firstProductImage" [alt]="order.firstProductName || 'Sản phẩm'" loading="lazy" class="w-full h-full object-cover" />
+                  } @else {
+                    <mat-icon class="w-5 h-5 text-slate-400 dark:text-slate-500">laptop_mac</mat-icon>
+                  }
+                </div>
+                <span class="font-medium text-slate-900 dark:text-white truncate max-w-[220px]">
+                  {{ order.itemCount }} sản phẩm
+                  @if (order.firstProductName) {
+                    · {{ order.firstProductName }}
+                  }
+                </span>
+              </div>
+            </ng-template>
+
+            <!-- Order Code Column Template -->
+            <ng-template #orderCodeColumn let-order>
+              <code class="text-xs font-mono text-primary-700 dark:text-primary-400 font-semibold">{{ order.orderCode }}</code>
+            </ng-template>
+
+            <!-- Order Date Column Template -->
+            <ng-template #orderDateColumn let-order>
+              <span class="text-slate-600 dark:text-slate-400 whitespace-nowrap">{{ formatDate(order.orderDate) }}</span>
+            </ng-template>
+
+            <!-- Customer Column Template -->
+            <ng-template #customerColumn let-order>
+              <div class="flex flex-col gap-1">
+                <span class="font-medium text-slate-900 dark:text-white truncate max-w-[180px]">{{ getCustomerName(order) }}</span>
+                @if (getCustomerPhone(order)) {
+                  <span class="text-xs text-slate-500 dark:text-slate-400 tabular-nums">{{ getCustomerPhone(order) }}</span>
+                }
+              </div>
+            </ng-template>
+
+            <!-- Total Price Column Template -->
+            <ng-template #totalPriceColumn let-order>
+              <span class="font-semibold tabular-nums text-slate-900 dark:text-white">{{ formatPrice(order.totalPrice) }}</span>
+            </ng-template>
+
+            <!-- Status Column Template -->
+            <ng-template #statusColumn let-order>
+              <app-badge
+                [label]="getStatusLabel(order)"
+                [variant]="getStatusVariant(order)"
+                [size]="'default'"
+              />
+            </ng-template>
+
+            <!-- Payment Column Template -->
+            <ng-template #paymentColumn let-order>
+              <div class="flex flex-col gap-1 items-center">
+                <span class="text-xs text-slate-500 dark:text-slate-400">{{ order.paymentMethod }}</span>
+                <app-badge
+                  [label]="getPaymentStatusLabel(order)"
+                  [variant]="getPaymentStatusVariant(order)"
+                  [size]="'sm'"
+                />
+              </div>
+            </ng-template>
+          </app-table>
+        </app-card>
+
+        <!-- Pagination -->
+        <div class="mt-4">
+          <app-pagination
+            [page]="page()"
+            [totalPages]="totalPages()"
+            (pageChange)="goPage($event)"
+          />
+        </div>
+      </div>
+    }
+  </div>
+</div>

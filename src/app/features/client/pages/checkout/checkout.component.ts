@@ -1,9 +1,10 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { ClientCartService } from '@core/services/client-cart.service';
 import { ClientOrderService } from '@core/services/client-order.service';
+import { LocationService, Commune, Province } from '@core/services/location.service';
 import { NotificationService } from '@core/services/notification.service';
 import { Cart } from '@core/models/cart.model';
 import { CreateOrderRequest, PaymentMethod, ValidateCouponRequest } from '@core/models/order.model';
@@ -13,6 +14,8 @@ import {
   CheckoutStepsComponent,
   LoadingComponent,
   OrderSummaryComponent,
+  SelectComponent,
+  SelectOption,
 } from '@shared/components';
 
 @Component({
@@ -27,6 +30,7 @@ import {
     CheckoutStepsComponent,
     LoadingComponent,
     OrderSummaryComponent,
+    SelectComponent,
   ],
   templateUrl: './checkout.component.html',
   styleUrl: './checkout.component.css',
@@ -36,6 +40,7 @@ export class CheckoutComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly cartService = inject(ClientCartService);
   private readonly orderService = inject(ClientOrderService);
+  private readonly locationService = inject(LocationService);
   private readonly notification = inject(NotificationService);
 
   readonly isLoading = signal(true);
@@ -50,20 +55,71 @@ export class CheckoutComponent implements OnInit {
   receiverFullName = '';
   receiverPhone = '';
   receiverEmail = '';
-  receiverProvince = '';
-  receiverDistrict = '';
   receiverAddress = '';
   note = '';
   paymentMethod: PaymentMethod = 'COD';
 
-  readonly provinces = ['Hà Nội', 'TP. Hồ Chí Minh', 'Đà Nẵng', 'Hải Phòng', 'Cần Thơ'];
+  // Địa chỉ 2 cấp sau sáp nhập 2025: Tỉnh/Thành phố → Phường/Xã
+  receiverProvinceCode = '';
+  receiverCommuneCode = '';
+
+  readonly provinces = signal<Province[]>([]);
+  readonly communes = signal<Commune[]>([]);
+  readonly isLoadingCommunes = signal(false);
+
+  readonly provinceOptions = computed<SelectOption[]>(() =>
+    this.provinces().map((p) => ({ value: String(p.code), label: p.name })),
+  );
+  readonly communeOptions = computed<SelectOption[]>(() =>
+    this.communes().map((c) => ({ value: String(c.code), label: c.name })),
+  );
 
   ngOnInit(): void {
     const coupon = this.route.snapshot.queryParamMap.get('coupon');
     if (coupon) {
       this.couponCode.set(coupon);
     }
+    this.loadProvinces();
     this.loadCart();
+  }
+
+  // ================== ĐỊA CHỈ 2 CẤP ==================
+
+  /** 34 tỉnh/thành sau sáp nhập — gọi API công khai, không qua BE. */
+  loadProvinces(): void {
+    this.locationService.getProvinces().subscribe({
+      next: (list) => this.provinces.set(list),
+      error: () => this.notification.error('Không tải được danh sách tỉnh/thành'),
+    });
+  }
+
+  /** Đổi tỉnh → xóa phường/xã đã chọn rồi nạp lại danh sách phường/xã. */
+  onProvinceChange(): void {
+    this.receiverCommuneCode = '';
+    this.communes.set([]);
+    if (!this.receiverProvinceCode) {
+      return;
+    }
+    this.isLoadingCommunes.set(true);
+    this.locationService.getCommunes(this.receiverProvinceCode).subscribe({
+      next: (list) => {
+        this.communes.set(list);
+        this.isLoadingCommunes.set(false);
+      },
+      error: () => {
+        this.isLoadingCommunes.set(false);
+        this.notification.error('Không tải được danh sách phường/xã');
+      },
+    });
+  }
+
+  /** Tên tỉnh/phường theo code đang chọn — dùng để ghép chuỗi địa chỉ. */
+  private provinceName(): string {
+    return this.provinces().find((p) => String(p.code) === this.receiverProvinceCode)?.name ?? '';
+  }
+
+  private communeName(): string {
+    return this.communes().find((c) => String(c.code) === this.receiverCommuneCode)?.name ?? '';
   }
 
   loadCart(): void {
@@ -127,18 +183,24 @@ export class CheckoutComponent implements OnInit {
       this.notification.warn('Vui lòng điền đầy đủ họ tên, số điện thoại và địa chỉ');
       return;
     }
-    if (!this.receiverProvince || !this.receiverDistrict) {
-      this.notification.warn('Vui lòng chọn tỉnh/thành và quận/huyện');
+    if (!this.receiverProvinceCode || !this.receiverCommuneCode) {
+      this.notification.warn('Vui lòng chọn tỉnh/thành và phường/xã');
       return;
     }
 
-    // Ghép địa chỉ 3 cấp thành 1 chuỗi — BE chỉ lưu 1 cột receiverAddress.
-    const fullAddress = `${this.receiverAddress.trim()}, ${this.receiverDistrict}, ${this.receiverProvince}`;
+    // Ghép địa chỉ 2 cấp thành 1 chuỗi cho cột receiverAddress của BE
+    const provinceName = this.provinceName();
+    const communeName = this.communeName();
+    const fullAddress = `${this.receiverAddress.trim()}, ${communeName}, ${provinceName}`;
 
     const req: CreateOrderRequest = {
       receiverFullName: this.receiverFullName.trim(),
       receiverPhone: this.receiverPhone.trim(),
       receiverAddress: fullAddress,
+      receiverProvinceCode: this.receiverProvinceCode,
+      receiverProvinceName: provinceName,
+      receiverCommuneCode: this.receiverCommuneCode,
+      receiverCommuneName: communeName,
       note: this.note.trim() || undefined,
       couponCode: this.couponCode().trim() || undefined,
       paymentMethod: this.paymentMethod,
