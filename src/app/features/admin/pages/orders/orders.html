@@ -18,44 +18,88 @@
         description="Tính năng xem đơn hàng đã bị thu hồi quyền bởi quản trị viên. Vui lòng liên hệ quản trị viên nếu bạn cần truy cập."
       />
     } @else {
-      <!-- Stats Cards -->
+      <!-- Stats Cards — Hàng 1: 4 KPI chính (grid-kpi chuẩn DESIGN.md, thẻ click để lọc) -->
       @if (stats(); as stats) {
-        <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-4">
           <app-stat-card
             label="Tổng đơn"
             [value]="stats.totalOrders.toString()"
             icon="receipt_long"
             iconClass="bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400"
+            [unit]="'đơn'"
+            [meter]="100"
+            meterClass="bg-blue-500"
+            caption="100% tổng đơn"
           />
           <app-stat-card
-            label="Chờ xử lý"
-            [value]="stats.pendingCount.toString()"
+            label="Cần xử lý"
+            [value]="stats.needsAction.toString()"
             icon="schedule"
             iconClass="bg-amber-50 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400"
+            [unit]="'đơn'"
+            [meter]="statPercent(stats.needsAction)"
+            meterClass="bg-amber-500"
+            [caption]="statPercent(stats.needsAction) + '% tổng đơn'"
+            [clickable]="true"
+            (cardClick)="quickFilter('PENDING')"
           />
           <app-stat-card
             label="Đang giao"
             [value]="stats.shippingCount.toString()"
             icon="local_shipping"
             iconClass="bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400"
+            [unit]="'đơn'"
+            [meter]="statPercent(stats.shippingCount)"
+            meterClass="bg-indigo-500"
+            [caption]="statPercent(stats.shippingCount) + '% tổng đơn'"
+            [clickable]="true"
+            (cardClick)="quickFilter('SHIPPING')"
           />
           <app-stat-card
             label="Đã giao"
             [value]="stats.completedCount.toString()"
             icon="check_circle"
             iconClass="bg-green-50 text-green-600 dark:bg-green-900/30 dark:text-green-400"
+            [unit]="'đơn'"
+            [meter]="statPercent(stats.completedCount)"
+            meterClass="bg-green-500"
+            [caption]="statPercent(stats.completedCount) + '% tổng đơn'"
           />
+        </div>
+
+        <!-- Stats Cards — Hàng 2: Doanh thu nổi bật + Đã hủy -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+          <!-- Doanh thu đã giao (hero card) -->
+          <div
+            class="lg:col-span-2 rounded-xl border border-emerald-200 dark:border-emerald-800 bg-gradient-to-br from-emerald-50 dark:from-emerald-950/40 to-white dark:to-slate-900 p-5 flex items-center gap-4 min-w-0"
+          >
+            <div
+              class="w-13 h-13 p-3.5 rounded-xl bg-emerald-500 text-white flex items-center justify-center shrink-0 shadow-lg shadow-emerald-500/25"
+            >
+              <mat-icon class="w-6 h-6">payments</mat-icon>
+            </div>
+            <div class="min-w-0">
+              <p class="text-caption text-slate-500 dark:text-slate-400">Doanh thu đã giao</p>
+              <p class="text-heading-3 font-bold text-slate-900 dark:text-white tabular-nums break-words">
+                {{ formatPrice(stats.completedRevenue) }}
+              </p>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                Tổng <span class="tabular-nums">{{ stats.completedCount }}</span> đơn đã giao ·
+                trung bình <span class="font-semibold text-emerald-600 dark:text-emerald-400 tabular-nums">{{ avgCompletedOrderValue() }}</span>/đơn
+              </p>
+            </div>
+          </div>
+
+          <!-- Đã hủy -->
           <app-stat-card
             label="Đã hủy"
             [value]="stats.cancelledCount.toString()"
             icon="cancel"
             iconClass="bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400"
-          />
-          <app-stat-card
-            label="Doanh thu đã giao"
-            [value]="formatPrice(stats.completedRevenue)"
-            icon="payments"
-            iconClass="bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400"
+            [unit]="'đơn'"
+            [meter]="statPercent(stats.cancelledCount)"
+            meterClass="bg-red-500"
+            [caption]="'tỉ lệ hủy ' + statPercent(stats.cancelledCount) + '%'"
           />
         </div>
       }
@@ -63,7 +107,7 @@
       <!-- Filter Bar -->
       <app-card [padding]="'sm'" [compact]="true">
         <div class="filter-row flex flex-wrap gap-4 items-end">
-          <!-- Search -->
+          <!-- Search — tự tìm kiếm khi gõ (debounce 300ms) -->
           <div class="relative flex-1 min-w-[250px] max-w-[400px]">
             <app-input
               id="order-search"
@@ -71,8 +115,7 @@
               placeholder="Mã đơn, tên hoặc SĐT khách..."
               [value]="keyword()"
               [icon]="'search'"
-              (valueChange)="keyword.set($event)"
-              (keydown.enter)="applyFilters()"
+              (valueChange)="keyword.set($event); onSearchChange()"
               [ariaLabel]="'Tìm kiếm đơn hàng'"
             />
           </div>
@@ -101,14 +144,14 @@
             [ariaLabel]="'Lọc theo trạng thái thanh toán'"
           />
 
-          <!-- Date Range -->
+          <!-- Date Range — đổi ngày là tự áp dụng luôn -->
           <div class="flex items-end gap-2">
             <label class="flex flex-col gap-1 text-xs text-slate-500 dark:text-slate-400">
               Từ ngày
               <input
                 type="date"
                 [value]="fromDate()"
-                (change)="fromDate.set($any($event.target).value)"
+                (change)="onFromDateChange($any($event.target).value)"
                 class="px-3 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
               />
             </label>
@@ -117,29 +160,56 @@
               <input
                 type="date"
                 [value]="toDate()"
-                (change)="toDate.set($any($event.target).value)"
+                (change)="onToDateChange($any($event.target).value)"
                 class="px-3 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
               />
             </label>
-            <app-button
-              variant="primary"
-              icon="search"
-              label="Lọc"
-              (click)="applyFilters()"
-            />
-          </div>
 
-          <!-- Clear Filters -->
-          @if (hasActiveFilters()) {
-            <app-button
-              variant="outline"
-              icon="filter_alt_off"
-              label="Xóa bộ lọc"
-              (click)="clearFilters()"
-              class="ml-auto"
-            />
-          }
+            <!-- Clear Filters -->
+            @if (hasActiveFilters()) {
+              <app-button
+                variant="outline"
+                icon="filter_alt_off"
+                label="Xóa bộ lọc"
+                (click)="clearFilters()"
+                class="ml-auto"
+              />
+            }
+          </div>
         </div>
+
+        <!-- Active filter chips -->
+        @if (activeFilterChips().length > 0) {
+          <div class="mt-4 pt-3 border-t border-slate-200 dark:border-slate-700 flex flex-wrap items-center gap-2">
+            <span class="text-xs text-slate-500 dark:text-slate-400 mr-1">Đang lọc:</span>
+            @for (chip of activeFilterChips(); track chip.key) {
+              <span
+                class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200"
+              >
+                {{ chip.label }}
+                <button
+                  type="button"
+                  (click)="removeFilterChip(chip.key)"
+                  class="flex items-center justify-center w-4 h-4 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors"
+                  [attr.aria-label]="'Bỏ lọc ' + chip.label"
+                >
+                  <!-- SVG thay mat-icon: glyph font bị lệch baseline dù có leading-none -->
+                  <svg
+                    class="w-3 h-3"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="3"
+                    stroke-linecap="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M18 6 6 18M6 6l12 12"></path>
+                  </svg>
+                </button>
+              </span>
+            }
+          </div>
+        }
       </app-card>
 
       <!-- Bulk Actions Toolbar -->
@@ -172,25 +242,6 @@
             [emptyTitle]="'Không tìm thấy đơn hàng'"
             [emptyDescription]="'Thử thay đổi bộ lọc hoặc khoảng ngày'"
           >
-            <!-- Product Column Template -->
-            <ng-template #productColumn let-order>
-              <div class="flex items-center gap-3 min-w-0">
-                <div class="w-10 h-10 rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0">
-                  @if (order.firstProductImage) {
-                    <img [src]="order.firstProductImage" [alt]="order.firstProductName || 'Sản phẩm'" loading="lazy" class="w-full h-full object-cover" />
-                  } @else {
-                    <mat-icon class="w-5 h-5 text-slate-400 dark:text-slate-500">laptop_mac</mat-icon>
-                  }
-                </div>
-                <span class="font-medium text-slate-900 dark:text-white truncate max-w-[220px]">
-                  {{ order.itemCount }} sản phẩm
-                  @if (order.firstProductName) {
-                    · {{ order.firstProductName }}
-                  }
-                </span>
-              </div>
-            </ng-template>
-
             <!-- Order Code Column Template -->
             <ng-template #orderCodeColumn let-order>
               <code class="text-xs font-mono text-primary-700 dark:text-primary-400 font-semibold">{{ order.orderCode }}</code>

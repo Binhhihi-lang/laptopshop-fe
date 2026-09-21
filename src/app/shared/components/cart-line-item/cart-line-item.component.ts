@@ -42,13 +42,15 @@ import { CartItem } from '@core/models/cart.model';
             [max]="item().availableQuantity"
             (changeValue)="quantityChange.emit($event)"
           />
+          <!-- 36px cho cân với stepper 34px; mat-icon mặc định 24px + line-height 1.5 nên
+               phải ép cả font-size lẫn line-height, chỉ ép w/h là glyph bị lệch trong nút. -->
           <button
             type="button"
-            class="w-[34px] h-[34px] rounded-lg grid place-items-center text-slate-400 hover:bg-rose-50 hover:text-rose-500 dark:hover:bg-rose-900/20 transition-colors"
+            class="w-9 h-9 shrink-0 rounded-lg grid place-items-center text-slate-400 hover:bg-rose-50 hover:text-rose-500 dark:hover:bg-rose-900/20 transition-colors"
             (click)="remove.emit()"
             aria-label="Xóa sản phẩm khỏi giỏ"
           >
-            <mat-icon class="w-4 h-4 text-base leading-none">delete_outline</mat-icon>
+            <mat-icon class="!w-6 !h-6 !text-xl !leading-none">delete_outline</mat-icon>
           </button>
         </div>
       </div>

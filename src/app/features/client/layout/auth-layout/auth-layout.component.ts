@@ -22,9 +22,7 @@ import { MatIconModule } from '@angular/material/icon';
           bg-[radial-gradient(80%_60%_at_85%_10%,rgba(255,255,255,0.16),transparent_60%),radial-gradient(60%_50%_at_10%_90%,rgba(34,211,238,0.25),transparent_60%),linear-gradient(150deg,#1d4ed8_0%,#4f46e5_48%,#7c3aed_100%)]"
       >
         <a routerLink="/" class="inline-flex items-center gap-2.5 font-extrabold text-lg">
-          <span
-            class="w-9 h-9 rounded-[10px] bg-white/15 backdrop-blur-sm grid place-items-center"
-          >
+          <span class="w-9 h-9 rounded-[10px] bg-white/15 backdrop-blur-sm grid place-items-center">
             <mat-icon class="!w-5 !h-5 !text-xl">laptop_chromebook</mat-icon>
           </span>
           LaptopShop
@@ -40,7 +38,9 @@ import { MatIconModule } from '@angular/material/icon';
         <ul class="flex flex-col gap-2.5 text-sm text-white/90">
           @for (perk of perks; track perk) {
             <li class="flex items-center gap-2.5">
-              <span class="w-[22px] h-[22px] rounded-full bg-white/20 grid place-items-center shrink-0">
+              <span
+                class="w-[22px] h-[22px] rounded-full bg-white/20 grid place-items-center shrink-0"
+              >
                 <mat-icon class="!w-3 !h-3 !text-xs">check</mat-icon>
               </span>
               {{ perk }}

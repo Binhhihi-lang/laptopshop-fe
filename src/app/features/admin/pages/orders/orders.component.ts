@@ -1,4 +1,13 @@
-import { Component, OnInit, signal, inject, computed } from '@angular/core';
+import {
+  AfterViewInit,
+  Component,
+  OnInit,
+  TemplateRef,
+  ViewChild,
+  signal,
+  inject,
+  computed,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -63,7 +72,7 @@ const PAYMENT_STATUSES = ['PENDING', 'PAID', 'FAILED', 'REFUNDED'] as const;
   templateUrl: './orders.html',
   styleUrl: './orders.css',
 })
-export class OrdersComponent implements OnInit {
+export class OrdersComponent implements OnInit, AfterViewInit {
   private readonly orderService = inject(OrderService);
   private readonly notification = inject(NotificationService);
   private readonly authService = inject(AuthService);
@@ -99,7 +108,6 @@ export class OrdersComponent implements OnInit {
 
   // Column definitions
   columns = signal<Column<AdminOrder>[]>([
-    { key: 'product', label: 'Sản phẩm', visible: true },
     { key: 'orderCode', label: 'Mã đơn', visible: true, width: '130px', align: 'left' },
     {
       key: 'orderDate',
@@ -122,6 +130,14 @@ export class OrdersComponent implements OnInit {
     { key: 'payment', label: 'Thanh toán', visible: true, width: '150px', align: 'center' },
   ]);
 
+  // Table column templates — bind vào columns() trong ngAfterViewInit (cùng pattern categories)
+  @ViewChild('orderCodeColumn') orderCodeColumn!: TemplateRef<any>;
+  @ViewChild('orderDateColumn') orderDateColumn!: TemplateRef<any>;
+  @ViewChild('customerColumn') customerColumn!: TemplateRef<any>;
+  @ViewChild('totalPriceColumn') totalPriceColumn!: TemplateRef<any>;
+  @ViewChild('statusColumn') statusColumn!: TemplateRef<any>;
+  @ViewChild('paymentColumn') paymentColumn!: TemplateRef<any>;
+
   // Dropdown options
   statusOptions = computed<SelectOption[]>(() =>
     ORDER_STATUSES.map((s) => ({ value: s, label: ORDER_STATUS_LABEL[s] })),
@@ -141,6 +157,25 @@ export class OrdersComponent implements OnInit {
 
   ngOnInit() {
     this.loadData();
+  }
+
+  ngAfterViewInit(): void {
+    this.columns.update((cols) =>
+      cols.map((col) => {
+        const templateMap: Record<string, TemplateRef<any>> = {
+          orderCode: this.orderCodeColumn,
+          orderDate: this.orderDateColumn,
+          customer: this.customerColumn,
+          totalPrice: this.totalPriceColumn,
+          status: this.statusColumn,
+          payment: this.paymentColumn,
+        };
+        if (templateMap[col.key]) {
+          return { ...col, template: templateMap[col.key] };
+        }
+        return col;
+      }),
+    );
   }
 
   loadData() {
@@ -186,6 +221,31 @@ export class OrdersComponent implements OnInit {
     this.loadData();
   }
 
+  /** Auto-search: gõ chữ/đổi ngày → chờ 300ms rồi mới gọi API (server-side). */
+  private searchDebounceTimer?: ReturnType<typeof setTimeout>;
+
+  onSearchChange() {
+    clearTimeout(this.searchDebounceTimer);
+    this.searchDebounceTimer = setTimeout(() => this.applyFilters(), 300);
+  }
+
+  onFromDateChange(value: string) {
+    this.fromDate.set(value);
+    this.onSearchChange();
+  }
+
+  onToDateChange(value: string) {
+    this.toDate.set(value);
+    this.onSearchChange();
+  }
+
+  /** Bấm thẻ KPI → lọc nhanh theo trạng thái. */
+  quickFilter(status: OrderStatus | '') {
+    this.statusFilter.set(status || '');
+    clearTimeout(this.searchDebounceTimer);
+    this.applyFilters();
+  }
+
   onStatusFilterChange(value: string) {
     this.statusFilter.set((value || '') as OrderStatus | '');
     this.applyFilters();
@@ -213,6 +273,62 @@ export class OrdersComponent implements OnInit {
       this.fromDate() !== '' ||
       this.toDate() !== ''
     );
+  }
+
+  // ---- KPI helpers (tính từ dữ liệu thật của OrderStats) ----
+
+  /** Tỉ lệ % của một nhóm so với tổng đơn; 0 nếu chưa có stats. */
+  statPercent(count: number): number {
+    const total = this.stats()?.totalOrders ?? 0;
+    if (total <= 0) return 0;
+    return Math.round((count / total) * 1000) / 10;
+  }
+
+  /** Giá trị trung bình/đơn đã giao (completedRevenue / completedCount). */
+  avgCompletedOrderValue(): string {
+    const s = this.stats();
+    if (!s || !s.completedCount) return '—';
+    return this.formatPrice(s.completedRevenue / s.completedCount);
+  }
+
+  /** Danh sách bộ lọc đang bật — hiện thành chips kèm nút xóa từng cái. */
+  activeFilterChips = computed<{ key: string; label: string }[]>(() => {
+    const chips: { key: string; label: string }[] = [];
+    const kw = this.keyword().trim();
+    if (kw) chips.push({ key: 'keyword', label: `Từ khóa: "${kw}"` });
+    if (this.statusFilter()) {
+      chips.push({ key: 'status', label: ORDER_STATUS_LABEL[this.statusFilter() as OrderStatus] });
+    }
+    if (this.paymentStatusFilter()) {
+      chips.push({
+        key: 'paymentStatus',
+        label: `Thanh toán: ${PAYMENT_STATUS_LABEL[this.paymentStatusFilter() as keyof typeof PAYMENT_STATUS_LABEL]}`,
+      });
+    }
+    if (this.fromDate()) {
+      chips.push({ key: 'fromDate', label: `Từ ${this.formatDateOnly(this.fromDate())}` });
+    }
+    if (this.toDate()) {
+      chips.push({ key: 'toDate', label: `Đến ${this.formatDateOnly(this.toDate())}` });
+    }
+    return chips;
+  });
+
+  /** Xóa một chip lọc và reload. */
+  removeFilterChip(key: string) {
+    if (key === 'keyword') this.keyword.set('');
+    if (key === 'status') this.statusFilter.set('');
+    if (key === 'paymentStatus') this.paymentStatusFilter.set('');
+    if (key === 'fromDate') this.fromDate.set('');
+    if (key === 'toDate') this.toDate.set('');
+    this.applyFilters();
+  }
+
+  /** `yyyy-MM-dd` → `dd/MM/yyyy` cho chip hiển thị. */
+  private formatDateOnly(iso: string): string {
+    if (!iso) return '';
+    const [y, m, d] = iso.split('-');
+    return `${d}/${m}/${y}`;
   }
 
   goPage(p: number) {
