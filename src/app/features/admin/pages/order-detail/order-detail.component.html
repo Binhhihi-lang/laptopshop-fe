@@ -158,6 +158,14 @@
                   {{ order.receiverFullName }} · {{ order.receiverPhone }}
                 </dd>
               </div>
+              @if (order.receiverEmail) {
+                <div class="flex justify-between gap-3">
+                  <dt class="text-slate-500 dark:text-slate-400 shrink-0">Email</dt>
+                  <dd class="font-medium text-slate-900 dark:text-white text-right break-all">
+                    {{ order.receiverEmail }}
+                  </dd>
+                </div>
+              }
               <div class="flex justify-between gap-3">
                 <dt class="text-slate-500 dark:text-slate-400 shrink-0">Địa chỉ</dt>
                 <dd class="font-medium text-slate-900 dark:text-white text-right">

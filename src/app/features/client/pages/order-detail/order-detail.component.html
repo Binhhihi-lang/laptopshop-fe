@@ -74,6 +74,12 @@
               <dt class="text-slate-500 shrink-0">SĐT</dt>
               <dd class="text-right">{{ order()!.receiverPhone }}</dd>
             </div>
+            @if (order()!.receiverEmail) {
+              <div class="flex justify-between gap-3">
+                <dt class="text-slate-500 shrink-0">Email</dt>
+                <dd class="text-right break-all">{{ order()!.receiverEmail }}</dd>
+              </div>
+            }
             <div class="flex justify-between gap-3">
               <dt class="text-slate-500 shrink-0">Địa chỉ</dt>
               <dd class="text-right">{{ order()!.receiverAddress }}</dd>

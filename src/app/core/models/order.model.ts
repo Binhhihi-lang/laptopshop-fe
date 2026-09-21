@@ -72,6 +72,7 @@ export interface OrderDetail extends OrderSummary {
   couponCode?: string;
   receiverFullName: string;
   receiverPhone: string;
+  receiverEmail?: string;
   receiverAddress: string;
   receiverProvinceCode?: string;
   receiverProvinceName?: string;
@@ -84,6 +85,7 @@ export interface OrderDetail extends OrderSummary {
 export interface CreateOrderRequest {
   receiverFullName: string;
   receiverPhone: string;
+  receiverEmail?: string;
   receiverAddress: string;
   receiverProvinceCode: string;
   receiverProvinceName: string;
@@ -151,6 +153,7 @@ export interface AdminOrderDetail {
   customerPhone?: string;
   receiverFullName: string;
   receiverPhone: string;
+  receiverEmail?: string;
   receiverAddress: string;
   note?: string;
   items: OrderItem[];
@@ -181,4 +184,17 @@ export interface AdminOrderFilter {
   size?: number;
   /** `field,asc|desc` — vd `orderDate,desc` */
   sort?: string;
+}
+
+// ===== VNPay (khớp dto/request/Client/VnpayCreateRequest + response ở BE) =====
+
+/** Body POST /api/v1/client/payments/vnpay/create — tạo URL thanh toán. */
+export interface VnpayCreateRequest {
+  orderCode: string;
+}
+
+/** Kết quả tạo URL — FE redirect trình duyệt sang paymentUrl của cổng VNPay. */
+export interface VnpayCreateResponse {
+  paymentUrl: string;
+  orderCode: string;
 }

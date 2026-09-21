@@ -131,6 +131,15 @@ export const CLIENT_ROUTES: Routes = [
           ),
         canActivate: [clientAuthGuard],
       },
+      // Kết quả thanh toán VNPay — không guard để khách vừa rời cổng VNPay
+      // vẫn xem được (xem trang không cần token; thanh toán lại mới cần).
+      {
+        path: 'payment-result',
+        loadComponent: () =>
+          import('./pages/payment-result/payment-result.component').then(
+            (m) => m.PaymentResultComponent,
+          ),
+      },
       {
         path: 'orders',
         loadComponent: () =>

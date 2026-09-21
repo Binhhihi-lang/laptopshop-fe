@@ -8,6 +8,8 @@ import {
   OrderDetail,
   OrderSummary,
   ValidateCouponRequest,
+  VnpayCreateRequest,
+  VnpayCreateResponse,
 } from '@core/models/order.model';
 
 /** Đơn hàng storefront — khớp ClientOrderController + ClientCouponController ở BE. */
@@ -33,5 +35,13 @@ export class ClientOrderService {
 
   validateCoupon(req: ValidateCouponRequest): Observable<CouponValidation> {
     return this.api.post<CouponValidation, ValidateCouponRequest>('/client/coupons/validate', req);
+  }
+
+  /** Tạo URL thanh toán VNPay cho đơn đã tạo — khớp VnpayController ở BE. */
+  createVnpayPayment(req: VnpayCreateRequest): Observable<VnpayCreateResponse> {
+    return this.api.post<VnpayCreateResponse, VnpayCreateRequest>(
+      '/client/payments/vnpay/create',
+      req,
+    );
   }
 }

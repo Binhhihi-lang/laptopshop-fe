@@ -17,7 +17,18 @@
       <div class="space-y-6">
         <!-- Thông tin giao hàng -->
         <section class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-5">
-          <h2 class="font-semibold mb-4">Thông tin giao hàng</h2>
+          <div class="flex items-center justify-between gap-3 mb-4">
+            <h2 class="font-semibold">Thông tin giao hàng</h2>
+            @if (profile()) {
+              <app-button
+                label="Dùng thông tin của tôi"
+                variant="outline"
+                size="sm"
+                icon="person"
+                (click)="applyProfile()"
+              />
+            }
+          </div>
           <div class="grid sm:grid-cols-2 gap-4">
             <div class="sm:col-span-2">
               <label class="block text-sm font-medium mb-1.5">Họ và tên *</label>
@@ -84,15 +95,17 @@
               <span class="w-9 h-9 rounded-lg flex items-center justify-center bg-amber-50 text-amber-500">💵</span>
             </label>
 
-            <button type="button" (click)="selectComingSoon('VNPay')"
-              class="w-full flex items-center gap-3 p-3 rounded-lg border-2 border-slate-200 dark:border-slate-700 opacity-60 text-left">
-              <span class="w-4 h-4 rounded-full border-2 border-slate-300"></span>
+            <label class="flex items-center gap-3 p-3 rounded-lg border-2 cursor-pointer transition-colors"
+              [class]="paymentMethod === 'VNPAY'
+                ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
+                : 'border-slate-200 dark:border-slate-700'">
+              <input type="radio" name="pay" value="VNPAY" [(ngModel)]="paymentMethod" class="w-4 h-4" />
               <span class="flex-1">
                 <b class="block text-sm">VNPay</b>
-                <span class="text-xs text-slate-500">Sắp ra mắt</span>
+                <span class="text-xs text-slate-500">Qua cổng VNPay (thẻ ATM nội địa, QR, Internet Banking)</span>
               </span>
               <span class="w-9 h-9 rounded-lg flex items-center justify-center bg-blue-50 text-blue-500">💳</span>
-            </button>
+            </label>
 
             <button type="button" (click)="selectComingSoon('Momo')"
               class="w-full flex items-center gap-3 p-3 rounded-lg border-2 border-slate-200 dark:border-slate-700 opacity-60 text-left">

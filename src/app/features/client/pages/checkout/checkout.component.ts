@@ -4,10 +4,12 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { ClientCartService } from '@core/services/client-cart.service';
 import { ClientOrderService } from '@core/services/client-order.service';
+import { ClientUserService } from '@core/services/client-user.service';
 import { LocationService, Commune, Province } from '@core/services/location.service';
 import { NotificationService } from '@core/services/notification.service';
 import { Cart } from '@core/models/cart.model';
 import { CreateOrderRequest, PaymentMethod, ValidateCouponRequest } from '@core/models/order.model';
+import { UserResponse } from '@core/models/user.model';
 import {
   BreadcrumbComponent,
   ButtonComponent,
@@ -40,6 +42,7 @@ export class CheckoutComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly cartService = inject(ClientCartService);
   private readonly orderService = inject(ClientOrderService);
+  private readonly userService = inject(ClientUserService);
   private readonly locationService = inject(LocationService);
   private readonly notification = inject(NotificationService);
 
@@ -50,6 +53,18 @@ export class CheckoutComponent implements OnInit {
   readonly couponDiscount = signal(0);
   readonly couponNote = signal('');
   readonly couponValid = signal<boolean | null>(null);
+  /** Hồ sơ khách đang đăng nhập — nguồn điền sẵn form giao hàng. */
+  readonly profile = signal<UserResponse | null>(null);
+
+  /** Chỉ điền tự động khi khách chưa nhập gì (tránh ghi đè). */
+  private isFormEmpty(): boolean {
+    return (
+      !this.receiverFullName.trim() &&
+      !this.receiverPhone.trim() &&
+      !this.receiverAddress.trim() &&
+      !this.receiverProvinceCode
+    );
+  }
 
   // Form giao hàng
   receiverFullName = '';
@@ -80,7 +95,67 @@ export class CheckoutComponent implements OnInit {
       this.couponCode.set(coupon);
     }
     this.loadProvinces();
+    this.loadProfile();
     this.loadCart();
+  }
+
+  // ================== ĐIỀN SẴN TỪ HỒ SƠ ==================
+
+  /**
+   * Nạp hồ sơ khách đang đăng nhập để điền sẵn form giao hàng.
+   * Lỗi mạng không chặn luồng đặt hàng — chỉ bỏ qua việc điền sẵn.
+   */
+  loadProfile(): void {
+    this.userService.getMyProfile().subscribe({
+      next: (user) => {
+        this.profile.set(user);
+        // Khách đã tự nhập trước khi API trả về thì tôn trọng dữ liệu đã nhập.
+        if (this.isFormEmpty()) {
+          this.applyProfile();
+        }
+      },
+      error: () => {
+        /* Không điền sẵn được thì khách tự nhập — không cần báo lỗi. */
+      },
+    });
+  }
+
+  /** Điền lại toàn bộ form giao hàng từ hồ sơ (nút "Dùng thông tin của tôi"). */
+  applyProfile(): void {
+    const user = this.profile();
+    if (!user) {
+      return;
+    }
+    this.receiverFullName = user.fullName ?? '';
+    this.receiverPhone = user.phone ?? '';
+    this.receiverEmail = user.email ?? '';
+    // address lưu sẵn dạng "số nhà, phường, tỉnh" — cắt đuôi để tránh lặp
+    // khi submit ghép lại thành chuỗi đầy đủ.
+    this.receiverAddress = this.streetPart(user);
+    this.receiverProvinceCode = user.provinceCode ?? '';
+    this.receiverCommuneCode = user.communeCode ?? '';
+    if (user.provinceCode) {
+      this.loadCommunesFor(user.provinceCode);
+    }
+  }
+
+  /**
+   * Bỏ phần phường/xã và tỉnh/thành đã lưu ở cuối chuỗi address, chỉ giữ
+   * địa chỉ đường. Duyệt từ cuối nên không cắt nhầm khi tên đường trùng
+   * tên phường/xã.
+   */
+  private streetPart(user: UserResponse): string {
+    let address = (user.address ?? '').trim();
+    const suffixes = [user.communeName, user.provinceName]
+      .filter((s): s is string => !!s?.trim())
+      .map((s) => s.trim());
+    for (const suffix of suffixes) {
+      if (address.toLowerCase().endsWith(suffix.toLowerCase())) {
+        address = address.slice(0, address.length - suffix.length);
+        address = address.replace(/[,\s]+$/, '');
+      }
+    }
+    return address;
   }
 
   // ================== ĐỊA CHỈ 2 CẤP ==================
@@ -93,15 +168,10 @@ export class CheckoutComponent implements OnInit {
     });
   }
 
-  /** Đổi tỉnh → xóa phường/xã đã chọn rồi nạp lại danh sách phường/xã. */
-  onProvinceChange(): void {
-    this.receiverCommuneCode = '';
-    this.communes.set([]);
-    if (!this.receiverProvinceCode) {
-      return;
-    }
+  /** Nạp phường/xã của một tỉnh — không xóa lựa chọn đang có. */
+  loadCommunesFor(provinceCode: string): void {
     this.isLoadingCommunes.set(true);
-    this.locationService.getCommunes(this.receiverProvinceCode).subscribe({
+    this.locationService.getCommunes(provinceCode).subscribe({
       next: (list) => {
         this.communes.set(list);
         this.isLoadingCommunes.set(false);
@@ -111,6 +181,16 @@ export class CheckoutComponent implements OnInit {
         this.notification.error('Không tải được danh sách phường/xã');
       },
     });
+  }
+
+  /** Đổi tỉnh → xóa phường/xã đã chọn rồi nạp lại danh sách phường/xã. */
+  onProvinceChange(): void {
+    this.receiverCommuneCode = '';
+    this.communes.set([]);
+    if (!this.receiverProvinceCode) {
+      return;
+    }
+    this.loadCommunesFor(this.receiverProvinceCode);
   }
 
   /** Tên tỉnh/phường theo code đang chọn — dùng để ghép chuỗi địa chỉ. */
@@ -196,6 +276,7 @@ export class CheckoutComponent implements OnInit {
     const req: CreateOrderRequest = {
       receiverFullName: this.receiverFullName.trim(),
       receiverPhone: this.receiverPhone.trim(),
+      receiverEmail: this.receiverEmail.trim() || undefined,
       receiverAddress: fullAddress,
       receiverProvinceCode: this.receiverProvinceCode,
       receiverProvinceName: provinceName,
@@ -206,16 +287,45 @@ export class CheckoutComponent implements OnInit {
       paymentMethod: this.paymentMethod,
     };
 
+    // Mở tab trống NGAY trong sự kiện click: gọi window.open trong callback
+    // async sẽ bị trình duyệt chặn popup. Tab này được trỏ sang VNPay sau.
+    const vnpayTab = this.paymentMethod === 'VNPAY' ? window.open('about:blank', '_blank') : null;
+
     this.isSubmitting.set(true);
     this.orderService.createOrder(req).subscribe({
       next: (order) => {
         this.isSubmitting.set(false);
         this.cartService.setCount(0);
+        if (this.paymentMethod === 'VNPAY') {
+          // Đơn đã tạo + trừ tồn kho; tab VNPay lo phần thanh toán, tab hiện
+          // tại giữ lại để khách xem đơn.
+          this.orderService.createVnpayPayment({ orderCode: order.orderCode }).subscribe({
+            next: (res) => {
+              if (vnpayTab) {
+                // Cắt tham chiếu opener trước khi rời sang cổng thanh toán.
+                vnpayTab.opener = null;
+                vnpayTab.location.href = res.paymentUrl;
+                this.router.navigate(['/order-success'], {
+                  queryParams: { code: order.orderCode, id: order.id, pending: 'vnpay' },
+                });
+              } else {
+                // Popup bị chặn → đành sang VNPay ngay tại tab hiện tại.
+                window.location.href = res.paymentUrl;
+              }
+            },
+            error: (err) => {
+              vnpayTab?.close();
+              this.notification.error(this.notification.extractError(err));
+            },
+          });
+          return;
+        }
         this.router.navigate(['/order-success'], {
           queryParams: { code: order.orderCode, id: order.id },
         });
       },
       error: (err) => {
+        vnpayTab?.close();
         this.notification.error(this.notification.extractError(err));
         this.isSubmitting.set(false);
       },
