@@ -31,6 +31,16 @@ export const PAYMENT_STATUS_LABEL: Record<PaymentStatus, string> = {
   REFUNDED: 'Đã hoàn tiền',
 };
 
+export const PAYMENT_STATUS_VARIANT: Record<
+  PaymentStatus,
+  'success' | 'warning' | 'danger' | 'info' | 'neutral' | 'primary'
+> = {
+  PENDING: 'warning',
+  PAID: 'success',
+  FAILED: 'danger',
+  REFUNDED: 'neutral',
+};
+
 /** Thứ tự luồng trạng thái — dùng cho nút/bảng đổi trạng thái của admin. */
 export const ORDER_STATUS_FLOW: OrderStatus[] = [
   'PENDING',
@@ -80,6 +90,25 @@ export interface OrderDetail extends OrderSummary {
   receiverCommuneName?: string;
   note?: string;
   items: OrderItem[];
+  /** Các lần thử thanh toán (mới nhất trước) — rỗng với đơn COD. */
+  payments: PaymentAttempt[];
+  /** Rule thanh toán lại do BE quyết — FE không tự suy ra. */
+  canRetryPayment: boolean;
+  /** Lý do bị chặn thanh toán lại (tiếng Việt, từ BE); null khi được phép. */
+  retryBlockedReason?: string;
+}
+
+/** Một lần thử thanh toán — khớp PaymentAttemptResponse ở BE. */
+export interface PaymentAttempt {
+  id: string;
+  txnRef: string;
+  attemptNo: number;
+  status: PaymentStatus;
+  amount: number;
+  responseCode?: string;
+  transactionNo?: string;
+  bankCode?: string;
+  createdAt: string;
 }
 
 export interface CreateOrderRequest {

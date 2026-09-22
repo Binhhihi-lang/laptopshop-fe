@@ -316,6 +316,9 @@ export class CheckoutComponent implements OnInit {
             error: (err) => {
               vnpayTab?.close();
               this.notification.error(this.notification.extractError(err));
+              // Đơn đã tạo rồi (đã trừ tồn kho) — không để khách kẹt ở checkout:
+              // đưa sang chi tiết đơn, nơi có nút "Thanh toán lại".
+              this.router.navigate(['/orders', order.id]);
             },
           });
           return;

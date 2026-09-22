@@ -13,15 +13,39 @@
   } @else if (order()) {
     <div class="flex items-center justify-between flex-wrap gap-3 mb-6">
       <h1 class="text-2xl font-bold">Chi tiết đơn hàng</h1>
-      @if (canCancel()) {
-        <app-button
-          label="Hủy đơn hàng"
-          variant="danger"
-          [loading]="isCancelling()"
-          (click)="cancel()"
-        />
-      }
+      <div class="flex items-center gap-3">
+        @if (order()!.canRetryPayment) {
+          <app-button
+            label="Thanh toán lại"
+            variant="primary"
+            icon="payment"
+            [loading]="isRetrying()"
+            (click)="retryPayment()"
+          />
+        }
+        @if (canCancel()) {
+          <app-button
+            label="Hủy đơn hàng"
+            variant="danger"
+            [loading]="isCancelling()"
+            (click)="cancel()"
+          />
+        }
+      </div>
     </div>
+
+    @if (order()!.retryBlockedReason) {
+      <div
+        class="flex items-start gap-3 rounded-xl border border-warning-200 dark:border-warning-800 bg-warning-50 dark:bg-warning-900/20 p-4 mb-6"
+      >
+        <mat-icon class="!w-5 !h-5 !text-xl !leading-none shrink-0 text-warning-600 dark:text-warning-400"
+          >info</mat-icon
+        >
+        <p class="text-sm text-warning-700 dark:text-warning-300">
+          {{ order()!.retryBlockedReason }}
+        </p>
+      </div>
+    }
 
     <div class="grid lg:grid-cols-[1fr_360px] gap-6 items-start">
       <div class="space-y-6">
@@ -52,6 +76,32 @@
             }
           </div>
         </section>
+
+        @if (order()!.payments.length) {
+          <section class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-5">
+            <h2 class="font-semibold mb-4">Lịch sử thanh toán</h2>
+            <div class="divide-y divide-slate-200 dark:divide-slate-700">
+              @for (p of order()!.payments; track p.id) {
+                <div class="flex items-center justify-between gap-3 py-3">
+                  <div class="min-w-0">
+                    <p class="text-sm font-medium">Lần {{ p.attemptNo }}</p>
+                    <p class="text-xs text-slate-500 font-mono break-all">{{ p.txnRef }}</p>
+                    <p class="text-xs text-slate-500">
+                      {{ p.createdAt | date: 'dd/MM/yyyy HH:mm' }}
+                      @if (p.bankCode) {
+                        · {{ p.bankCode }}
+                      }
+                    </p>
+                  </div>
+                  <div class="text-right shrink-0">
+                    <app-badge [label]="paymentLabel(p.status)" [variant]="paymentVariant(p.status)" />
+                    <p class="font-mono tabular-nums text-sm mt-1">{{ format(p.amount) }}</p>
+                  </div>
+                </div>
+              }
+            </div>
+          </section>
+        }
       </div>
 
       <aside class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-5">

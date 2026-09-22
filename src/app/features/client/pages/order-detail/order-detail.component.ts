@@ -1,9 +1,15 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { MatIconModule } from '@angular/material/icon';
 import { ClientOrderService } from '@core/services/client-order.service';
 import { NotificationService } from '@core/services/notification.service';
-import { OrderDetail } from '@core/models/order.model';
+import {
+  OrderDetail,
+  PAYMENT_STATUS_LABEL,
+  PAYMENT_STATUS_VARIANT,
+  PaymentStatus,
+} from '@core/models/order.model';
 import {
   BadgeComponent,
   BreadcrumbComponent,
@@ -20,6 +26,7 @@ import {
   imports: [
     CommonModule,
     RouterModule,
+    MatIconModule,
     BadgeComponent,
     BreadcrumbComponent,
     ButtonComponent,
@@ -40,6 +47,7 @@ export class OrderDetailComponent implements OnInit {
   readonly isLoading = signal(true);
   readonly order = signal<OrderDetail | null>(null);
   readonly isCancelling = signal(false);
+  readonly isRetrying = signal(false);
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
@@ -70,6 +78,37 @@ export class OrderDetailComponent implements OnInit {
     return status === 'PENDING' || status === 'CONFIRMED';
   }
 
+  /**
+   * Đơn VNPay chưa trả tiền và còn trong hạn — BE quyết qua canRetryPayment,
+   * FE chỉ hiển thị. Mở tab trống ngay trong sự kiện click để không bị chặn popup.
+   */
+  retryPayment(): void {
+    const order = this.order();
+    if (!order?.canRetryPayment) {
+      return;
+    }
+    const tab = window.open('about:blank', '_blank');
+    this.isRetrying.set(true);
+    this.orderService.createVnpayPayment({ orderCode: order.orderCode }).subscribe({
+      next: (res) => {
+        this.isRetrying.set(false);
+        if (tab) {
+          tab.opener = null;
+          tab.location.href = res.paymentUrl;
+        } else {
+          window.location.href = res.paymentUrl;
+        }
+      },
+      error: (err) => {
+        tab?.close();
+        this.isRetrying.set(false);
+        this.notification.error(this.notification.extractError(err));
+        // Rule có thể đã đổi ở BE (quá hạn / vượt số lần) — nạp lại cho khớp.
+        this.load(order.id);
+      },
+    });
+  }
+
   cancel(): void {
     const order = this.order();
     if (!order) {
@@ -91,6 +130,14 @@ export class OrderDetailComponent implements OnInit {
 
   goOrders(): void {
     this.router.navigate(['/orders']);
+  }
+
+  paymentLabel(status: PaymentStatus): string {
+    return PAYMENT_STATUS_LABEL[status];
+  }
+
+  paymentVariant(status: PaymentStatus) {
+    return PAYMENT_STATUS_VARIANT[status];
   }
 
   format(value: number): string {

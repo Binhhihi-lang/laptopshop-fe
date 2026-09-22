@@ -1,7 +1,12 @@
 import { Component, input, output, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { BadgeComponent, BadgeVariant } from '../badge/badge.component';
-import { OrderSummary, OrderStatus } from '@core/models/order.model';
+import {
+  OrderSummary,
+  OrderStatus,
+  PAYMENT_STATUS_LABEL,
+  PAYMENT_STATUS_VARIANT,
+} from '@core/models/order.model';
 
 const STATUS_LABEL: Record<OrderStatus, string> = {
   PENDING: 'Chờ xử lý',
@@ -34,6 +39,9 @@ const STATUS_VARIANT: Record<OrderStatus, BadgeVariant> = {
           order().orderDate | date: 'dd/MM/yyyy'
         }}</span>
         <app-badge [label]="statusLabel()" [variant]="statusVariant()" />
+        @if (order().paymentMethod === 'VNPAY') {
+          <app-badge [label]="payStatusLabel()" [variant]="payStatusVariant()" />
+        }
       </div>
 
       <div class="flex items-center gap-3 mt-3">
@@ -84,6 +92,9 @@ export class OrderCardComponent {
   paymentLabel = computed(() =>
     this.order().paymentMethod === 'COD' ? 'Thanh toán khi nhận hàng (COD)' : 'VNPay',
   );
+  /** Đơn VNPay hiện thêm trạng thái trả tiền để khách biết còn nợ hay không. */
+  payStatusLabel = computed(() => PAYMENT_STATUS_LABEL[this.order().paymentStatus]);
+  payStatusVariant = computed(() => PAYMENT_STATUS_VARIANT[this.order().paymentStatus]);
 
   format(value: number): string {
     return new Intl.NumberFormat('vi-VN', {

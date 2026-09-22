@@ -93,6 +93,29 @@ export class ProductDetailComponent implements OnInit {
       return;
     }
 
+    this.addToGuestCart(p, qty);
+    this.notification.success(`Đã thêm "${p.name}" vào giỏ hàng`);
+  }
+
+  // Mua ngay: thêm vào giỏ xong mới chuyển trang (tránh race → giỏ trống).
+  onBuyNow(): void {
+    const p = this.product();
+    if (!p) return;
+    const qty = this.quantity();
+
+    if (this.auth.isAuthenticated()) {
+      this.cartService.addItem({ productId: p.id, quantity: qty }).subscribe({
+        next: () => this.router.navigate(['/cart']),
+        error: (err) => this.notification.error(this.notification.extractError(err)),
+      });
+      return;
+    }
+
+    this.addToGuestCart(p, qty);
+    this.router.navigate(['/cart']);
+  }
+
+  private addToGuestCart(p: ProductResponse, qty: number): void {
     const items = this.cartService.getGuestCart();
     const existing = items.find((i) => i.productId === p.id);
     if (existing) {
@@ -101,12 +124,6 @@ export class ProductDetailComponent implements OnInit {
       items.push({ productId: p.id, quantity: qty });
     }
     this.cartService.setGuestCart(items);
-    this.notification.success(`Đã thêm "${p.name}" vào giỏ hàng`);
-  }
-
-  onBuyNow(): void {
-    this.onAddToCart();
-    this.router.navigate(['/cart']);
   }
 
   // Có đang giảm giá không (giá gốc > giá bán)
