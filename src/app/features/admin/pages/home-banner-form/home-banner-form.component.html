@@ -1,0 +1,336 @@
+<div class="form-container min-h-screen bg-slate-50 dark:bg-slate-950">
+  @if (isLoading()) {
+    <div class="loading-overlay fixed inset-0 bg-white/80 dark:bg-slate-950/80 flex items-center justify-center z-50">
+      <app-loading size="xl" text="Đang tải..." />
+    </div>
+  }
+
+  <div class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-16 z-[90]">
+    <div class="max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-4">
+      <app-page-header [title]="pageTitle()" [subtitle]="pageSubtitle()" [hasActions]="true">
+        <app-button
+          variant="ghost"
+          icon="arrow_back"
+          label="Quay lại"
+          (click)="onCancel()"
+          [disabled]="isSubmitting()"
+        />
+      </app-page-header>
+    </div>
+  </div>
+
+  <form
+    [formGroup]="bannerForm"
+    (ngSubmit)="onSubmit()"
+    class="banner-form max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-8"
+  >
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+      <!-- ===== Cột trái: form ===== -->
+      <div class="lg:col-span-2 space-y-6">
+        <!-- Nội dung slide -->
+        <section class="form-section" aria-labelledby="content-heading">
+          <app-card [padding]="'default'" [variant]="'default'">
+            <div class="flex items-center gap-2 mb-4">
+              <mat-icon class="text-primary-600 dark:text-primary-400">info</mat-icon>
+              <h3 id="content-heading" class="text-lg font-medium text-slate-900 dark:text-white">
+                Nội dung slide
+              </h3>
+            </div>
+
+            <div class="space-y-4">
+              <app-form-field
+                id="kicker-field"
+                label="Nhãn nhỏ (kicker)"
+                hint="Dòng chữ nhỏ in hoa phía trên tiêu đề."
+              >
+                <app-input
+                  id="kicker"
+                  name="kicker"
+                  formControlName="kicker"
+                  placeholder="VD: FLASH SALE 12:00"
+                  [ariaLabel]="'Nhãn nhỏ của slide'"
+                />
+              </app-form-field>
+
+              <app-form-field
+                id="title-field"
+                label="Tiêu đề"
+                [required]="true"
+                [error]="hasError('title', 'required') ? 'Tiêu đề không được để trống' : ''"
+              >
+                <app-input
+                  id="title"
+                  name="title"
+                  formControlName="title"
+                  placeholder="VD: Laptop gaming giảm đến 30%"
+                  [ariaLabel]="'Tiêu đề banner'"
+                />
+              </app-form-field>
+
+              <app-form-field id="subtitle-field" label="Mô tả phụ">
+                <app-input
+                  id="subtitle"
+                  name="subtitle"
+                  formControlName="subtitle"
+                  placeholder="VD: Áp dụng đến hết 30/09"
+                  [ariaLabel]="'Mô tả phụ của slide'"
+                />
+              </app-form-field>
+            </div>
+          </app-card>
+        </section>
+
+        <!-- Ảnh slide -->
+        <section class="form-section" aria-labelledby="image-heading">
+          <app-card [padding]="'default'" [variant]="'default'">
+            <div class="flex items-center gap-2 mb-4">
+              <mat-icon class="text-primary-600 dark:text-primary-400">photo_camera</mat-icon>
+              <h3 id="image-heading" class="text-lg font-medium text-slate-900 dark:text-white">
+                Ảnh slide
+              </h3>
+            </div>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mb-3">
+              Ảnh là bắt buộc — tỉ lệ khuyến nghị 16:6 (vd 1600×600), chữ trên slide được phủ
+              lớp tối dần từ trái sang để luôn đọc được.
+            </p>
+            <app-image-upload
+              [existingImage]="existingImage()"
+              [label]="'Ảnh banner'"
+              [maxSizeMB]="5"
+              [disabled]="isSubmitting()"
+              (fileChange)="onImageFileChange($event)"
+              (imageRemoved)="imageRemoved.set($event)"
+            />
+          </app-card>
+        </section>
+
+        <!-- Liên kết khi khách bấm -->
+        <section class="form-section" aria-labelledby="target-heading">
+          <app-card [padding]="'default'" [variant]="'default'">
+            <div class="flex items-center gap-2 mb-4">
+              <mat-icon class="text-primary-600 dark:text-primary-400">link</mat-icon>
+              <h3 id="target-heading" class="text-lg font-medium text-slate-900 dark:text-white">
+                Liên kết khi khách bấm
+                <span class="text-sm font-normal text-slate-500 dark:text-slate-400">
+                  — chọn loại rồi nhập giá trị tương ứng
+                </span>
+              </h3>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <app-form-field id="targetType-field" label="Loại liên kết" [required]="true">
+                <select
+                  id="targetType"
+                  name="targetType"
+                  formControlName="targetType"
+                  class="input w-full"
+                  [attr.aria-label]="'Loại liên kết'"
+                  (change)="onTargetTypeChange()"
+                >
+                  @for (t of targetTypes; track t.value) {
+                    <option [value]="t.value">{{ t.label }}</option>
+                  }
+                </select>
+              </app-form-field>
+
+              <app-form-field
+                id="targetValue-field"
+                [label]="targetLabel()"
+                [required]="true"
+                [hint]="targetHelp()"
+              >
+                @if (targetType() === 'CATEGORY') {
+                  <select
+                    id="targetValue"
+                    name="targetValue"
+                    formControlName="targetValue"
+                    class="input w-full"
+                    [attr.aria-label]="'Chọn danh mục'"
+                  >
+                    <option value="">— Chọn danh mục —</option>
+                    @for (c of categories(); track c.id) {
+                      <option [value]="c.id">{{ c.name }}</option>
+                    }
+                  </select>
+                }
+
+                @if (targetType() === 'PRODUCT') {
+                  <app-product-picker
+                    formControlName="targetValue"
+                    [emitCode]="true"
+                    [ariaLabel]="'Chọn sản phẩm'"
+                  />
+                }
+
+                @if (targetType() === 'FLASH_SALE') {
+                  <select
+                    id="targetValue"
+                    name="targetValue"
+                    formControlName="targetValue"
+                    class="input w-full"
+                    [attr.aria-label]="'Chọn phiên flash sale'"
+                  >
+                    <option value="">— Chọn phiên —</option>
+                    @for (s of flashSales(); track s.id) {
+                      <option [value]="s.id">{{ s.name }}</option>
+                    }
+                  </select>
+                }
+
+                @if (targetType() === 'BRAND') {
+                  <select
+                    id="targetValue"
+                    name="targetValue"
+                    formControlName="targetValue"
+                    class="input w-full"
+                    [attr.aria-label]="'Chọn hãng'"
+                  >
+                    <option value="">— Chọn hãng —</option>
+                    @for (b of brands(); track b) {
+                      <option [value]="b">{{ b }}</option>
+                    }
+                  </select>
+                }
+              </app-form-field>
+
+              <app-form-field
+                id="sortOrder-field"
+                label="Thứ tự hiển thị"
+                hint="Số nhỏ hiện trước. Trùng số thì theo thứ tự tạo."
+                [error]="hasError('sortOrder', 'min') ? 'Thứ tự không được âm' : ''"
+              >
+                <app-input
+                  id="sortOrder"
+                  name="sortOrder"
+                  type="number"
+                  formControlName="sortOrder"
+                  placeholder="0"
+                  [min]="'0'"
+                  [step]="'1'"
+                  [ariaLabel]="'Thứ tự hiển thị'"
+                />
+              </app-form-field>
+
+              <app-form-field id="active-field" label="Trạng thái">
+                <div class="flex items-center gap-3 h-10">
+                  <label class="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      formControlName="active"
+                      class="sr-only peer"
+                      [attr.aria-label]="'Hiển thị ở trang chủ'"
+                    />
+                    <div
+                      class="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-primary-600"
+                    ></div>
+                  </label>
+                  <span class="text-sm text-slate-700 dark:text-slate-300">Hiển thị ở trang chủ</span>
+                </div>
+              </app-form-field>
+            </div>
+
+            <p class="mt-4 flex items-start gap-2 text-sm text-slate-500 dark:text-slate-400">
+              <mat-icon class="!w-4 !h-4 !text-[16px] !leading-none text-primary-500 shrink-0 mt-0.5">info</mat-icon>
+              <span>
+                Đích đến luôn là dữ liệu có thật trong hệ thống — admin chọn từ danh sách,
+                không gõ đường dẫn tay.
+              </span>
+            </p>
+          </app-card>
+        </section>
+      </div>
+
+      <!-- ===== Cột phải: xem trước slide ===== -->
+      <aside class="lg:col-span-1">
+        <div class="lg:sticky lg:top-40">
+          <app-card [padding]="'none'">
+            <div
+              class="flex items-center gap-2 px-4 py-3 border-b border-slate-200 dark:border-slate-700"
+            >
+              <mat-icon class="!w-5 !h-5 !text-[20px] !leading-none text-slate-400">visibility</mat-icon>
+              <b class="text-sm font-semibold text-slate-900 dark:text-white">Xem trước slide</b>
+              <span
+                class="ml-auto text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400"
+              >
+                Mockup
+              </span>
+            </div>
+
+            <div class="p-4 space-y-4">
+              <!-- Slide -->
+              <div
+                class="relative aspect-[16/6] rounded-xl overflow-hidden bg-slate-800 flex items-center px-4 transition-opacity"
+                [style.opacity]="preview().active ? 1 : 0.55"
+              >
+                @if (existingImage() && !imageRemoved()) {
+                  <img [src]="existingImage()" alt="" class="absolute inset-0 w-full h-full object-cover" />
+                }
+                <div
+                  class="absolute inset-0 bg-gradient-to-r from-slate-950/85 via-slate-950/55 to-transparent"
+                ></div>
+                <span
+                  class="absolute top-2 right-3 text-xs font-mono text-white/90 bg-black/35 px-1.5 py-0.5 rounded"
+                >
+                  #{{ preview().sortOrder }}
+                </span>
+                <div class="relative z-10 max-w-[74%]">
+                  @if (preview().kicker) {
+                    <span
+                      class="block text-[9px] font-extrabold uppercase tracking-widest text-slate-200"
+                    >
+                      {{ preview().kicker }}
+                    </span>
+                  }
+                  <b class="block mt-2 text-sm font-extrabold text-white leading-snug">
+                    {{ preview().title || 'Tiêu đề slide' }}
+                  </b>
+                  @if (preview().subtitle) {
+                    <p class="mt-1 text-xs text-slate-200/90">{{ preview().subtitle }}</p>
+                  }
+                </div>
+              </div>
+
+              <!-- Chi tiết liên kết -->
+              <dl class="space-y-2 text-sm">
+                <div class="flex items-center justify-between gap-3">
+                  <dt class="text-slate-500 dark:text-slate-400">Loại liên kết</dt>
+                  <dd class="font-mono text-slate-700 dark:text-slate-300">
+                    {{ preview().targetType }}
+                  </dd>
+                </div>
+                <div class="flex items-center justify-between gap-3">
+                  <dt class="text-slate-500 dark:text-slate-400">Giá trị</dt>
+                  <dd class="font-mono text-slate-700 dark:text-slate-300 truncate max-w-[60%]">
+                    {{ preview().targetValue || '—' }}
+                  </dd>
+                </div>
+                <div class="flex items-center justify-between gap-3">
+                  <dt class="text-slate-500 dark:text-slate-400">Thứ tự</dt>
+                  <dd class="font-mono text-slate-700 dark:text-slate-300">{{ preview().sortOrder }}</dd>
+                </div>
+              </dl>
+
+              <p
+                class="text-xs text-slate-500 dark:text-slate-400 pt-3 border-t border-slate-100 dark:border-slate-800"
+              >
+                Slide tự chạy <b>6 giây</b>, dừng khi rê chuột. Khách chưa đăng nhập vẫn thấy.
+              </p>
+            </div>
+          </app-card>
+        </div>
+      </aside>
+    </div>
+
+    <!-- ===== Actions ===== -->
+    <div class="form-actions flex justify-end gap-3 mt-6">
+      <app-button variant="outline" label="Hủy" (click)="onCancel()" [disabled]="isSubmitting()" />
+      <app-button
+        variant="primary"
+        icon="check"
+        label="Lưu slide"
+        type="submit"
+        [loading]="isSubmitting()"
+      />
+    </div>
+  </form>
+</div>

@@ -1,0 +1,238 @@
+<div class="home-banners-container min-h-screen bg-slate-50 dark:bg-slate-950">
+  <div class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-16 z-[90]">
+    <div class="max-w-screen-2xl mx-auto px-4 md:px-6 lg:px-8 py-4">
+      <app-page-header
+        title="Banner trang chủ"
+        subtitle="Carousel đầu trang chủ — tối đa 5 slide, tự chạy 6 giây, hiển thị theo thứ tự sắp xếp."
+        [hasActions]="true"
+      >
+        <app-button variant="primary" icon="add" label="Thêm slide" (click)="createBanner()" />
+      </app-page-header>
+    </div>
+  </div>
+
+  <div class="max-w-screen-2xl mx-auto px-4 md:px-6 lg:px-8 py-6 space-y-6">
+    @if (permissionDenied()) {
+      <app-card [padding]="'none'">
+        <app-empty-state
+          variant="permission"
+          icon="lock"
+          title="Bạn không có quyền xem banner trang chủ"
+          description="Quyền xem banner trang chủ đã bị thu hồi bởi quản trị viên. Vui lòng liên hệ quản trị viên nếu bạn cần truy cập."
+        />
+      </app-card>
+    } @else {
+      <!-- Danh sách slide -->
+      <app-card [padding]="'default'">
+        <div class="flex flex-wrap items-baseline justify-between gap-2 mb-4">
+          <h3 class="text-title font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+            <mat-icon class="w-5 h-5 text-slate-400 dark:text-slate-500">view_carousel</mat-icon>
+            Slide đang hiển thị
+            <span class="text-sm font-normal text-slate-500 dark:text-slate-400">
+              ({{ activeCount() }}/5 đang bật)
+            </span>
+          </h3>
+          <p class="text-sm text-slate-500 dark:text-slate-400">
+            Kéo để đổi thứ tự · tắt để ẩn khỏi trang chủ
+          </p>
+        </div>
+
+        @if (isLoading()) {
+          <!-- Skeleton lưới 2 cột — đồng bộ cách chờ dữ liệu với các trang danh sách khác -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6" aria-hidden="true">
+            @for (i of [0, 1, 2, 3]; track i) {
+              <article class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-hidden">
+                <div class="h-40 bg-slate-200 dark:bg-slate-700 animate-pulse"></div>
+                <div class="p-4 space-y-3">
+                  <div class="h-4 w-1/2 rounded bg-slate-200 dark:bg-slate-700 animate-pulse"></div>
+                  <div class="h-3 w-3/4 rounded bg-slate-200 dark:bg-slate-700 animate-pulse"></div>
+                  <div class="h-8 w-full rounded bg-slate-100 dark:bg-slate-800 animate-pulse"></div>
+                </div>
+              </article>
+            }
+          </div>
+          <p class="sr-only" role="status" aria-live="polite">Đang tải banner...</p>
+        } @else if (banners().length === 0) {
+          <app-empty-state
+            variant="no-data"
+            icon="image"
+            title="Chưa có banner nào"
+            description="Thêm slide đầu tiên để thay hero mặc định ở trang chủ"
+            actionLabel="Thêm slide"
+            actionIcon="add"
+            actionVariant="primary"
+            (actionClick)="createBanner()"
+          />
+        } @else {
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            @for (banner of banners(); track trackByBannerId(banner)) {
+              <article
+                class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-hidden transition-opacity"
+                [class.opacity-60]="!banner.active"
+              >
+                <!-- Slide thật -->
+                <div class="relative aspect-[16/6] bg-slate-800 flex items-center px-5">
+                  @if (banner.image) {
+                    <img
+                      [src]="banner.image"
+                      [alt]="banner.title"
+                      loading="lazy"
+                      class="absolute inset-0 w-full h-full object-cover"
+                    />
+                  }
+                  <div
+                    class="absolute inset-0 bg-gradient-to-r from-slate-950/85 via-slate-950/55 to-transparent"
+                  ></div>
+                  <span
+                    class="absolute top-2.5 right-3 z-10 text-xs font-mono text-white/90 bg-black/35 px-1.5 py-0.5 rounded"
+                  >
+                    #{{ banner.sortOrder }}
+                  </span>
+                  <div class="relative z-10 max-w-[74%]">
+                    @if (banner.kicker) {
+                      <span class="block text-[10px] font-extrabold uppercase tracking-widest text-slate-200">
+                        {{ banner.kicker }}
+                      </span>
+                    }
+                    <b class="block mt-2 text-base font-extrabold text-white leading-snug">
+                      {{ banner.title }}
+                    </b>
+                    @if (banner.subtitle) {
+                      <p class="mt-1 text-xs text-slate-200/90">{{ banner.subtitle }}</p>
+                    }
+                  </div>
+                </div>
+
+                <!-- Meta -->
+                <div class="px-4 py-3 space-y-2.5">
+                  <div class="flex items-center justify-between gap-3 text-xs">
+                    <span class="text-slate-500 dark:text-slate-400">Loại liên kết</span>
+                    <span
+                      class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold font-mono"
+                      [class]="targetTypeClass(banner)"
+                    >
+                      {{ banner.targetType }}
+                    </span>
+                  </div>
+                  <div class="flex items-center justify-between gap-3 text-xs">
+                    <span class="text-slate-500 dark:text-slate-400">Giá trị</span>
+                    <code class="font-mono text-slate-600 dark:text-slate-300 truncate max-w-[65%]">
+                      {{ banner.targetValue }}
+                    </code>
+                  </div>
+                  <div class="flex items-center justify-between gap-3 text-xs">
+                    <span class="text-slate-500 dark:text-slate-400">Thứ tự hiển thị</span>
+                    <span class="font-mono font-bold text-slate-700 dark:text-slate-200">
+                      {{ banner.sortOrder }}
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Switch + kebab -->
+                <div
+                  class="flex items-center justify-between gap-3 px-4 py-3 border-t border-slate-100 dark:border-slate-700"
+                >
+                  <label class="inline-flex items-center gap-2.5 cursor-pointer">
+                    <span class="relative inline-flex items-center">
+                      <input
+                        type="checkbox"
+                        class="sr-only peer"
+                        [checked]="banner.active"
+                        [disabled]="!canUpdate() || togglingId() === banner.id"
+                        (change)="toggleActive(banner, $event)"
+                        [attr.aria-label]="'Hiển thị slide ' + banner.title"
+                      />
+                      <span
+                        class="w-11 h-6 bg-slate-200 dark:bg-slate-700 rounded-full peer peer-checked:bg-primary-600 after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full peer-checked:after:border-white peer-disabled:opacity-50"
+                      ></span>
+                    </span>
+                    <span class="text-sm text-slate-600 dark:text-slate-300">
+                      {{ banner.active ? 'Đang hiển thị' : 'Đang ẩn' }}
+                    </span>
+                  </label>
+
+                  <button
+                    type="button"
+                    class="grid place-items-center w-9 h-9 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white"
+                    [matMenuTriggerFor]="menu"
+                    [attr.aria-label]="'Thao tác cho slide ' + banner.title"
+                    aria-haspopup="menu"
+                  >
+                    <mat-icon class="!w-5 !h-5 !text-[20px] !leading-none">more_vert</mat-icon>
+                  </button>
+                  <mat-menu #menu="matMenu" panelClass="kebab-menu" xPosition="before">
+                    <button mat-menu-item (click)="editBanner(banner)">
+                      <mat-icon>edit</mat-icon>
+                      <span>Sửa slide</span>
+                    </button>
+                    <button mat-menu-item (click)="duplicateBanner(banner)">
+                      <mat-icon>content_copy</mat-icon>
+                      <span>Nhân bản slide</span>
+                    </button>
+                    <button
+                      mat-menu-item
+                      [disabled]="!canDelete()"
+                      (click)="remove(banner)"
+                      class="kebab-danger"
+                    >
+                      <mat-icon>delete</mat-icon>
+                      <span>Xóa slide</span>
+                    </button>
+                  </mat-menu>
+                </div>
+              </article>
+            }
+          </div>
+        }
+      </app-card>
+
+      <!-- Hướng dẫn gắn liên kết -->
+      <app-card [padding]="'default'">
+        <h3 class="text-title font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+          <mat-icon class="w-5 h-5 text-slate-400 dark:text-slate-500">info</mat-icon>
+          Cách gắn liên kết cho slide
+        </h3>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm min-w-[620px]">
+            <thead>
+              <tr class="text-left text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">
+                <th class="py-2.5 pr-4 font-medium">Loại liên kết</th>
+                <th class="py-2.5 pr-4 font-medium">Giá trị nhập</th>
+                <th class="py-2.5 font-medium">Kết quả khi khách bấm</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of linkGuide; track row.type) {
+                <tr class="border-b border-slate-100 dark:border-slate-800 last:border-b-0">
+                  <td class="py-3 pr-4">
+                    <span
+                      class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold font-mono"
+                      [class]="row.type === 'PRODUCT'
+                        ? 'bg-primary-50 dark:bg-primary-950/40 text-primary-700 dark:text-primary-300'
+                        : row.type === 'CATEGORY'
+                          ? 'bg-violet-50 dark:bg-violet-950/40 text-violet-700 dark:text-violet-300'
+                          : row.type === 'BRAND'
+                            ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300'
+                            : 'bg-orange-50 dark:bg-orange-950/40 text-orange-700 dark:text-orange-300'"
+                    >
+                      {{ row.type }}
+                    </span>
+                  </td>
+                  <td class="py-3 pr-4 font-mono text-slate-600 dark:text-slate-300">{{ row.value }}</td>
+                  <td class="py-3 text-slate-600 dark:text-slate-300">{{ row.result }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <p class="mt-4 flex items-start gap-2 text-sm text-slate-500 dark:text-slate-400">
+          <mat-icon class="!w-4 !h-4 !text-[16px] !leading-none text-primary-500 shrink-0 mt-0.5">info</mat-icon>
+          <span>
+            Mọi đích đều là dữ liệu có thật trong hệ thống nên admin <b>chọn từ danh sách</b>,
+            không gõ đường dẫn tay — không có đường cho link ngoài lọt vào banner.
+          </span>
+        </p>
+      </app-card>
+    }
+  </div>
+</div>

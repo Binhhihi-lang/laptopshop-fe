@@ -69,6 +69,7 @@ export type InputType =
           [attr.maxlength]="maxLength()"
           [pattern]="pattern()"
           [autocomplete]="autocomplete()"
+          [attr.list]="list() || null"
           [class]="computedClass()"
           (input)="onInput($event)"
           (blur)="onBlur()"
@@ -129,7 +130,18 @@ export class InputComponent implements ControlValueAccessor {
   id = input.required<string>();
   name = input<string>('');
   type = input<InputType>('text');
-  value = input<string>('');
+  /**
+   * Giá trị do PARENT đẩy xuống. Để `undefined` = parent không bind — lúc đó
+   * `writeValue`/`onInput` là nguồn duy nhất, effect không được đụng vào.
+   *
+   * <p>
+   * Mặc định cũ là `''` gây bug: với form dùng `formControlName` (không bind
+   * `[value]`), effect luôn đọc `''` và ghi đè `_value` về rỗng. Chỉ lộ ra khi
+   * component được TẠO SAU khi FormControl đã có giá trị — tức ô nằm trong
+   * `@if`/`@else` mà nhánh được chọn sau `patchValue()` (vd ô "Giá trị giảm (₫)"
+   * của voucher loại số tiền). Các ô ngoài `@if` tạo trước khi patch nên không bị.
+   */
+  value = input<string | undefined>(undefined);
   placeholder = input<string>('');
   disabled = input<boolean>(false);
   readonly = input<boolean>(false);
@@ -141,6 +153,8 @@ export class InputComponent implements ControlValueAccessor {
   maxLength = input<number | null>(null);
   pattern = input<string>('');
   autocomplete = input<string>('off');
+  /** id của <datalist> để gợi ý giá trị sẵn có (vd danh sách hãng). */
+  list = input<string>('');
   icon = input<string>('');
   prefix = input<string>('');
   suffix = input<string>('');
@@ -165,13 +179,16 @@ export class InputComponent implements ControlValueAccessor {
 
   // FIX: dùng untracked() khi đọc _value() bên trong effect này, để effect
   // CHỈ re-run khi `value` (input từ parent qua [value]) đổi — không tự kích hoạt
-  // lại mỗi khi writeValue()/onInput() thay đổi _value(). Nếu không, mỗi lần
-  // writeValue() set giá trị mới (ví dụ khi patchValue() ở form), effect này sẽ
-  // tự chạy lại, thấy `value` (luôn là '' vì không ai bind [value] khi dùng
-  // formControlName) khác với _value() vừa set, rồi set _value về '' lại —
-  // xóa mất giá trị vừa patch trong cùng 1 tick.
+  // lại mỗi khi writeValue()/onInput() thay đổi _value().
+  //
+  // `value` mặc định undefined = parent KHÔNG bind [value] (trường hợp form dùng
+  // formControlName). Lúc đó phải bỏ qua hoàn toàn: nếu so sánh với undefined thì
+  // mọi giá trị do writeValue() nạp vào đều bị coi là "lệch" và bị xoá về rỗng.
   private readonly valueSyncEffect = effect(() => {
     const parentValue = this.value();
+    if (parentValue === undefined) {
+      return;
+    }
     untracked(() => {
       if (parentValue !== this._value()) {
         this._value.set(parentValue);

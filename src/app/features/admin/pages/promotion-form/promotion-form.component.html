@@ -1,0 +1,432 @@
+<div class="form-container min-h-screen bg-slate-50 dark:bg-slate-950">
+  @if (isLoading()) {
+    <div class="loading-overlay fixed inset-0 bg-white/80 dark:bg-slate-950/80 flex items-center justify-center z-50">
+      <app-loading size="xl" text="Đang tải..." />
+    </div>
+  }
+
+  <!-- Header -->
+  <div class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-16 z-[90]">
+    <div class="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-4">
+      <app-page-header [title]="pageTitle()" [subtitle]="pageSubtitle()" [hasActions]="true">
+        <app-button
+          variant="outline"
+          label="Hủy"
+          (click)="onCancel()"
+          [disabled]="isSubmitting()"
+        />
+        <app-button
+          variant="primary"
+          [icon]="submitButtonIcon()"
+          [label]="submitButtonLabel()"
+          (click)="onSubmit()"
+          [disabled]="isSubmitting()"
+        />
+      </app-page-header>
+    </div>
+  </div>
+
+  <form
+    [formGroup]="promotionForm"
+    (ngSubmit)="onSubmit()"
+    class="promotion-form max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-8"
+  >
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+      <!-- ===== Cột trái: các card cấu hình ===== -->
+      <div class="lg:col-span-2 space-y-6">
+        <!-- Thông tin chương trình -->
+        <section class="form-section" aria-labelledby="general-heading">
+          <app-card [padding]="'default'" [variant]="'default'">
+            <div class="flex items-center gap-2 mb-4">
+              <mat-icon class="text-primary-600 dark:text-primary-400">campaign</mat-icon>
+              <h3 id="general-heading" class="section-title text-lg font-medium text-slate-900 dark:text-white">
+                Thông tin chương trình
+              </h3>
+            </div>
+
+            <div class="space-y-4">
+              <app-form-field
+                id="name-field"
+                label="Tên chương trình"
+                [required]="true"
+                [error]="hasError('name', 'required') ? 'Tên chương trình không được để trống' : ''"
+              >
+                <app-input
+                  id="name"
+                  name="name"
+                  formControlName="name"
+                  placeholder="VD: Trợ giá Laptop Gaming tháng 10"
+                  [ariaLabel]="'Tên chương trình'"
+                />
+              </app-form-field>
+
+              <app-form-field
+                id="title-field"
+                label="Tiêu đề hiển thị cho khách"
+                [required]="true"
+                hint="Hiện ở overlay “Khuyến mại và ưu đãi” khi khách xem giỏ."
+                [error]="hasError('title', 'required') ? 'Tiêu đề không được để trống' : ''"
+              >
+                <app-input
+                  id="title"
+                  name="title"
+                  formControlName="title"
+                  placeholder="VD: Trợ giá Gaming — giảm thêm 8%"
+                  [ariaLabel]="'Tiêu đề hiển thị cho khách'"
+                />
+              </app-form-field>
+
+              <app-form-field id="description-field" label="Mô tả">
+                <textarea
+                  id="description"
+                  name="description"
+                  formControlName="description"
+                  rows="2"
+                  class="input w-full"
+                  placeholder="Mô tả ngắn về chương trình"
+                  [attr.aria-label]="'Mô tả'"
+                ></textarea>
+              </app-form-field>
+            </div>
+          </app-card>
+        </section>
+
+        <!-- Mức giảm -->
+        <section class="form-section" aria-labelledby="discount-heading">
+          <app-card [padding]="'default'" [variant]="'default'">
+            <div class="flex items-center gap-2 mb-1">
+              <mat-icon class="text-primary-600 dark:text-primary-400">percent</mat-icon>
+              <h3 id="discount-heading" class="section-title text-lg font-medium text-slate-900 dark:text-white">
+                Mức giảm
+              </h3>
+            </div>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">
+              Số tiền giảm tính cho <b>mỗi máy</b>, nhân với số lượng.
+            </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <app-form-field id="discountType-field" label="Kiểu giảm giá" [required]="true">
+                <select
+                  id="discountType"
+                  name="discountType"
+                  formControlName="discountType"
+                  class="input w-full"
+                  [attr.aria-label]="'Kiểu giảm giá'"
+                >
+                  @for (d of discountTypes; track d.value) {
+                    <option [value]="d.value">{{ d.label }}</option>
+                  }
+                </select>
+              </app-form-field>
+
+              <app-form-field
+                id="discountValue-field"
+                [label]="discountValueLabel()"
+                [required]="true"
+                [error]="hasError('discountValue', 'required') ? 'Vui lòng nhập giá trị giảm' : ''"
+              >
+                <app-input
+                  id="discountValue"
+                  name="discountValue"
+                  type="number"
+                  formControlName="discountValue"
+                  [placeholder]="isPercent() ? 'VD: 8' : 'VD: 500000'"
+                  [min]="'1'"
+                  [step]="'1'"
+                  [ariaLabel]="'Giá trị giảm'"
+                />
+              </app-form-field>
+
+              <app-form-field
+                id="maxDiscountAmount-field"
+                label="Giảm tối đa / đơn (₫)"
+                hint="Trần tổng giảm của chương trình trong MỘT đơn. Để trống nếu không giới hạn."
+              >
+                <app-input
+                  id="maxDiscountAmount"
+                  name="maxDiscountAmount"
+                  type="number"
+                  formControlName="maxDiscountAmount"
+                  placeholder="VD: 6000000"
+                  [min]="'1'"
+                  [step]="'1'"
+                  [ariaLabel]="'Giảm tối đa mỗi đơn'"
+                />
+              </app-form-field>
+
+              <app-form-field
+                id="priority-field"
+                label="Độ ưu tiên"
+                hint="Khi nhiều chương trình cùng khớp một sản phẩm, chương trình có ưu tiên cao hơn thắng."
+              >
+                <app-input
+                  id="priority"
+                  name="priority"
+                  type="number"
+                  formControlName="priority"
+                  placeholder="VD: 10"
+                  [step]="'1'"
+                  [ariaLabel]="'Độ ưu tiên'"
+                />
+              </app-form-field>
+            </div>
+          </app-card>
+        </section>
+
+        <!-- Điều kiện áp dụng -->
+        <section class="form-section" aria-labelledby="condition-heading">
+          <app-card [padding]="'default'" [variant]="'default'">
+            <div class="flex items-center gap-2 mb-4">
+              <mat-icon class="text-primary-600 dark:text-primary-400">lock</mat-icon>
+              <h3 id="condition-heading" class="section-title text-lg font-medium text-slate-900 dark:text-white">
+                Điều kiện áp dụng
+              </h3>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+              <app-form-field id="minOrderValue-field" label="Đơn tối thiểu (₫)" hint="Để trống nếu không yêu cầu">
+                <app-input
+                  id="minOrderValue"
+                  name="minOrderValue"
+                  type="number"
+                  formControlName="minOrderValue"
+                  placeholder="VD: 15000000"
+                  [min]="'0'"
+                  [step]="'1'"
+                  [ariaLabel]="'Đơn tối thiểu'"
+                />
+              </app-form-field>
+
+              <app-form-field id="minQuantity-field" label="Số lượng tối thiểu / dòng" hint="Để trống nếu không yêu cầu">
+                <app-input
+                  id="minQuantity"
+                  name="minQuantity"
+                  type="number"
+                  formControlName="minQuantity"
+                  placeholder="VD: 1"
+                  [min]="'1'"
+                  [step]="'1'"
+                  [ariaLabel]="'Số lượng tối thiểu mỗi dòng'"
+                />
+              </app-form-field>
+
+              <app-form-field
+                id="usageLimit-field"
+                label="Ngân sách (số đơn tối đa)"
+                hint="Đếm theo đơn, không theo dòng. Để trống nếu không giới hạn."
+              >
+                <app-input
+                  id="usageLimit"
+                  name="usageLimit"
+                  type="number"
+                  formControlName="usageLimit"
+                  placeholder="VD: 200"
+                  [min]="'1'"
+                  [step]="'1'"
+                  [ariaLabel]="'Ngân sách số đơn tối đa'"
+                />
+              </app-form-field>
+
+              <app-form-field
+                id="startDate-field"
+                label="Bắt đầu"
+                [required]="true"
+                [error]="hasError('startDate', 'required') ? 'Vui lòng chọn thời gian bắt đầu' : ''"
+              >
+                <input
+                  type="datetime-local"
+                  id="startDate"
+                  name="startDate"
+                  formControlName="startDate"
+                  class="input w-full"
+                  [disabled]="isSubmitting()"
+                  [attr.aria-label]="'Thời gian bắt đầu'"
+                />
+              </app-form-field>
+
+              <app-form-field
+                id="endDate-field"
+                label="Kết thúc"
+                [required]="true"
+                [error]="hasFormError('dateRange') ? 'Thời gian kết thúc phải sau thời gian bắt đầu' : ''"
+              >
+                <input
+                  type="datetime-local"
+                  id="endDate"
+                  name="endDate"
+                  formControlName="endDate"
+                  class="input w-full"
+                  [disabled]="isSubmitting()"
+                  [attr.aria-label]="'Thời gian kết thúc'"
+                />
+              </app-form-field>
+
+              <div class="flex flex-col gap-1.5">
+                <span class="text-sm font-medium text-slate-700 dark:text-slate-300">Trạng thái</span>
+                <div class="flex items-center gap-3 h-10">
+                  <label class="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      formControlName="active"
+                      class="sr-only peer"
+                      [attr.aria-label]="'Trạng thái hoạt động'"
+                    />
+                    <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-primary-600"></div>
+                  </label>
+                  <span class="text-sm text-slate-700 dark:text-slate-300">
+                    {{ promotionForm.get('active')?.value ? 'Kích hoạt' : 'Đã tắt' }}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-3 mt-4">
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  formControlName="stackable"
+                  class="sr-only peer"
+                  [attr.aria-label]="'Cho phép cộng dồn'"
+                />
+                <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-primary-600"></div>
+              </label>
+              <span class="text-sm text-slate-700 dark:text-slate-300">Cho phép cộng dồn với chương trình khác</span>
+            </div>
+          </app-card>
+        </section>
+
+        <!-- Phạm vi áp dụng -->
+        <section class="form-section" aria-labelledby="scope-heading">
+          <app-card [padding]="'default'" [variant]="'default'">
+            <div class="flex items-center gap-2 mb-1">
+              <mat-icon class="text-primary-600 dark:text-primary-400">filter_alt</mat-icon>
+              <h3 id="scope-heading" class="section-title text-lg font-medium text-slate-900 dark:text-white">
+                Phạm vi áp dụng
+              </h3>
+            </div>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">
+              Sản phẩm phải khớp phạm vi mới được giảm.
+            </p>
+
+            <app-scope-picker
+              [kind]="scopeType()"
+              (kindChange)="onScopeKindChange($event)"
+              [categories]="categories()"
+              [brands]="brands()"
+              [value]="scopeValues()"
+              (valueChange)="scopeValues.set($event)"
+            />
+          </app-card>
+        </section>
+
+        <!-- Loại trừ sản phẩm -->
+        <section class="form-section" aria-labelledby="exclude-heading">
+          <app-card [padding]="'default'" [variant]="'default'">
+            <div class="flex items-center gap-2 mb-1">
+              <mat-icon class="text-primary-600 dark:text-primary-400">block</mat-icon>
+              <h3 id="exclude-heading" class="section-title text-lg font-medium text-slate-900 dark:text-white">
+                Loại trừ sản phẩm
+              </h3>
+            </div>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">
+              Sản phẩm trong danh sách này <b>không</b> được giảm, dù có khớp phạm vi ở trên.
+            </p>
+
+            <app-product-picker
+              [multiple]="true"
+              [formControl]="excludeControl"
+              placeholder="Tìm sản phẩm cần loại trừ…"
+              ariaLabel="Chọn sản phẩm loại trừ"
+            />
+          </app-card>
+        </section>
+      </div>
+
+      <!-- ===== Cột phải: xem trước cách tính ===== -->
+      <aside class="lg:col-span-1">
+        <div class="lg:sticky lg:top-36">
+          <app-card [padding]="'default'" [variant]="'default'">
+            <div class="flex items-center gap-2.5 mb-4 pb-3 border-b border-slate-200 dark:border-slate-700">
+              <mat-icon class="!w-4 !h-4 !text-[16px] !leading-none text-violet-600 dark:text-violet-400"
+                >visibility</mat-icon
+              >
+              <h3 class="text-sm font-bold text-slate-900 dark:text-white">Xem trước cách tính</h3>
+              <span
+                class="ml-auto px-2 py-0.5 rounded text-[9px] font-extrabold tracking-wider bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300"
+                >MOCKUP</span
+              >
+            </div>
+
+            <div class="flex items-center gap-3 pb-4 border-b border-slate-200 dark:border-slate-700">
+              <div class="grid place-items-center w-12 h-12 rounded-lg bg-slate-100 dark:bg-slate-800 shrink-0">
+                <mat-icon class="text-slate-400">laptop_mac</mat-icon>
+              </div>
+              <div class="min-w-0">
+                <p class="font-medium text-slate-900 dark:text-white truncate">Sản phẩm mẫu</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400">
+                  Đơn giá {{ format(previewUnitPrice) }}
+                </p>
+              </div>
+            </div>
+
+            <div class="py-4 space-y-3 border-b border-slate-200 dark:border-slate-700">
+              <div class="flex justify-between gap-4 text-sm">
+                <span class="text-slate-500 dark:text-slate-400">Đơn giá</span>
+                <span class="text-slate-900 dark:text-white tabular-nums">{{ format(previewUnitPrice) }}</span>
+              </div>
+              <div class="flex justify-between gap-4 text-sm items-center">
+                <span class="text-slate-500 dark:text-slate-400">Số lượng</span>
+                <div class="flex items-center gap-1">
+                  <button
+                    type="button"
+                    class="grid place-items-center w-6 h-6 rounded border border-slate-300 dark:border-slate-600 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
+                    aria-label="Giảm số lượng"
+                    (click)="previewQty.set(previewQty() > 1 ? previewQty() - 1 : 1)"
+                  >
+                    <mat-icon class="!w-3.5 !h-3.5 !text-[14px] !leading-none">remove</mat-icon>
+                  </button>
+                  <span class="w-6 text-center text-slate-900 dark:text-white tabular-nums">{{ previewQty() }}</span>
+                  <button
+                    type="button"
+                    class="grid place-items-center w-6 h-6 rounded border border-slate-300 dark:border-slate-600 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
+                    aria-label="Tăng số lượng"
+                    (click)="previewQty.set(previewQty() + 1)"
+                  >
+                    <mat-icon class="!w-3.5 !h-3.5 !text-[14px] !leading-none">add</mat-icon>
+                  </button>
+                </div>
+              </div>
+              <div class="flex justify-between gap-4 text-sm">
+                <span class="text-slate-500 dark:text-slate-400">
+                  Thành tiền <span class="text-slate-400 dark:text-slate-500">(× {{ previewQty() }})</span>
+                </span>
+                <span class="text-slate-900 dark:text-white tabular-nums">{{ format(previewLineTotal()) }}</span>
+              </div>
+              <div class="flex justify-between gap-4 text-sm">
+                <span class="text-slate-500 dark:text-slate-400">Giảm giá sản phẩm</span>
+                <span class="text-danger-600 dark:text-danger-400 tabular-nums">
+                  −{{ format(previewDiscount()) }}
+                </span>
+              </div>
+            </div>
+
+            <div class="flex justify-between items-baseline gap-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+              <span class="text-sm font-bold text-slate-900 dark:text-white">Khách trả</span>
+              <span class="text-xl font-extrabold text-primary-600 dark:text-primary-400 tabular-nums">
+                {{ format(previewPay()) }}
+              </span>
+            </div>
+
+            <p
+              class="mt-4 px-3 py-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/60 text-xs leading-relaxed text-slate-500 dark:text-slate-400"
+              [class.text-warning-700]="previewCapped()"
+              [class.dark:text-warning-400]="previewCapped()"
+            >
+              {{ previewNote() }}
+            </p>
+          </app-card>
+        </div>
+      </aside>
+    </div>
+  </form>
+</div>

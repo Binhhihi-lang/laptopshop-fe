@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { ApiService } from './api.service';
 import { API_ENDPOINTS } from '@core/utils/constants';
 import { Observable } from 'rxjs';
+import { Page } from '@core/models/page.model';
 import {
   UserCreationRequest,
   UserProfileUpdateRequest,
@@ -23,6 +24,18 @@ export class UserService {
 
   getUserById(id: string): Observable<UserResponse> {
     return this.api.get<UserResponse>(`${this.apiUrl}/${id}`);
+  }
+
+  /**
+   * Tìm khách cho picker (gán voucher...). Chỉ trả tài khoản đang hoạt động.
+   * Phân trang để không phải tải hết danh sách khi shop nhiều tài khoản.
+   */
+  searchForPicker(keyword: string, page = 0, size = 20): Observable<Page<UserResponse>> {
+    return this.api.get<Page<UserResponse>>(`${this.apiUrl}/search`, {
+      keyword: keyword?.trim() || undefined,
+      page,
+      size,
+    });
   }
 
   private buildFormData(data: UserCreationRequest | UserUpdateRequest): FormData {

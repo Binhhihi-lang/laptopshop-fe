@@ -285,17 +285,58 @@
                 </div>
               }
               <div class="flex justify-between border-t border-slate-200 dark:border-slate-800 pt-3">
-                <dt class="text-slate-500 dark:text-slate-400">Tạm tính</dt>
-                <dd class="font-medium text-slate-900 dark:text-white tabular-nums">{{ formatPrice(order.subtotal) }}</dd>
+                <dt class="text-slate-500 dark:text-slate-400">Tiền hàng</dt>
+                <dd class="font-medium text-slate-900 dark:text-white tabular-nums">{{ formatPrice(order.totalBeforeDiscount ?? order.subtotal) }}</dd>
               </div>
               @if (order.discountAmount > 0) {
-                <div class="flex justify-between">
-                  <dt class="text-slate-500 dark:text-slate-400">
-                    Giảm giá @if (order.couponCode) { ({{ order.couponCode }}) }
+                <!-- G10: tách 2 nguồn giảm (D1) khi BE đã trả breakdown -->
+                @if (hasBreakdown(order)) {
+                  @if (order.promotionDiscount) {
+                    <div class="flex justify-between">
+                      <dt class="text-slate-500 dark:text-slate-400">Giảm giá sản phẩm</dt>
+                      <dd class="font-medium text-green-600 dark:text-green-400 tabular-nums">
+                        −{{ formatPrice(order.promotionDiscount) }}
+                      </dd>
+                    </div>
+                  }
+                  @if (order.voucherDiscount) {
+                    <div class="flex justify-between">
+                      <dt class="text-slate-500 dark:text-slate-400">
+                        Voucher @if (order.voucherCode) { ({{ order.voucherCode }}) }
+                      </dt>
+                      <dd class="font-medium text-green-600 dark:text-green-400 tabular-nums">
+                        −{{ formatPrice(order.voucherDiscount) }}
+                      </dd>
+                    </div>
+                  }
+                } @else {
+                  <div class="flex justify-between">
+                    <dt class="text-slate-500 dark:text-slate-400">
+                      Giảm giá @if (order.voucherCode) { ({{ order.voucherCode }}) }
+                    </dt>
+                    <dd class="font-medium text-green-600 dark:text-green-400 tabular-nums">
+                      −{{ formatPrice(order.discountAmount) }}
+                    </dd>
+                  </div>
+                }
+              }
+
+              <!-- Chương trình khuyến mại đã áp — đơn cũ không có thì ẩn -->
+              @if (order.promotionLines && order.promotionLines.length > 0) {
+                <div class="pt-2 border-t border-dashed border-slate-200 dark:border-slate-800">
+                  <dt class="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-1.5">
+                    Khuyến mại đã áp
                   </dt>
-                  <dd class="font-medium text-green-600 dark:text-green-400 tabular-nums">
-                    −{{ formatPrice(order.discountAmount) }}
-                  </dd>
+                  @for (line of order.promotionLines; track line.promotionId) {
+                    <div class="flex justify-between text-sm">
+                      <span class="text-slate-500 dark:text-slate-400">
+                        {{ line.name ?? 'Chương trình đã xóa' }}
+                      </span>
+                      <span class="text-slate-600 dark:text-slate-400 tabular-nums">
+                        −{{ formatPrice(line.discountAmount) }}
+                      </span>
+                    </div>
+                  }
                 </div>
               }
               <div class="flex justify-between">

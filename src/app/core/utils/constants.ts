@@ -14,7 +14,10 @@ export const API_ENDPOINTS = {
   PERMISSIONS: '/admin/permissions',
   PRODUCTS: '/admin/products',
   CATEGORIES: '/admin/categories',
-  COUPONS: '/admin/coupons',
+  VOUCHERS: '/admin/vouchers',
+  PROMOTIONS: '/admin/promotions',
+  FLASH_SALES: '/admin/flash-sales',
+  HOME_BANNERS: '/admin/home-banners',
   ORDERS: '/admin/orders',
   DASHBOARD: '/admin/dashboard',
 };

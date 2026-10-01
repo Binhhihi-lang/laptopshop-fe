@@ -1,0 +1,162 @@
+<div class="max-w-4xl mx-auto px-4 py-8">
+  <app-breadcrumb [items]="[{ label: 'Trang chủ', link: '/' }, { label: 'Ví voucher' }]" />
+
+  <header class="mt-4 mb-6">
+    <h1 class="text-2xl font-bold">Ví voucher của tôi</h1>
+    <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
+      Voucher bạn đã lưu sẽ nằm ở đây — chọn ở bước thanh toán để được giảm thêm.
+    </p>
+  </header>
+
+  <!-- Tabs -->
+  <div class="flex gap-2 border-b border-slate-200 dark:border-slate-700 mb-5 overflow-x-auto">
+    <button
+      type="button"
+      class="px-4 py-2.5 text-sm font-semibold border-b-2 whitespace-nowrap transition"
+      [class]="
+        activeTab() === 'AVAILABLE'
+          ? 'border-primary-600 text-primary-600 dark:text-primary-400'
+          : 'border-transparent text-slate-500 hover:text-slate-700'
+      "
+      (click)="setTab('AVAILABLE')"
+    >
+      Khả dụng <span class="text-xs">({{ availableVouchers().length }})</span>
+    </button>
+    <button
+      type="button"
+      class="px-4 py-2.5 text-sm font-semibold border-b-2 whitespace-nowrap transition"
+      [class]="
+        activeTab() === 'USED'
+          ? 'border-primary-600 text-primary-600 dark:text-primary-400'
+          : 'border-transparent text-slate-500 hover:text-slate-700'
+      "
+      (click)="setTab('USED')"
+    >
+      Đã dùng <span class="text-xs">({{ usedVouchers().length }})</span>
+    </button>
+    <button
+      type="button"
+      class="px-4 py-2.5 text-sm font-semibold border-b-2 whitespace-nowrap transition"
+      [class]="
+        activeTab() === 'EXPIRED'
+          ? 'border-primary-600 text-primary-600 dark:text-primary-400'
+          : 'border-transparent text-slate-500 hover:text-slate-700'
+      "
+      (click)="setTab('EXPIRED')"
+    >
+      Hết hạn <span class="text-xs">({{ expiredVouchers().length }})</span>
+    </button>
+    <button
+      type="button"
+      class="px-4 py-2.5 text-sm font-semibold border-b-2 whitespace-nowrap transition"
+      [class]="
+        activeTab() === 'CLAIM'
+          ? 'border-primary-600 text-primary-600 dark:text-primary-400'
+          : 'border-transparent text-slate-500 hover:text-slate-700'
+      "
+      (click)="setTab('CLAIM')"
+    >
+      Kho voucher <span class="text-xs">({{ claimable().length }})</span>
+    </button>
+  </div>
+
+  @if (isLoading()) {
+    <app-loading />
+  } @else if (activeTab() === 'CLAIM') {
+    <!-- Kho voucher để claim (D16) -->
+    <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">
+      Voucher công khai đang phát — bấm "Lưu mã" để thêm vào ví. Mỗi mã chỉ lưu được 1 lần.
+    </p>
+    @if (claimable().length === 0) {
+      <app-empty-state
+        icon="confirmation_number"
+        title="Chưa có voucher nào để nhận"
+        description="Hiện chưa có chương trình voucher công khai nào đang phát."
+      />
+    }
+    @for (c of claimable(); track c.id) {
+      <div
+        class="flex items-stretch border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden mb-3 bg-white dark:bg-slate-900"
+      >
+        <div
+          class="shrink-0 w-[100px] bg-primary-50 dark:bg-primary-950/40 text-primary-700 dark:text-primary-400 flex flex-col items-center justify-center gap-0.5 border-r border-dashed border-primary-300 px-2 py-3 text-center"
+        >
+          <b class="font-mono font-extrabold text-base leading-tight">{{ voucherLabel(c) }}</b>
+          <span class="text-[10px] font-bold uppercase tracking-wide">giảm</span>
+        </div>
+        <div class="flex-1 min-w-0 px-4 py-3 flex flex-col gap-1">
+          <b class="text-sm font-bold">{{ c.code }}</b>
+          <span class="text-xs text-slate-500 dark:text-slate-400">
+            {{ conditionText(c) }}
+          </span>
+          <span class="text-xs text-slate-400">HSD: {{ formatDate(c.expiryDate) }}</span>
+        </div>
+        <div class="shrink-0 flex items-center px-4">
+          @if (isClaimed(c)) {
+            <span class="inline-flex items-center gap-1.5 text-xs font-bold text-green-600 dark:text-green-400">
+              <mat-icon class="!w-3.5 !h-3.5 !text-[14px] !leading-none">check_circle</mat-icon>
+              Đã lưu
+            </span>
+          } @else {
+            <app-button
+              label="Lưu mã"
+              size="sm"
+              [loading]="claimingId() === c.id"
+              (click)="claim(c)"
+            />
+          }
+        </div>
+      </div>
+    }
+  } @else {
+    <!-- Ví theo trạng thái -->
+    @if (currentList().length === 0) {
+      <app-empty-state
+        icon="confirmation_number"
+        title="Không có voucher nào"
+        description="Chuyển sang tab Kho voucher để lưu mã vào ví."
+      />
+    }
+    @for (v of currentList(); track v.id) {
+      <div
+        class="flex items-stretch border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden mb-3 bg-white dark:bg-slate-900"
+        [class.opacity-60]="v.status !== 'AVAILABLE'"
+      >
+        <div
+          class="shrink-0 w-[100px] flex flex-col items-center justify-center gap-0.5 border-r border-dashed px-2 py-3 text-center"
+          [class]="
+            v.status === 'AVAILABLE'
+              ? 'bg-primary-50 dark:bg-primary-950/40 text-primary-700 dark:text-primary-400 border-primary-300'
+              : 'bg-slate-100 dark:bg-slate-800 text-slate-500 border-slate-300'
+          "
+        >
+          <b class="font-mono font-extrabold text-base leading-tight">{{ voucherLabel(v) }}</b>
+          <span class="text-[10px] font-bold uppercase tracking-wide">giảm</span>
+        </div>
+        <div class="flex-1 min-w-0 px-4 py-3 flex flex-col gap-1">
+          <b class="text-sm font-bold">{{ v.code }}</b>
+          <span class="text-xs text-slate-500 dark:text-slate-400">{{ conditionText(v) }}</span>
+          <span class="text-xs text-slate-400">
+            @if (v.status === 'USED' && v.usedAt) {
+              Đã dùng ngày {{ formatDate(v.usedAt) }}
+            } @else {
+              HSD: {{ formatDate(v.expiresAt) }}
+            }
+          </span>
+        </div>
+        <div class="shrink-0 flex items-center px-4">
+          <span
+            class="text-xs font-bold"
+            [class]="
+              v.status === 'AVAILABLE'
+                ? 'text-green-600 dark:text-green-400'
+                : 'text-slate-400'
+            "
+          >
+            {{ statusLabel(v.status) }}
+          </span>
+        </div>
+      </div>
+    }
+  }
+</div>

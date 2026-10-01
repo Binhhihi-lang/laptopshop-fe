@@ -16,7 +16,7 @@ import { MatIconModule } from '@angular/material/icon';
   imports: [CommonModule, MatIconModule],
   template: `
     <article
-      class="card-hover card-padded group min-h-[130px] overflow-hidden"
+      class="card-hover card-padded group min-h-[130px] h-full overflow-hidden"
       [attr.data-trend]="trendUp() === false ? 'down' : 'up'"
       [class.clickable]="clickable()"
       [attr.role]="clickable() ? 'button' : null"

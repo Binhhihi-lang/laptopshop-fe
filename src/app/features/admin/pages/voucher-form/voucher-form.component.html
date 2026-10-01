@@ -1,0 +1,507 @@
+<div class="form-container min-h-screen bg-slate-50 dark:bg-slate-950">
+  <!-- Loading -->
+  @if (isLoading()) {
+    <div class="loading-overlay fixed inset-0 bg-white/80 dark:bg-slate-950/80 flex items-center justify-center z-50">
+      <app-loading size="xl" text="Đang tải..." />
+    </div>
+  }
+
+  <!-- Header -->
+  <div class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-16 z-[90]">
+    <div class="max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-4">
+      <app-page-header
+        [title]="pageTitle()"
+        [subtitle]="pageSubtitle()"
+        [hasActions]="true"
+      >
+        <app-button
+          variant="ghost"
+          icon="arrow_back"
+          label="Quay lại"
+          (click)="onCancel()"
+          [disabled]="isSubmitting()"
+        />
+      </app-page-header>
+    </div>
+  </div>
+
+  <form [formGroup]="voucherForm" (ngSubmit)="onSubmit()" class="voucher-form max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-8">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+      <div class="lg:col-span-2 space-y-6">
+    <!-- Thông tin voucher -->
+    <section class="form-section" aria-labelledby="voucher-info-heading">
+      <app-card [padding]="'default'" [variant]="'default'">
+        <div class="flex items-center gap-2 mb-4">
+          <mat-icon class="text-primary-600 dark:text-primary-400">info</mat-icon>
+          <h3 id="voucher-info-heading" class="text-lg font-medium text-slate-900 dark:text-white">
+            Thông tin voucher
+          </h3>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Code -->
+          <app-form-field
+            id="code-field"
+            label="Mã voucher"
+            [required]="true"
+            [error]="hasError('code', 'required') ? 'Mã voucher là bắt buộc' : hasError('code', 'maxlength') ? 'Mã không được vượt quá 50 ký tự' : ''"
+            hint="Khách gõ mã này ở checkout. Không dấu, không khoảng trắng."
+          >
+            <app-input
+              id="code"
+              name="code"
+              formControlName="code"
+              placeholder="VD: SUMMER50"
+              [maxLength]="50"
+              [ariaLabel]="'Mã voucher'"
+            />
+          </app-form-field>
+
+          <!-- Kiểu phát hành -->
+          <app-form-field
+            id="voucherType-field"
+            label="Kiểu phát hành"
+            [hint]="voucherTypeHelp()"
+          >
+            <select
+              id="voucherType"
+              name="voucherType"
+              formControlName="voucherType"
+              class="input w-full"
+              [attr.aria-label]="'Kiểu phát hành'"
+            >
+              @for (t of voucherTypes; track t.value) {
+                <option [value]="t.value">{{ t.label }}</option>
+              }
+            </select>
+          </app-form-field>
+
+          <!-- Tiêu đề hiển thị cho khách -->
+          <app-form-field
+            id="title-field"
+            label="Tiêu đề hiển thị cho khách"
+            class="md:col-span-2"
+            hint="Hiện ở overlay “Khuyến mại và ưu đãi” và trong ví voucher."
+            [error]="hasError('title', 'maxlength') ? 'Tiêu đề không vượt quá 255 ký tự' : ''"
+          >
+            <app-input
+              id="title"
+              name="title"
+              formControlName="title"
+              placeholder="VD: Giảm 500.000 ₫ cho đơn từ 20 triệu"
+              [maxLength]="255"
+              [ariaLabel]="'Tiêu đề hiển thị cho khách'"
+            />
+          </app-form-field>
+
+          <!-- Mô tả / điều kiện -->
+          <app-form-field
+            id="description-field"
+            label="Mô tả / điều kiện"
+            class="md:col-span-2"
+            [error]="hasError('description', 'maxlength') ? 'Mô tả không vượt quá 500 ký tự' : ''"
+          >
+            <textarea
+              id="description"
+              name="description"
+              formControlName="description"
+              rows="2"
+              class="input w-full"
+              placeholder="VD: Áp dụng cho đơn hàng từ 20.000.000 ₫. Mỗi khách dùng 1 lần."
+              [attr.aria-label]="'Mô tả điều kiện voucher'"
+            ></textarea>
+          </app-form-field>
+        </div>
+      </app-card>
+    </section>
+
+    <!-- Khách được nhận — chỉ hiện khi phát đích danh -->
+    @if (needsAssignees()) {
+      <section class="form-section" aria-labelledby="voucher-assign-heading">
+        <app-card [padding]="'default'" [variant]="'default'">
+          <div class="flex items-center gap-2 mb-4">
+            <mat-icon class="text-primary-600 dark:text-primary-400">group_add</mat-icon>
+            <h3 id="voucher-assign-heading" class="text-lg font-medium text-slate-900 dark:text-white">
+              Khách được nhận
+            </h3>
+          </div>
+          <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">
+            Voucher vào thẳng ví của những người này. Khách đã có voucher sẽ được bỏ qua, không phát trùng.
+          </p>
+          <app-user-picker
+            [value]="assigneeIds()"
+            (valueChange)="assigneeIds.set($event)"
+            [ariaLabel]="'Chọn khách nhận voucher'"
+          />
+        </app-card>
+      </section>
+    }
+
+    <!-- Mức giảm -->
+    <section class="form-section" aria-labelledby="voucher-discount-heading">
+      <app-card [padding]="'default'" [variant]="'default'">
+        <div class="flex items-center gap-2 mb-4">
+          <mat-icon class="text-primary-600 dark:text-primary-400">percent</mat-icon>
+          <h3 id="voucher-discount-heading" class="text-lg font-medium text-slate-900 dark:text-white">
+            Mức giảm
+          </h3>
+          <span class="text-sm text-slate-500 dark:text-slate-400">— trừ một lần cho cả đơn</span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Discount Type -->
+          <app-form-field id="discountType-field" label="Kiểu giảm giá" [required]="true" class="md:col-span-2">
+            <div class="flex gap-3">
+              <label class="flex items-center gap-2 px-4 py-3 border rounded-xl cursor-pointer transition-colors flex-1 border-slate-200 dark:border-slate-700"
+                     [class.border-primary-600]="voucherForm.get('discountType')?.value === 'amount'"
+                     [ngClass]="{ 'bg-primary-600/5': voucherForm.get('discountType')?.value === 'amount' }">
+                <input type="radio" formControlName="discountType" value="amount" class="sr-only" [disabled]="isSubmitting()" (change)="onDiscountTypeChange('amount')" />
+                <mat-icon class="w-5 h-5" [class.text-primary-600]="voucherForm.get('discountType')?.value === 'amount'" [class.text-slate-400]="voucherForm.get('discountType')?.value !== 'amount'">payments</mat-icon>
+                <div>
+                  <p class="font-medium text-sm text-slate-900 dark:text-white">Số tiền (₫)</p>
+                  <p class="text-xs text-slate-500 dark:text-slate-400">Giảm thẳng một mức — mua 1 hay 10 máy cũng vậy</p>
+                </div>
+              </label>
+              <label class="flex items-center gap-2 px-4 py-3 border rounded-xl cursor-pointer transition-colors flex-1 border-slate-200 dark:border-slate-700"
+                [class.border-primary-600]="voucherForm.get('discountType')?.value === 'percent'"
+                [ngClass]="{ 'bg-primary-600/5': voucherForm.get('discountType')?.value === 'percent' }">
+                <input type="radio" formControlName="discountType" value="percent" class="sr-only" [disabled]="isSubmitting()" (change)="onDiscountTypeChange('percent')" />
+                <mat-icon class="w-5 h-5" [class.text-primary-600]="voucherForm.get('discountType')?.value === 'percent'" [class.text-slate-400]="voucherForm.get('discountType')?.value !== 'percent'">percent</mat-icon>
+                <div>
+                  <p class="font-medium text-sm text-slate-900 dark:text-white">Phần trăm (%)</p>
+                  <p class="text-xs text-slate-500 dark:text-slate-400">Tính trên tiền hàng thuộc phạm vi, có trần giảm</p>
+                </div>
+              </label>
+            </div>
+          </app-form-field>
+
+          <!-- Chỉ hiện ô tương ứng loại đang chọn. Dùng @if chứ không dùng
+               [class.hidden]: :host{display:block} của app-form-field đè .hidden. -->
+          @if (isPercentType()) {
+            <app-form-field
+              id="discountPercent-field"
+              label="Giá trị giảm (%)"
+              [required]="true"
+              hint="Đơn vị: % (0–100) — tính trên tiền hàng thuộc phạm vi"
+              [error]="hasError('discountPercent', 'min') || hasError('discountPercent', 'max') ? 'Phần trăm phải từ 1 đến 100' : ''"
+            >
+              <app-input
+                id="discountPercent"
+                name="discountPercent"
+                type="number"
+                formControlName="discountPercent"
+                placeholder="VD: 15"
+                [min]="'1'"
+                [max]="'100'"
+                [step]="'1'"
+                [ariaLabel]="'Phần trăm giảm giá'"
+              />
+            </app-form-field>
+          } @else {
+            <app-form-field
+              id="discountAmount-field"
+              label="Giá trị giảm (₫)"
+              [required]="true"
+              hint="Đơn vị: ₫ — trừ một lần cho cả đơn"
+              [error]="hasError('discountAmount', 'min') ? 'Số tiền phải lớn hơn 0' : ''"
+            >
+              <app-input
+                id="discountAmount"
+                name="discountAmount"
+                type="number"
+                formControlName="discountAmount"
+                placeholder="VD: 500000"
+                [min]="'0'"
+                [step]="'1000'"
+                [ariaLabel]="'Số tiền giảm giá'"
+              />
+            </app-form-field>
+          }
+
+          <!-- Trần giảm: chỉ có nghĩa với kiểu PERCENT -->
+          @if (isPercentType()) {
+            <app-form-field
+              id="maxDiscountAmount-field"
+              label="Giảm tối đa (₫)"
+              hint="Trần cho kiểu phần trăm — voucher 10% trên đơn 90 triệu sẽ giảm thẳng 9 triệu nếu không đặt trần."
+            >
+              <app-input
+                id="maxDiscountAmount"
+                name="maxDiscountAmount"
+                type="number"
+                formControlName="maxDiscountAmount"
+                placeholder="Để trống"
+                [min]="'1'"
+                [step]="'1'"
+                [ariaLabel]="'Giảm tối đa'"
+              />
+            </app-form-field>
+          }
+
+          @if (hasFormError('bothDiscount')) {
+            <p class="md:col-span-2 text-sm text-red-500">Chỉ được chọn một loại giảm giá</p>
+          }
+          @if (hasFormError('noDiscount')) {
+            <p class="md:col-span-2 text-sm text-red-500">Vui lòng nhập giá trị giảm giá</p>
+          }
+        </div>
+      </app-card>
+    </section>
+
+    <!-- Điều kiện & giới hạn -->
+    <section class="form-section" aria-labelledby="voucher-limit-heading">
+      <app-card [padding]="'default'" [variant]="'default'">
+        <div class="flex items-center gap-2 mb-4">
+          <mat-icon class="text-primary-600 dark:text-primary-400">lock</mat-icon>
+          <h3 id="voucher-limit-heading" class="text-lg font-medium text-slate-900 dark:text-white">
+            Điều kiện &amp; giới hạn
+          </h3>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <app-form-field
+            id="minOrderValue-field"
+            label="Đơn tối thiểu (₫)"
+            hint="Xét trên tiền hàng thuộc phạm vi, không phải cả giỏ."
+          >
+            <app-input
+              id="minOrderValue"
+              name="minOrderValue"
+              type="number"
+              formControlName="minOrderValue"
+              placeholder="Để trống"
+              [min]="'0'"
+              [step]="'1'"
+              [ariaLabel]="'Đơn tối thiểu'"
+            />
+          </app-form-field>
+
+          <app-form-field
+            id="startDate-field"
+            label="Bắt đầu hiệu lực"
+            hint="Để trống nếu dùng được ngay"
+          >
+            <input
+              type="datetime-local"
+              id="startDate"
+              name="startDate"
+              formControlName="startDate"
+              class="input w-full"
+              [disabled]="isSubmitting()"
+              [attr.aria-label]="'Thời gian bắt đầu'" />
+          </app-form-field>
+
+          <app-form-field
+            id="expiryDate-field"
+            label="Hết hạn"
+            hint="Để trống nếu không giới hạn thời gian"
+          >
+            <input
+              type="datetime-local"
+              id="expiryDate"
+              name="expiryDate"
+              formControlName="expiryDate"
+              class="input w-full"
+              [disabled]="isSubmitting()"
+              [attr.aria-label]="'Ngày hết hạn'"
+            />
+          </app-form-field>
+
+          <app-form-field
+            id="perUserLimit-field"
+            label="Giới hạn mỗi khách"
+            hint="Đếm cả khi khách gõ mã tay lẫn dùng từ ví."
+          >
+            <app-input
+              id="perUserLimit"
+              name="perUserLimit"
+              type="number"
+              formControlName="perUserLimit"
+              placeholder="Để trống"
+              [min]="'1'"
+              [step]="'1'"
+              [ariaLabel]="'Giới hạn mỗi khách'"
+            />
+          </app-form-field>
+
+          <app-form-field
+            id="usageLimit-field"
+            label="Tổng lượt dùng"
+            class="md:col-span-2"
+            hint="Ngân sách voucher — hết lượt thì mã tự ngừng áp. Đặt 0 nếu không giới hạn."
+            [error]="hasError('usageLimit', 'min') ? 'Giới hạn phải lớn hơn hoặc bằng 0' : ''"
+          >
+            <app-input
+              id="usageLimit"
+              name="usageLimit"
+              type="number"
+              formControlName="usageLimit"
+              placeholder="VD: 1000"
+              [min]="'0'"
+              [step]="'1'"
+              [ariaLabel]="'Tổng lượt dùng'"
+            />
+          </app-form-field>
+        </div>
+      </app-card>
+    </section>
+
+    <!-- Phạm vi áp dụng -->
+    <section class="form-section" aria-labelledby="scope-heading">
+      <app-card [padding]="'default'" [variant]="'default'">
+        <div class="flex items-center gap-2 mb-1">
+          <mat-icon class="text-primary-600 dark:text-primary-400">filter_alt</mat-icon>
+          <h3 id="scope-heading" class="text-lg font-medium text-slate-900 dark:text-white">
+            Phạm vi áp dụng
+          </h3>
+        </div>
+        <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">
+          Voucher chỉ giảm trên tiền hàng khớp phạm vi — điều kiện “đơn tối thiểu” cũng xét trên đó.
+        </p>
+
+        <app-scope-picker
+          [kind]="scopeType()"
+          (kindChange)="onScopeKindChange($event)"
+          [categories]="categories()"
+          [brands]="brands()"
+          [value]="scopeValues()"
+          (valueChange)="scopeValues.set($event)"
+        />
+      </app-card>
+    </section>
+
+    <!-- Ảnh & trạng thái -->
+    <section class="form-section" aria-labelledby="voucher-image-heading">
+      <app-card [padding]="'default'" [variant]="'default'">
+        <div class="flex items-center gap-2 mb-4">
+          <mat-icon class="text-primary-600 dark:text-primary-400">image</mat-icon>
+          <h3 id="voucher-image-heading" class="text-lg font-medium text-slate-900 dark:text-white">
+            Ảnh &amp; trạng thái
+          </h3>
+        </div>
+
+        <app-image-upload
+          [existingImage]="existingImage()"
+          [label]="'Ảnh đại diện voucher'"
+          [maxSizeMB]="5"
+          [disabled]="isSubmitting()"
+          (fileChange)="onImageFileChange($event)"
+          (imageRemoved)="imageRemoved.set($event)"
+        />
+
+        <div class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+          <app-form-field
+            id="imageUrl-field"
+            label="Hoặc dán link ảnh (URL)"
+            [error]="hasError('imageUrl', 'pattern') ? 'Link ảnh phải bắt đầu bằng http:// hoặc https://' : ''"
+          >
+            <app-input
+              id="imageUrl"
+              name="imageUrl"
+              formControlName="imageUrl"
+              placeholder="https://example.com/image.jpg"
+              [ariaLabel]="'Link ảnh voucher'"
+            ></app-input>
+          </app-form-field>
+        </div>
+
+        <div class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+          <label class="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 block">Trạng thái</label>
+          <div class="status-toggle flex items-center gap-3">
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                formControlName="active"
+                class="sr-only peer"
+                [attr.aria-label]="'Trạng thái hoạt động'">
+              <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-primary-600"></div>
+            </label>
+            <span class="toggle-label text-sm font-medium text-slate-700 dark:text-slate-300">
+              {{ voucherForm.get('active')?.value ? 'Kích hoạt — khách claim được ngay' : 'Tạm dừng — khách không claim được' }}
+            </span>
+          </div>
+        </div>
+      </app-card>
+    </section>
+      </div>
+
+      <!-- Preview cách tính (mockup D22) -->
+      <aside class="lg:col-span-1">
+        <div class="lg:sticky lg:top-36">
+          <app-card [padding]="'default'" [variant]="'default'">
+            <div class="flex items-center gap-2.5 mb-4 pb-3 border-b border-slate-200 dark:border-slate-700">
+              <mat-icon class="!w-4 !h-4 !text-[16px] !leading-none text-violet-600 dark:text-violet-400"
+                >visibility</mat-icon
+              >
+              <h3 class="text-sm font-bold text-slate-900 dark:text-white">Xem trước cách tính</h3>
+              <span
+                class="ml-auto px-2 py-0.5 rounded text-[9px] font-extrabold tracking-wider bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300"
+                >MOCKUP</span
+              >
+            </div>
+
+            <dl class="space-y-2.5 text-sm">
+              <div class="flex justify-between gap-3">
+                <dt class="text-slate-500 dark:text-slate-400">Tạm tính (cả giỏ)</dt>
+                <dd class="tabular-nums text-slate-900 dark:text-white">{{ money(89970000) }}</dd>
+              </div>
+              <div class="flex justify-between gap-3">
+                <dt class="text-slate-500 dark:text-slate-400">Giảm giá sản phẩm</dt>
+                <dd class="tabular-nums text-danger-600 dark:text-danger-400">−{{ money(2559200) }}</dd>
+              </div>
+              <div class="flex justify-between gap-3">
+                <dt class="text-slate-500 dark:text-slate-400">Tiền thuộc phạm vi voucher</dt>
+                <dd class="tabular-nums text-slate-900 dark:text-white">{{ money(previewEligible()) }}</dd>
+              </div>
+              <div class="flex justify-between gap-3">
+                <dt class="text-slate-500 dark:text-slate-400">Voucher giảm</dt>
+                <dd class="tabular-nums text-danger-600 dark:text-danger-400">
+                  @if (previewBelowMin()) {
+                    —
+                  } @else {
+                    −{{ money(previewDiscount()) }}
+                  }
+                </dd>
+              </div>
+            </dl>
+
+            <div class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700 flex justify-between items-baseline">
+              <span class="text-sm font-bold text-slate-900 dark:text-white">Khách trả</span>
+              <span class="text-xl font-extrabold tabular-nums text-primary-600 dark:text-primary-400">
+                {{ money(previewBelowMin() ? previewEligible() : previewPay()) }}
+              </span>
+            </div>
+
+            <p
+              class="mt-4 px-3 py-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/60 text-xs text-slate-500 dark:text-slate-400 leading-relaxed"
+            >
+              {{ previewNote() }} {{ previewScopeNote() }}
+            </p>
+          </app-card>
+        </div>
+      </aside>
+    </div>
+
+    <!-- Form Actions -->
+    <div class="form-actions flex justify-end gap-3 pt-6 mt-6 border-t border-slate-200 dark:border-slate-700">
+      <app-button
+        type="button"
+        variant="outline"
+        icon="close"
+        label="Hủy"
+        [disabled]="isSubmitting()"
+        (click)="onCancel()"
+        size="default">
+      </app-button>
+      <app-button
+        type="submit"
+        variant="primary"
+        [icon]="isSubmitting() ? '' : submitButtonIcon()"
+        [loading]="isSubmitting()"
+        [label]="isSubmitting() ? 'Đang lưu...' : submitButtonText()"
+        [disabled]="voucherForm.invalid || isSubmitting()"
+        size="default">
+      </app-button>
+    </div>
+  </form>
+</div>

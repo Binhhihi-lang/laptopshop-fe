@@ -4,18 +4,25 @@ import { Router, RouterModule } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { ClientCategoryService } from '@core/services/client-category.service';
 import { ClientProductService } from '@core/services/client-product.service';
+import { FlashSaleService } from '@core/services/flash-sale.service';
+import { HomeBannerService } from '@core/services/home-banner.service';
 import { CategoryResponse } from '@core/models/category.model';
 import { ProductResponse } from '@core/models/product.model';
+import { FlashSaleResponse } from '@core/models/flash-sale.model';
+import { HomeBannerResponse } from '@core/models/home-banner.model';
 import {
   CategoryTileComponent,
   EmptyStateComponent,
+  FlashSaleStripComponent,
+  HomeBannerCarouselComponent,
   LoadingComponent,
   ProductCardComponent,
 } from '@shared/components';
 
 /**
  * Trang chủ storefront:
- * - Hero banner + chip "Bán chạy nhất".
+ * - Carousel banner (admin cấu hình) hoặc hero mặc định khi chưa có banner.
+ * - Strip flash sale + đếm ngược khi có phiên đang chạy.
  * - Trust strip 4 mục.
  * - Carousel thương hiệu (prev/next + kéo chuột).
  * - Danh mục nổi bật (nhu cầu sử dụng).
@@ -30,6 +37,8 @@ import {
     MatIconModule,
     CategoryTileComponent,
     EmptyStateComponent,
+    FlashSaleStripComponent,
+    HomeBannerCarouselComponent,
     LoadingComponent,
     ProductCardComponent,
   ],
@@ -40,6 +49,8 @@ export class HomeComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly categoryService = inject(ClientCategoryService);
   private readonly productService = inject(ClientProductService);
+  private readonly bannerService = inject(HomeBannerService);
+  private readonly flashSaleService = inject(FlashSaleService);
 
   private readonly brandTrack = viewChild<ElementRef<HTMLDivElement>>('brandTrack');
 
@@ -98,10 +109,42 @@ export class HomeComponent implements OnInit {
   readonly bestSellers = signal<ProductResponse[]>([]);
   readonly brands = signal<string[]>([]);
 
+  /** Banner admin cấu hình — rỗng thì home rơi về hero mặc định. */
+  readonly banners = signal<HomeBannerResponse[]>([]);
+  /** Phiên flash đang chạy — null thì ẩn strip. */
+  readonly activeFlashSale = signal<FlashSaleResponse | null>(null);
+
   /** Sản phẩm bán chạy nhất — hiện trong hero chip. */
   readonly topSeller = computed(() => this.bestSellers()[0] ?? null);
 
   ngOnInit(): void {
+    this.load();
+    this.loadBanners();
+    this.loadFlashSale();
+  }
+
+  /**
+   * Banner + flash sale gọi RIÊNG, không gộp vào `load()`: 2 API này lỗi thì chỉ
+   * ẩn khối tương ứng, home vẫn hiện đủ phần còn lại (R20 — không
+   * forkJoin-blocking).
+   */
+  private loadBanners(): void {
+    this.bannerService.getActiveBanners().subscribe({
+      next: (banners) => this.banners.set(banners),
+      error: () => this.banners.set([]),
+    });
+  }
+
+  private loadFlashSale(): void {
+    this.flashSaleService.getActive().subscribe({
+      next: (sale) => this.activeFlashSale.set(sale),
+      error: () => this.activeFlashSale.set(null),
+    });
+  }
+
+  /** Phiên vừa kết thúc → nạp lại để strip ẩn và giá về thường. */
+  onFlashSaleExpired(): void {
+    this.loadFlashSale();
     this.load();
   }
 

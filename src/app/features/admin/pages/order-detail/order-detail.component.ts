@@ -196,6 +196,14 @@ export class OrderDetailComponent implements OnInit {
     this.router.navigate(['/admin/orders']);
   }
 
+  /**
+   * BE đã trả breakdown chưa? Đơn cũ (trước Sprint 2) không có 2 field này nên
+   * template rơi về dòng "Giảm giá" gộp — không vỡ giao diện (G10/G11).
+   */
+  hasBreakdown(order: AdminOrderDetail): boolean {
+    return order.promotionDiscount != null || order.voucherDiscount != null;
+  }
+
   formatPrice(price: number): string {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(
       price || 0,

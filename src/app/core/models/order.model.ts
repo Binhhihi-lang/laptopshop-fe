@@ -55,9 +55,13 @@ export interface OrderItem {
   productCode: string;
   productName: string;
   productImage: string;
+  /** Đơn giá tại thời điểm mua (chưa trừ khuyến mại của dòng). */
   price: number;
   quantity: number;
+  /** Thành tiền = price × quantity − discountAmount. */
   lineTotal: number;
+  /** Tiền khuyến mại giảm riêng dòng này (0/undefined nếu không giảm). */
+  discountAmount?: number;
 }
 
 export interface OrderSummary {
@@ -76,10 +80,19 @@ export interface OrderSummary {
 }
 
 export interface OrderDetail extends OrderSummary {
+  /** Tiền hàng SAU khi trừ giảm giá cấp dòng (chưa trừ voucher). */
   subtotal: number;
+  /** Tiền hàng GỐC = Σ(giá × số lượng), chưa trừ gì — mốc để các dòng cộng khớp. */
+  totalBeforeDiscount?: number;
   discountAmount: number;
+  /** Giảm cấp DÒNG từ khuyến mại (undefined = đơn cũ trước Sprint 1). */
+  promotionDiscount?: number;
+  /** Giảm cấp ĐƠN từ voucher (undefined = đơn cũ). */
+  voucherDiscount?: number;
+  /** Chương trình khuyến mại đã áp — rỗng nếu không có hoặc đơn cũ. */
+  promotionLines?: OrderPromotionLine[];
   shippingFee: number;
-  couponCode?: string;
+  voucherCode?: string;
   receiverFullName: string;
   receiverPhone: string;
   receiverEmail?: string;
@@ -96,6 +109,15 @@ export interface OrderDetail extends OrderSummary {
   canRetryPayment: boolean;
   /** Lý do bị chặn thanh toán lại (tiếng Việt, từ BE); null khi được phép. */
   retryBlockedReason?: string;
+}
+
+/** Một chương trình khuyến mại đã áp cho đơn — khớp PromotionLine ở BE. */
+export interface OrderPromotionLine {
+  promotionId: string;
+  /** Tên chương trình; null nếu chương trình đã bị xóa khỏi DB. */
+  name: string | null;
+  /** Tổng tiền chương trình này đã giảm cho cả đơn. */
+  discountAmount: number;
 }
 
 /** Một lần thử thanh toán — khớp PaymentAttemptResponse ở BE. */
@@ -121,20 +143,32 @@ export interface CreateOrderRequest {
   receiverCommuneCode: string;
   receiverCommuneName: string;
   note?: string;
-  couponCode?: string;
+  /** Mã gõ tay. D11: không được gửi đồng thời với userVoucherId. */
+  voucherCode?: string;
+  /** Voucher lấy từ ví (id UserVoucher, KHÔNG phải mã voucher). D11. */
+  userVoucherId?: string;
   paymentMethod: PaymentMethod;
 }
 
-export interface CouponValidation {
+export interface VoucherValidation {
   valid: boolean;
   code?: string;
   discountAmount: number;
   message: string;
+  /**
+   * Phần mệnh giá voucher KHÔNG dùng được vì đơn nhỏ hơn mệnh giá (BR-V14).
+   * `> 0` = khách mất phần này, không được hoàn lại — FE hiện cảnh báo.
+   */
+  forfeitedAmount: number;
 }
 
-export interface ValidateCouponRequest {
-  code: string;
-  orderTotal: number;
+/**
+ * D14: BE tự đọc giỏ của khách nên KHÔNG còn orderTotal.
+ * BR-V13: gửi ĐÚNG MỘT trong hai — `code` (mã gõ tay) hoặc `userVoucherId` (ví).
+ */
+export interface ValidateVoucherRequest {
+  code?: string;
+  userVoucherId?: string;
 }
 
 // ===== Admin (khớp dto/request/Order + dto/response/Order ở BE) =====
@@ -171,11 +205,19 @@ export interface AdminOrderDetail {
   paymentMethod: PaymentMethod;
   paymentStatus: PaymentStatus;
   paymentTxnRef?: string;
+  /** Tiền hàng SAU khi trừ giảm giá cấp dòng (chưa trừ voucher). */
   subtotal: number;
+  /** Tiền hàng GỐC = Σ(giá × số lượng), chưa trừ gì — mốc để các dòng cộng khớp. */
+  totalBeforeDiscount?: number;
   discountAmount: number;
+  /** G10: tách 2 nguồn giảm (D1) — null với đơn cũ trước Sprint 2. */
+  promotionDiscount?: number | null;
+  voucherDiscount?: number | null;
+  /** Các chương trình khuyến mại đã áp, gộp theo promotionId. */
+  promotionLines?: { promotionId: string; name: string | null; discountAmount: number }[];
   shippingFee: number;
   totalPrice: number;
-  couponCode?: string;
+  voucherCode?: string;
   userId?: string;
   customerName?: string;
   customerEmail?: string;

@@ -1,10 +1,10 @@
 import { Component, input, computed } from '@angular/core';
 
-export type PromoBadgeVariant = 'hot' | 'new' | 'sale' | 'sold-out';
+export type PromoBadgeVariant = 'hot' | 'new' | 'sale' | 'sold-out' | 'flash';
 
 /**
- * Nhãn nổi trên card sản phẩm: HOT / Mới / -x% / Hết hàng.
- * `sale` tự tính % từ price + originalPrice.
+ * Nhãn nổi trên card sản phẩm: HOT / Mới / -x% / Hết hàng / FLASH SALE.
+ * `sale` và `flash` tự tính % giảm (flash so với giá thường truyền vào).
  */
 @Component({
   selector: 'app-promo-badge',
@@ -40,6 +40,9 @@ export class PromoBadgeComponent {
         return 'bg-teal-500';
       case 'sale':
         return 'bg-rose-500';
+      case 'flash':
+        // Đậm hơn `sale` để phân biệt flash sale với giảm giá thường.
+        return 'bg-rose-600';
       case 'sold-out':
         return 'bg-slate-500';
     }
@@ -61,6 +64,8 @@ export class PromoBadgeComponent {
         }
         return '';
       }
+      case 'flash':
+        return 'FLASH SALE';
     }
   });
 }

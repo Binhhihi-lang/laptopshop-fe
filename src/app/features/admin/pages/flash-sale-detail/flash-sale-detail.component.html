@@ -1,0 +1,256 @@
+<div class="detail-container min-h-screen bg-slate-50 dark:bg-slate-950">
+  @if (permissionDenied()) {
+    <app-empty-state
+      variant="permission"
+      icon="lock"
+      title="Bạn không có quyền xem chi tiết phiên flash sale"
+      description="Quyền xem mục này đã bị thu hồi bởi quản trị viên. Vui lòng liên hệ quản trị viên nếu bạn cần truy cập."
+    />
+  } @else {
+    @if (isLoading()) {
+      <div class="max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-8" aria-hidden="true">
+        <div class="space-y-6">
+          <app-skeleton-card>
+            <app-skeleton width="w-64" height="h-8" class="mb-3" />
+            <app-skeleton width="w-40" height="h-5" />
+          </app-skeleton-card>
+          <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+            @for (i of [0, 1, 2, 3]; track i) {
+              <app-skeleton-card>
+                <app-skeleton width="w-full" height="h-16" />
+              </app-skeleton-card>
+            }
+          </div>
+        </div>
+      </div>
+    } @else if (errorMessage()) {
+      <app-empty-state
+        variant="error"
+        icon="error_outline"
+        title="Không thể tải phiên flash sale"
+        [description]="errorMessage()"
+        actionLabel="Quay về danh sách"
+        actionIcon="arrow_back"
+        actionVariant="primary"
+        (actionClick)="goBack()"
+      />
+    } @else if (flashSale(); as sale) {
+      <app-detail-header
+        [title]="sale.name"
+        backAriaLabel="Quay về danh sách phiên flash sale"
+        (backClick)="goBack()"
+      >
+        <div headerBadges class="flex items-center gap-3">
+          <app-badge [label]="statusBadge().label" [variant]="statusBadge().variant" [size]="'default'" />
+        </div>
+        <div headerActions class="flex items-center gap-2 sm:ml-auto">
+          @if (canUpdate()) {
+            <app-button
+              variant="secondary"
+              [icon]="sale.active ? 'pause' : 'play_arrow'"
+              [label]="sale.active ? 'Tạm dừng' : 'Mở lại'"
+              (click)="toggleActive()"
+            />
+            <app-button variant="primary" icon="edit" label="Sửa phiên" (click)="goToEdit()" />
+          }
+        </div>
+      </app-detail-header>
+
+      <div class="max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-8 space-y-6">
+        <!-- KPI -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+          <app-stat-card
+            icon="bolt"
+            iconClass="bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400"
+            label="Đã bán / kho"
+            [value]="totalSold() + ' / ' + totalStock()"
+            unit="suất"
+            [meter]="soldPercent()"
+            meterClass="bg-amber-500"
+            [caption]="soldPercent() + '% · còn ' + (totalStock() - totalSold()) + ' suất'"
+          />
+          <app-stat-card
+            icon="trending_up"
+            iconClass="bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400"
+            label="Doanh thu phiên"
+            [value]="format(revenue())"
+            [caption]="totalSold() + ' máy đã bán'"
+          />
+          <app-stat-card
+            icon="percent"
+            iconClass="bg-violet-100 dark:bg-violet-900/40 text-violet-600 dark:text-violet-400"
+            label="Tổng tiền đã giảm"
+            [value]="format(totalDiscount())"
+            [caption]="'Giảm TB ' + format(avgDiscountPerUnit()) + '/máy'"
+          />
+          <app-stat-card
+            icon="schedule"
+            iconClass="bg-sky-100 dark:bg-sky-900/40 text-sky-600 dark:text-sky-400"
+            label="Khung giờ"
+            [value]="formatDate(sale.startAt)"
+            [caption]="'Kết thúc ' + formatDate(sale.endAt)"
+          />
+        </div>
+
+        <!-- Sản phẩm trong phiên -->
+        <app-card [padding]="'default'">
+          <div class="flex flex-wrap items-baseline justify-between gap-2 mb-4">
+            <h3 class="text-title font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+              <mat-icon class="w-5 h-5 text-slate-400 dark:text-slate-500">inventory_2</mat-icon>
+              Sản phẩm trong phiên
+            </h3>
+            <p class="text-sm text-slate-500 dark:text-slate-400">
+              Hết kho thì dòng đó tự về giá thường — không chặn mua.
+            </p>
+          </div>
+
+          @if (!sale.items || sale.items.length === 0) {
+            <p class="text-sm text-slate-500 dark:text-slate-400 py-6 text-center">
+              Phiên này chưa có sản phẩm nào.
+            </p>
+          } @else {
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm">
+                <thead>
+                  <tr class="text-left text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">
+                    <th class="py-2.5 pr-4 font-medium">Sản phẩm</th>
+                    <th class="py-2.5 pr-4 font-medium text-right">Giá đang bán</th>
+                    <th class="py-2.5 pr-4 font-medium text-right">Giá flash</th>
+                    <th class="py-2.5 pr-4 font-medium text-right">Giảm</th>
+                    <th class="py-2.5 pr-4 font-medium">Đã bán / kho</th>
+                    <th class="py-2.5 pr-4 font-medium text-right">Tối đa / khách</th>
+                    <th class="py-2.5 font-medium text-right">Doanh thu</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (item of sale.items; track item.id) {
+                    <tr class="border-b border-slate-100 dark:border-slate-800 last:border-b-0">
+                      <td class="py-3 pr-4">
+                        <div class="flex items-center gap-3">
+                          @if (item.productImage) {
+                            <img
+                              [src]="item.productImage"
+                              [alt]="item.productName"
+                              class="w-10 h-10 rounded-lg object-cover shrink-0"
+                            />
+                          }
+                          <div class="min-w-0">
+                            <span class="block font-medium text-slate-900 dark:text-white truncate">
+                              {{ item.productName }}
+                            </span>
+                            <span class="block text-xs font-mono text-slate-500">{{ item.productCode }}</span>
+                          </div>
+                        </div>
+                      </td>
+                      <td class="py-3 pr-4 text-right text-slate-400 line-through tabular-nums">
+                        {{ format(item.regularPrice) }}
+                      </td>
+                      <td class="py-3 pr-4 text-right font-semibold text-slate-900 dark:text-white tabular-nums">
+                        {{ format(item.flashPrice) }}
+                      </td>
+                      <td class="py-3 pr-4 text-right text-danger-600 dark:text-danger-400 tabular-nums">
+                        −{{ format(itemDiscount(item)) }}
+                      </td>
+                      <td class="py-3 pr-4 min-w-[140px]">
+                        <div class="flex items-center gap-2">
+                          <div class="h-1.5 flex-1 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                            <div
+                              class="h-full rounded-full bg-amber-500 transition-all"
+                              [style.width.%]="itemPercent(item)"
+                            ></div>
+                          </div>
+                          <span class="text-xs text-slate-500 tabular-nums whitespace-nowrap">
+                            {{ item.soldInFlash }} / {{ item.flashStock }}
+                          </span>
+                        </div>
+                      </td>
+                      <td class="py-3 pr-4 text-right text-slate-700 dark:text-slate-300 tabular-nums">
+                        {{ item.perUserLimit ?? '∞' }}
+                      </td>
+                      <td class="py-3 text-right font-medium text-slate-900 dark:text-white tabular-nums">
+                        {{ format(itemRevenue(item)) }}
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+        </app-card>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Thông tin phiên -->
+          <app-card [padding]="'default'">
+            <h3 class="text-title font-semibold text-slate-900 dark:text-white mb-2 flex items-center gap-2">
+              <mat-icon class="w-5 h-5 text-slate-400 dark:text-slate-500">info</mat-icon>
+              Thông tin phiên
+            </h3>
+            <dl>
+              <app-info-item label="Tên phiên" [value]="sale.name" />
+              <app-info-item label="Bắt đầu" [value]="formatDate(sale.startAt)" [mono]="true" />
+              <app-info-item label="Kết thúc" [value]="formatDate(sale.endAt)" [mono]="true" />
+              @if (sale.bannerImage) {
+                <app-info-item label="Ảnh banner" [value]="sale.bannerImage" [mono]="true" />
+              }
+              @if (sale.description) {
+                <app-info-item label="Mô tả" [value]="sale.description" />
+              }
+              <app-info-item
+                label="Số sản phẩm trong phiên"
+                [value]="sale.items.length + ' sản phẩm · tổng kho ' + totalStock() + ' suất'"
+                [mono]="true"
+              />
+              <app-info-item label="Ngày tạo" [value]="formatDate(sale.createdAt)" [mono]="true" />
+              <app-info-item
+                label="Lặp lại hằng ngày"
+                value="Không — chưa hỗ trợ, sẽ bổ sung sau"
+              />
+            </dl>
+          </app-card>
+
+          <!-- Hiệu quả phiên -->
+          <app-card [padding]="'default'">
+            <h3 class="text-title font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+              <mat-icon class="w-5 h-5 text-slate-400 dark:text-slate-500">insights</mat-icon>
+              Hiệu quả phiên
+            </h3>
+            <dl class="space-y-3">
+              <div class="flex justify-between gap-4">
+                <dt class="text-slate-500 dark:text-slate-400">Doanh thu từ phiên</dt>
+                <dd class="font-semibold text-success-600 dark:text-success-400 tabular-nums">
+                  {{ format(revenue()) }}
+                </dd>
+              </div>
+              <div class="flex justify-between gap-4">
+                <dt class="text-slate-500 dark:text-slate-400">Số máy đã bán</dt>
+                <dd class="font-medium text-slate-900 dark:text-white tabular-nums">{{ totalSold() }}</dd>
+              </div>
+              <div class="flex justify-between gap-4">
+                <dt class="text-slate-500 dark:text-slate-400">Tổng tiền đã giảm</dt>
+                <dd class="font-semibold text-primary-600 dark:text-primary-400 tabular-nums">
+                  {{ format(totalDiscount()) }}
+                </dd>
+              </div>
+              <div class="flex justify-between gap-4">
+                <dt class="text-slate-500 dark:text-slate-400">Giảm trung bình / máy</dt>
+                <dd class="font-medium text-slate-900 dark:text-white tabular-nums">
+                  {{ format(avgDiscountPerUnit()) }}
+                </dd>
+              </div>
+              <div class="flex justify-between gap-4">
+                <dt class="text-slate-500 dark:text-slate-400">Suất còn lại</dt>
+                <dd class="font-medium text-slate-900 dark:text-white tabular-nums">
+                  {{ totalStock() - totalSold() }} / {{ totalStock() }}
+                </dd>
+              </div>
+            </dl>
+            <p class="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800 flex items-start gap-2 text-sm text-slate-500 dark:text-slate-400">
+              <mat-icon class="w-4 h-4 text-amber-500 shrink-0 mt-0.5">warning_amber</mat-icon>
+              <span>Hủy đơn sẽ <b>hoàn lại suất</b> vào phiên này — kho phiên lưu theo từng dòng đơn.</span>
+            </p>
+          </app-card>
+        </div>
+      </div>
+    }
+  }
+</div>

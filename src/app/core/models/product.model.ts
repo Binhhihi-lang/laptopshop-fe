@@ -25,6 +25,13 @@ export interface ProductResponse {
   categoryActive?: boolean; // trạng thái active của Category (undefined nếu category bị xóa mềm)
   createdAt: string; // ISO datetime string
   updatedAt: string; // ISO datetime string
+
+  // ===== Flash sale (Sprint 2b) — null/undefined nếu không trong phiên nào =====
+  flashPrice?: number | null; // giá sốc thay price khi phiên đang chạy (§0.5)
+  flashStock?: number | null; // kho riêng của phiên
+  flashSold?: number | null; // đã bán trong phiên — vẽ "Đã bán x/y"
+  flashSaleId?: string | null; // phiên chứa sản phẩm
+  flashEndAt?: string | null; // lúc phiên kết thúc (đếm ngược)
 }
 
 export interface ProductCreationRequest {

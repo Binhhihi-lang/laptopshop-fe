@@ -3,7 +3,7 @@ export interface DashboardStats {
   activeUserCount: number;
   productCount: number;
   categoryCount: number;
-  couponCount: number;
+  voucherCount: number;
   lowStockCount: number;
   lowStockProducts: LowStockProduct[];
 }

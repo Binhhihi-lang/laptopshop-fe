@@ -1,0 +1,190 @@
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <app-breadcrumb [items]="[{ label: 'Trang chủ', link: '/' }, { label: 'Flash Sale' }]" />
+
+  <header class="mt-4 mb-6">
+    <h1 class="text-2xl sm:text-3xl font-extrabold flex items-center gap-2">
+      <mat-icon class="!w-8 !h-8 !text-[32px] !leading-none text-rose-600">bolt</mat-icon>
+      Flash Sale
+    </h1>
+    <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
+      Giá sốc trong thời gian ngắn — số lượng có hạn.
+    </p>
+  </header>
+
+  <!-- Tabs -->
+  <div class="flex gap-2 border-b border-slate-200 dark:border-slate-700 mb-5">
+    <button
+      type="button"
+      class="px-4 py-2.5 text-sm font-semibold border-b-2 transition"
+      [class]="
+        activeTab() === 'running'
+          ? 'border-rose-600 text-rose-600 dark:text-rose-400'
+          : 'border-transparent text-slate-500 hover:text-slate-700'
+      "
+      (click)="setTab('running')"
+    >
+      Đang diễn ra
+    </button>
+    <button
+      type="button"
+      class="px-4 py-2.5 text-sm font-semibold border-b-2 transition"
+      [class]="
+        activeTab() === 'upcoming'
+          ? 'border-rose-600 text-rose-600 dark:text-rose-400'
+          : 'border-transparent text-slate-500 hover:text-slate-700'
+      "
+      (click)="setTab('upcoming')"
+    >
+      Sắp diễn ra
+      @if (upcoming().length > 0) {
+        <span class="text-xs">({{ upcoming().length }})</span>
+      }
+    </button>
+  </div>
+
+  @if (isLoading()) {
+    <app-loading />
+  } @else if (activeTab() === 'running') {
+    @if (activeSale(); as sale) {
+      <!-- Header phiên -->
+      <div
+        class="rounded-xl bg-rose-600 text-white px-5 py-4 mb-5 flex flex-wrap items-center justify-between gap-3"
+      >
+        <div>
+          <b class="text-lg font-bold">{{ sale.name }}</b>
+          @if (sale.description) {
+            <p class="text-sm text-rose-100 mt-0.5">{{ sale.description }}</p>
+          }
+        </div>
+        <span class="text-sm text-rose-100">
+          Kết thúc {{ formatDateTime(sale.endAt) }}
+        </span>
+      </div>
+
+      @if (items().length === 0) {
+        <app-empty-state
+          icon="bolt"
+          title="Phiên chưa có sản phẩm"
+          description="Quay lại sau để xem ưu đãi của phiên này."
+        />
+      } @else {
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+          @for (item of items(); track item.id) {
+            <a
+              [routerLink]="['/products', item.productCode]"
+              class="group rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 overflow-hidden hover:shadow-md hover:border-rose-400 transition-all"
+            >
+              <div class="relative aspect-square overflow-hidden bg-slate-100 dark:bg-slate-800">
+                @if (item.productImage) {
+                  <img
+                    [src]="item.productImage"
+                    [alt]="item.productName"
+                    loading="lazy"
+                    class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-150"
+                  />
+                } @else {
+                  <div class="w-full h-full flex items-center justify-center text-slate-400">
+                    <span class="text-5xl">💻</span>
+                  </div>
+                }
+                @if (discountPercent(item); as pct) {
+                  <span
+                    class="absolute top-2 left-2 px-2 py-0.5 rounded-md text-xs font-bold text-white bg-rose-600"
+                  >
+                    -{{ pct }}%
+                  </span>
+                }
+              </div>
+
+              <div class="p-3">
+                <h3
+                  class="text-sm font-medium text-slate-800 dark:text-slate-100 line-clamp-2 min-h-[2.5rem]"
+                >
+                  {{ item.productName }}
+                </h3>
+
+                <div class="mt-2 flex items-baseline gap-2 flex-wrap">
+                  <span class="text-lg font-bold text-rose-600 dark:text-rose-400 tabular-nums">
+                    {{ format(item.flashPrice) }}
+                  </span>
+                  <span class="text-sm text-slate-400 line-through tabular-nums">
+                    {{ format(item.regularPrice) }}
+                  </span>
+                </div>
+
+                <!-- Progress "Đã bán x/y" -->
+                <div class="mt-2">
+                  <div
+                    class="h-1.5 w-full rounded-full bg-rose-100 dark:bg-rose-950/50 overflow-hidden"
+                  >
+                    <div
+                      class="h-full rounded-full bg-rose-600 transition-all"
+                      [style.width.%]="soldPercent(item)"
+                    ></div>
+                  </div>
+                  <p class="text-[11px] mt-1 font-medium" [class]="
+                    isAvailable(item)
+                      ? 'text-rose-600 dark:text-rose-400'
+                      : 'text-slate-400'
+                  ">
+                    @if (isAvailable(item)) {
+                      Đã bán {{ item.soldInFlash }}/{{ item.flashStock }}
+                    } @else {
+                      Hết hàng
+                    }
+                  </p>
+                </div>
+
+                @if (item.perUserLimit) {
+                  <p class="text-[11px] text-slate-400 mt-1">
+                    Tối đa {{ item.perUserLimit }} sản phẩm/khách
+                  </p>
+                }
+              </div>
+            </a>
+          }
+        </div>
+      }
+    } @else {
+      <app-empty-state
+        icon="bolt"
+        title="Hiện không có phiên flash sale nào"
+        description="Xem tab 'Sắp diễn ra' để biết phiên tiếp theo."
+      />
+    }
+  } @else {
+    <!-- Tab sắp diễn ra -->
+    @if (upcoming().length === 0) {
+      <app-empty-state
+        icon="schedule"
+        title="Chưa có phiên nào sắp diễn ra"
+        description="Quay lại sau để không bỏ lỡ ưu đãi tiếp theo."
+      />
+    } @else {
+      @for (sale of upcoming(); track sale.id) {
+        <div
+          class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-5 py-4 mb-3 flex flex-wrap items-center justify-between gap-3"
+        >
+          <div class="min-w-0">
+            <b class="text-base font-semibold text-slate-900 dark:text-white">{{ sale.name }}</b>
+            @if (sale.description) {
+              <p class="text-sm text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-1">
+                {{ sale.description }}
+              </p>
+            }
+          </div>
+          <div class="flex items-center gap-4">
+            <span class="text-sm text-slate-500 dark:text-slate-400 whitespace-nowrap">
+              Bắt đầu {{ formatDateTime(sale.startAt) }}
+            </span>
+            <span
+              class="text-xs font-semibold px-2.5 py-1 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
+            >
+              {{ sale.itemCount }} sản phẩm
+            </span>
+          </div>
+        </div>
+      }
+    }
+  }
+</div>

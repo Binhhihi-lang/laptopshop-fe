@@ -3,16 +3,16 @@ import { Observable } from 'rxjs';
 import { ApiService } from './api.service';
 import { Page } from '@core/models/page.model';
 import {
-  CouponValidation,
+  VoucherValidation,
   CreateOrderRequest,
   OrderDetail,
   OrderSummary,
-  ValidateCouponRequest,
+  ValidateVoucherRequest,
   VnpayCreateRequest,
   VnpayCreateResponse,
 } from '@core/models/order.model';
 
-/** Đơn hàng storefront — khớp ClientOrderController + ClientCouponController ở BE. */
+/** Đơn hàng storefront — khớp ClientOrderController + ClientVoucherController ở BE. */
 @Injectable({ providedIn: 'root' })
 export class ClientOrderService {
   private readonly api = inject(ApiService);
@@ -33,10 +33,9 @@ export class ClientOrderService {
     return this.api.post<OrderDetail, void>(`/client/orders/${orderId}/cancel`, undefined as void);
   }
 
-  validateCoupon(req: ValidateCouponRequest): Observable<CouponValidation> {
-    return this.api.post<CouponValidation, ValidateCouponRequest>('/client/coupons/validate', req);
+  validateVoucher(req: ValidateVoucherRequest): Observable<VoucherValidation> {
+    return this.api.post<VoucherValidation, ValidateVoucherRequest>('/client/vouchers/validate', req);
   }
-
   /** Tạo URL thanh toán VNPay cho đơn đã tạo — khớp VnpayController ở BE. */
   createVnpayPayment(req: VnpayCreateRequest): Observable<VnpayCreateResponse> {
     return this.api.post<VnpayCreateResponse, VnpayCreateRequest>(

@@ -1,0 +1,311 @@
+<div class="detail-container min-h-screen bg-slate-50 dark:bg-slate-950">
+  @if (permissionDenied()) {
+    <app-empty-state
+      variant="permission"
+      icon="lock"
+      title="Bạn không có quyền xem chi tiết chương trình"
+      description="Quyền xem mục này đã bị thu hồi bởi quản trị viên. Vui lòng liên hệ quản trị viên nếu bạn cần truy cập."
+    />
+  } @else {
+    @if (isLoading()) {
+      <div class="max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-8" aria-hidden="true">
+        <div class="space-y-6">
+          <app-skeleton-card>
+            <app-skeleton width="w-64" height="h-8" class="mb-3" />
+            <app-skeleton width="w-40" height="h-5" />
+          </app-skeleton-card>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <app-skeleton-card>
+              <app-skeleton width="w-32" height="h-5" class="mb-4" />
+              <div class="space-y-3">
+                <app-skeleton width="w-full" height="h-4" />
+                <app-skeleton width="w-2/3" height="h-4" />
+              </div>
+            </app-skeleton-card>
+            <app-skeleton-card>
+              <app-skeleton width="w-32" height="h-5" class="mb-4" />
+              <app-skeleton width="w-full" height="h-4" />
+            </app-skeleton-card>
+          </div>
+        </div>
+      </div>
+    } @else if (errorMessage()) {
+      <app-empty-state
+        variant="error"
+        icon="error_outline"
+        title="Không thể tải chương trình"
+        [description]="errorMessage()"
+        actionLabel="Quay về danh sách"
+        actionIcon="arrow_back"
+        actionVariant="primary"
+        (actionClick)="goBack()"
+      />
+    } @else if (promotion(); as promo) {
+      <app-detail-header
+        [title]="promo.name"
+        backAriaLabel="Quay về danh sách chương trình khuyến mại"
+        (backClick)="goBack()"
+      >
+        <div headerBadges class="flex items-center gap-3">
+          <app-badge [label]="statusBadge().label" [variant]="statusBadge().variant" [size]="'default'" />
+          <app-badge [label]="timeBadge().label" [variant]="timeBadge().variant" [size]="'default'" />
+        </div>
+        <div headerActions class="flex items-center gap-2 sm:ml-auto">
+          <app-button
+            variant="secondary"
+            [icon]="promo.active ? 'pause' : 'play_arrow'"
+            [label]="promo.active ? 'Tạm dừng' : 'Bật lại'"
+            (click)="toggleActive()"
+          />
+          <app-button variant="secondary" icon="content_copy" label="Nhân bản" (click)="duplicate()" />
+          <app-button variant="primary" icon="edit" label="Sửa chương trình" (click)="goToEdit()" />
+        </div>
+      </app-detail-header>
+
+      <div class="max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-8 space-y-6">
+        <!-- KPI: chỉ dựng thẻ có dữ liệu thật từ BE (không bịa số) -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+          <app-stat-card
+            icon="receipt_long"
+            iconClass="bg-success-100 dark:bg-success-900/40 text-success-600 dark:text-success-400"
+            label="Đơn đã áp dụng"
+            [value]="promo.usedCount + ''"
+            [unit]="promo.usageLimit && promo.usageLimit > 0 ? '/ ' + promo.usageLimit : ''"
+            [meter]="usagePercent() ?? 0"
+            meterClass="bg-success-500"
+            [caption]="budgetLeft() !== null ? 'Còn ' + budgetLeft() + ' đơn ngân sách' : 'Không giới hạn'"
+          />
+          <app-stat-card
+            icon="percent"
+            iconClass="bg-primary-100 dark:bg-primary-900/40 text-primary-600 dark:text-primary-400"
+            label="Mức giảm"
+            [value]="discountLabel(promo)"
+            [caption]="discountTypeLabel(promo)"
+          />
+          <app-stat-card
+            icon="schedule"
+            iconClass="bg-warning-100 dark:bg-warning-900/40 text-warning-600 dark:text-warning-400"
+            label="Còn lại"
+            [value]="daysLeft() + ''"
+            unit="ngày"
+            [caption]="'Kết thúc ' + formatDate(promo.endDate)"
+          />
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+          <!-- Cột trái: các card thông tin -->
+          <div class="lg:col-span-2 space-y-6">
+            <!-- Thông tin chương trình -->
+            <app-card [padding]="'default'">
+              <h3 class="text-title font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                <mat-icon class="w-5 h-5 text-slate-400 dark:text-slate-500">campaign</mat-icon>
+                Thông tin chương trình
+              </h3>
+              <dl class="space-y-3">
+                <div class="flex justify-between gap-4">
+                  <dt class="text-slate-500 dark:text-slate-400">Tiêu đề cho khách</dt>
+                  <dd class="font-medium text-slate-900 dark:text-white text-right">{{ promo.title }}</dd>
+                </div>
+                @if (promo.description) {
+                  <div class="flex justify-between gap-4">
+                    <dt class="text-slate-500 dark:text-slate-400">Mô tả</dt>
+                    <dd class="text-slate-700 dark:text-slate-300 text-right">{{ promo.description }}</dd>
+                  </div>
+                }
+                <div class="flex justify-between gap-4">
+                  <dt class="text-slate-500 dark:text-slate-400">Kiểu giảm</dt>
+                  <dd class="font-medium text-slate-900 dark:text-white text-right">
+                    {{ discountTypeLabel(promo) }}
+                  </dd>
+                </div>
+                <div class="flex justify-between gap-4">
+                  <dt class="text-slate-500 dark:text-slate-400">Giá trị giảm</dt>
+                  <dd class="font-medium text-slate-900 dark:text-white text-right tabular-nums">
+                    {{ discountLabel(promo) }}
+                  </dd>
+                </div>
+                <div class="flex justify-between gap-4">
+                  <dt class="text-slate-500 dark:text-slate-400">Giảm tối đa / đơn</dt>
+                  <dd class="font-medium text-slate-900 dark:text-white text-right tabular-nums">
+                    {{ promo.maxDiscountAmount ? format(promo.maxDiscountAmount) : 'Không giới hạn' }}
+                  </dd>
+                </div>
+                <div class="flex justify-between gap-4">
+                  <dt class="text-slate-500 dark:text-slate-400">Ưu tiên</dt>
+                  <dd class="font-medium text-slate-900 dark:text-white text-right tabular-nums">
+                    {{ promo.priority ?? '—' }}
+                  </dd>
+                </div>
+                <div class="flex justify-between gap-4">
+                  <dt class="text-slate-500 dark:text-slate-400">Cộng dồn</dt>
+                  <dd class="font-medium text-slate-900 dark:text-white text-right">
+                    {{ promo.stackable ? 'Có' : 'Không' }}
+                  </dd>
+                </div>
+              </dl>
+            </app-card>
+
+            <!-- Điều kiện áp dụng -->
+            <app-card [padding]="'default'">
+              <h3 class="text-title font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                <mat-icon class="w-5 h-5 text-slate-400 dark:text-slate-500">lock</mat-icon>
+                Điều kiện áp dụng
+              </h3>
+              <dl class="space-y-3">
+                <div class="flex justify-between gap-4">
+                  <dt class="text-slate-500 dark:text-slate-400">Đơn tối thiểu</dt>
+                  <dd class="font-medium text-slate-900 dark:text-white text-right tabular-nums">
+                    {{ promo.minOrderValue ? format(promo.minOrderValue) : 'Không yêu cầu' }}
+                  </dd>
+                </div>
+                <div class="flex justify-between gap-4">
+                  <dt class="text-slate-500 dark:text-slate-400">Số lượng tối thiểu / dòng</dt>
+                  <dd class="font-medium text-slate-900 dark:text-white text-right tabular-nums">
+                    {{ promo.minQuantity ? promo.minQuantity + ' máy' : 'Không yêu cầu' }}
+                  </dd>
+                </div>
+                <div class="flex justify-between gap-4">
+                  <dt class="text-slate-500 dark:text-slate-400">Ngân sách</dt>
+                  <dd class="font-medium text-slate-900 dark:text-white text-right tabular-nums">
+                    {{ promo.usageLimit && promo.usageLimit > 0 ? promo.usageLimit + ' đơn' : 'Không giới hạn' }}
+                  </dd>
+                </div>
+                <div class="flex justify-between gap-4">
+                  <dt class="text-slate-500 dark:text-slate-400">Bắt đầu</dt>
+                  <dd class="font-medium text-slate-900 dark:text-white text-right">
+                    {{ formatDate(promo.startDate) }}
+                  </dd>
+                </div>
+                <div class="flex justify-between gap-4">
+                  <dt class="text-slate-500 dark:text-slate-400">Kết thúc</dt>
+                  <dd class="font-medium text-slate-900 dark:text-white text-right">
+                    {{ formatDate(promo.endDate) }}
+                  </dd>
+                </div>
+              </dl>
+            </app-card>
+
+            <!-- Phạm vi áp dụng -->
+            <app-card [padding]="'default'">
+              <h3 class="text-title font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                <mat-icon class="w-5 h-5 text-slate-400 dark:text-slate-500">filter_alt</mat-icon>
+                Phạm vi áp dụng
+              </h3>
+              <div class="flex flex-wrap gap-1.5 mb-3">
+                <app-badge [label]="scopeLabel(promo)" variant="primary" [size]="'default'" />
+              </div>
+              @if (promo.scopeValues && promo.scopeValues.length > 0) {
+                <div class="flex flex-wrap gap-1.5">
+                  @for (value of promo.scopeValues; track value) {
+                    <span
+                      class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-mono bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
+                    >
+                      {{ value }}
+                    </span>
+                  }
+                </div>
+              }
+            </app-card>
+
+            <!-- Loại trừ sản phẩm -->
+            <app-card [padding]="'default'">
+              <h3 class="text-title font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                <mat-icon class="w-5 h-5 text-slate-400 dark:text-slate-500">block</mat-icon>
+                Loại trừ sản phẩm
+              </h3>
+              @if (excludeNames().length === 0) {
+                <p class="text-sm text-slate-500 dark:text-slate-400">Không loại trừ sản phẩm nào.</p>
+              } @else {
+                <div class="flex flex-wrap gap-1.5">
+                  @for (item of excludeNames(); track item.id) {
+                    <span
+                      class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-danger-50 dark:bg-danger-900/30 text-danger-700 dark:text-danger-400"
+                    >
+                      {{ item.label }}
+                    </span>
+                  }
+                </div>
+                <p class="mt-3 text-sm text-slate-500 dark:text-slate-400">
+                  Sản phẩm này <b>không</b> được giảm dù khớp phạm vi ở trên.
+                </p>
+              }
+            </app-card>
+          </div>
+
+          <!-- Cột phải: hiệu quả + timeline -->
+          <aside class="lg:col-span-1 space-y-6">
+            <app-card [padding]="'default'">
+              <h3 class="text-title font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                <mat-icon class="w-5 h-5 text-slate-400 dark:text-slate-500">insights</mat-icon>
+                Hiệu quả chương trình
+              </h3>
+              <dl class="space-y-3">
+                <div class="flex justify-between gap-4">
+                  <dt class="text-slate-500 dark:text-slate-400">Số đơn đã áp dụng</dt>
+                  <dd class="font-medium text-slate-900 dark:text-white tabular-nums">{{ promo.usedCount }}</dd>
+                </div>
+                <div class="flex justify-between gap-4">
+                  <dt class="text-slate-500 dark:text-slate-400">Ngân sách còn lại</dt>
+                  <dd class="font-medium text-slate-900 dark:text-white tabular-nums">
+                    @if (budgetLeft() !== null) {
+                      {{ budgetLeft() }} / {{ promo.usageLimit }} đơn
+                    } @else {
+                      Không giới hạn
+                    }
+                  </dd>
+                </div>
+              </dl>
+              @if (usagePercent() !== null) {
+                <div class="mt-4">
+                  <div class="h-2 w-full rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                    <div
+                      class="h-full rounded-full bg-success-500 transition-all"
+                      [style.width.%]="usagePercent()"
+                    ></div>
+                  </div>
+                  <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">
+                    Đã dùng {{ promo.usedCount }} / {{ promo.usageLimit }} đơn · {{ usagePercent() }}%
+                  </p>
+                </div>
+              }
+            </app-card>
+
+            <app-card [padding]="'default'">
+              <h3 class="text-title font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                <mat-icon class="w-5 h-5 text-slate-400 dark:text-slate-500">history</mat-icon>
+                Dòng thời gian
+              </h3>
+              <ol class="relative border-l border-slate-200 dark:border-slate-700 ml-2 space-y-5">
+                <li class="ml-4">
+                  <span
+                    class="absolute -left-[5px] mt-1.5 w-2.5 h-2.5 rounded-full bg-success-500"
+                    aria-hidden="true"
+                  ></span>
+                  <p class="text-sm font-medium text-slate-900 dark:text-white">Đã tạo</p>
+                  <p class="text-xs text-slate-500 dark:text-slate-400">{{ formatDate(promo.createdAt) }}</p>
+                </li>
+                <li class="ml-4">
+                  <span
+                    class="absolute -left-[5px] mt-1.5 w-2.5 h-2.5 rounded-full"
+                    [class]="timeState(promo) === 'running' ? 'bg-primary-500' : 'bg-slate-300 dark:bg-slate-600'"
+                    aria-hidden="true"
+                  ></span>
+                  <p class="text-sm font-medium text-slate-900 dark:text-white">{{ timeBadge().label }}</p>
+                  <p class="text-xs text-slate-500 dark:text-slate-400">Từ {{ formatDate(promo.startDate) }}</p>
+                </li>
+                <li class="ml-4">
+                  <span
+                    class="absolute -left-[5px] mt-1.5 w-2.5 h-2.5 rounded-full bg-slate-300 dark:bg-slate-600"
+                    aria-hidden="true"
+                  ></span>
+                  <p class="text-sm font-medium text-slate-900 dark:text-white">Kết thúc dự kiến</p>
+                  <p class="text-xs text-slate-500 dark:text-slate-400">{{ formatDate(promo.endDate) }}</p>
+                </li>
+              </ol>
+            </app-card>
+          </aside>
+        </div>
+      </div>
+    }
+  }
+</div>

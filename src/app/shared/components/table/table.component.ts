@@ -132,9 +132,9 @@ export interface TableAction<T> {
               }
               @if (actions().length > 0) {
                 <th
-                  class="px-4 py-3 text-right text-xs uppercase tracking-wider font-medium text-slate-600 dark:text-slate-300 w-14"
+                  class="px-4 py-3 text-right text-xs uppercase tracking-wider font-medium text-slate-600 dark:text-slate-300 w-24"
                 >
-                  <span class="sr-only">Thao tác</span>
+                  Thao tác
                 </th>
               }
             </tr>

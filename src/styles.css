@@ -463,3 +463,89 @@ body {
   box-shadow: var(--shadow-xl);
   background: var(--color-bg-secondary);
 }
+
+/* ===========================================
+   MENU 3 CHẤM (MatMenu) — đồng bộ với dropdown của app-table
+   Material mặc định bo góc/đổ bóng/màu hover khác hẳn tông của app, nên
+   ép về đúng spec DESIGN.md: rounded-xl, shadow-lg, item px-4 py-2 text-sm,
+   hover surface.100/slate-700, item danger đỏ.
+   Panel của MatMenu nằm ở overlay ngoài component nên phải style toàn cục.
+   =========================================== */
+.mat-mdc-menu-panel.kebab-menu {
+  border-radius: var(--radius-xl) !important;
+  border: 1px solid var(--color-border-primary) !important;
+  box-shadow: var(--shadow-lg) !important;
+  background: var(--color-bg-secondary) !important;
+  min-width: 12rem !important;
+  overflow: hidden;
+}
+
+.mat-mdc-menu-panel.kebab-menu .mat-mdc-menu-content {
+  padding: 4px 0 !important;
+}
+
+.mat-mdc-menu-panel.kebab-menu .mat-mdc-menu-item {
+  height: auto !important;
+  min-height: 0 !important;
+  padding: 8px 16px !important;
+  font-size: 0.875rem !important;
+  line-height: 1.4 !important;
+  color: var(--color-text-primary) !important;
+}
+
+.mat-mdc-menu-panel.kebab-menu .mat-mdc-menu-item .mat-icon {
+  margin-right: 8px !important;
+  width: 16px !important;
+  height: 16px !important;
+  font-size: 16px !important;
+  color: var(--color-text-tertiary) !important;
+}
+
+.mat-mdc-menu-panel.kebab-menu .mat-mdc-menu-item:hover:not([disabled]) {
+  background: var(--color-bg-tertiary) !important;
+}
+
+/* Item nguy hiểm (Xóa) — đỏ, hover nền đỏ nhạt */
+.mat-mdc-menu-panel.kebab-menu .mat-mdc-menu-item.kebab-danger,
+.mat-mdc-menu-panel.kebab-menu .mat-mdc-menu-item.kebab-danger .mat-icon {
+  color: var(--color-danger) !important;
+}
+
+.mat-mdc-menu-panel.kebab-menu .mat-mdc-menu-item.kebab-danger:hover:not([disabled]) {
+  background: rgb(239 68 68 / 0.08) !important;
+}
+
+.mat-mdc-menu-panel.kebab-menu .mat-mdc-menu-item[disabled] {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+}
+
+/* ===========================================
+   SELECT DÙNG CLASS .input — vẽ lại mũi tên
+   Mũi tên gốc của trình duyệt bám sát viền phải nên nhìn chật, lệch với các ô
+   nhập cạnh nó. Tắt mũi tên gốc, tự vẽ chevron và chừa 36px lề phải cho nó thở
+   (đúng cách mockup admin xử lý). Áp cho mọi <select class="input"> nên chỉ cần
+   một rule là các form Promotion / Voucher / Banner / Dashboard đồng bộ.
+   app-select KHÔNG dính rule này (nó tự vẽ chevron bằng mat-icon, không dùng
+   class .input).
+   =========================================== */
+select.input {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  padding-right: 36px;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 15px 15px;
+}
+
+:root[data-theme='dark'] select.input {
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) select.input {
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  }
+}

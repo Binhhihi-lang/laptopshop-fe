@@ -48,7 +48,7 @@ const SEED_NOTIFICATIONS: AppNotification[] = [
   },
   {
     id: '5',
-    title: 'Mã giảm giá',
+    title: 'Voucher',
     message: 'SUMMER20 sắp hết hạn trong 2 ngày',
     time: '5 giờ trước',
     read: false,

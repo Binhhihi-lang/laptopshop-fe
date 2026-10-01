@@ -106,11 +106,11 @@ export class DashboardComponent implements OnInit {
         trend: { up: true, text: `${s.categoryCount} đang hoạt động` },
       },
       {
-        label: 'Mã giảm giá',
-        value: s.couponCount.toString(),
+        label: 'Voucher',
+        value: s.voucherCount.toString(),
         icon: 'local_offer',
         iconClass: 'bg-pink-50 text-pink-600 dark:bg-pink-900/30 dark:text-pink-400',
-        trend: { up: true, text: `${s.couponCount} đang hoạt động` },
+        trend: { up: true, text: `${s.voucherCount} đang hoạt động` },
       },
       {
         label: 'Doanh thu hôm nay',
@@ -192,7 +192,7 @@ export class DashboardComponent implements OnInit {
       },
       {
         id: '4',
-        title: 'Tạo mã giảm giá',
+        title: 'Tạo voucher',
         description: 'SUMMER20 - Giảm 20% tất cả laptop',
         time: '3 giờ trước',
         icon: 'local_offer',

@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { ApiService } from './api.service';
 import { API_ENDPOINTS } from '@core/utils/constants';
 import { Observable } from 'rxjs';
+import { Page } from '@core/models/page.model';
 import {
   ProductResponse,
   ProductCreationRequest,
@@ -22,6 +23,19 @@ export class ProductService {
 
   getProductById(id: string): Observable<ProductResponse> {
     return this.api.get<ProductResponse>(`${this.apiUrl}/${id}`);
+  }
+
+  /**
+   * Tìm sản phẩm cho picker ở trang quản trị (phạm vi khuyến mại, banner...).
+   * Phân trang để không phải tải hết danh mục khi shop có hàng nghìn sản phẩm.
+   * keyword rỗng = lấy trang đầu theo tên.
+   */
+  searchForPicker(keyword: string, page = 0, size = 20): Observable<Page<ProductResponse>> {
+    return this.api.get<Page<ProductResponse>>(`${this.apiUrl}/search`, {
+      keyword: keyword?.trim() || undefined,
+      page,
+      size,
+    });
   }
 
   private buildProductFormData(

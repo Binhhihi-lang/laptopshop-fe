@@ -1,0 +1,288 @@
+<div class="form-container min-h-screen bg-slate-50 dark:bg-slate-950">
+  @if (isLoading()) {
+    <div class="loading-overlay fixed inset-0 bg-white/80 dark:bg-slate-950/80 flex items-center justify-center z-50">
+      <app-loading size="xl" text="Đang tải..." />
+    </div>
+  }
+
+  <!-- Header -->
+  <div class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-16 z-[90]">
+    <div class="max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-4">
+      <app-page-header [title]="pageTitle()" [subtitle]="pageSubtitle()" [hasActions]="true">
+        <app-button
+          variant="ghost"
+          icon="arrow_back"
+          label="Quay lại"
+          (click)="onCancel()"
+          [disabled]="isSubmitting()"
+        />
+      </app-page-header>
+    </div>
+  </div>
+
+  <form
+    [formGroup]="flashSaleForm"
+    (ngSubmit)="onSubmit()"
+    class="flash-sale-form max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-8 space-y-6"
+  >
+    <!-- ===== Thông tin phiên ===== -->
+    <section class="form-section" aria-labelledby="info-heading">
+      <app-card [padding]="'default'" [variant]="'default'">
+        <div class="flex items-center gap-2 mb-4">
+          <mat-icon class="text-primary-600 dark:text-primary-400">bolt</mat-icon>
+          <h3 id="info-heading" class="text-lg font-medium text-slate-900 dark:text-white">
+            Thông tin phiên
+          </h3>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <app-form-field
+            id="name-field"
+            label="Tên phiên"
+            [required]="true"
+            [error]="hasError('name', 'required') ? 'Tên phiên không được để trống' : ''"
+          >
+            <app-input
+              id="name"
+              name="name"
+              formControlName="name"
+              placeholder="VD: Flash sale 12h trưa"
+              [ariaLabel]="'Tên phiên'"
+            />
+          </app-form-field>
+
+          <app-form-field id="description-field" label="Mô tả">
+            <app-input
+              id="description"
+              name="description"
+              formControlName="description"
+              placeholder="Mô tả ngắn về phiên"
+              [ariaLabel]="'Mô tả'"
+            />
+          </app-form-field>
+
+          <app-form-field
+            id="startAt-field"
+            label="Bắt đầu"
+            [required]="true"
+            [error]="hasError('startAt', 'required') ? 'Vui lòng chọn thời gian bắt đầu' : ''"
+          >
+            <input
+              type="datetime-local"
+              id="startAt"
+              name="startAt"
+              formControlName="startAt"
+              class="input w-full"
+              [disabled]="isSubmitting()"
+              [attr.aria-label]="'Thời gian bắt đầu'"
+            />
+          </app-form-field>
+
+          <app-form-field
+            id="endAt-field"
+            label="Kết thúc"
+            [required]="true"
+            [error]="hasFormError('dateRange') ? 'Thời gian kết thúc phải sau thời gian bắt đầu' : ''"
+          >
+            <input
+              type="datetime-local"
+              id="endAt"
+              name="endAt"
+              formControlName="endAt"
+              class="input w-full"
+              [disabled]="isSubmitting()"
+              [attr.aria-label]="'Thời gian kết thúc'"
+            />
+          </app-form-field>
+        </div>
+      </app-card>
+    </section>
+
+    <!-- ===== Ảnh banner ===== -->
+    <section class="form-section" aria-labelledby="banner-heading">
+      <app-card [padding]="'default'" [variant]="'default'">
+        <div class="flex items-center gap-2 mb-4">
+          <mat-icon class="text-primary-600 dark:text-primary-400">image</mat-icon>
+          <h3 id="banner-heading" class="text-lg font-medium text-slate-900 dark:text-white">
+            Ảnh banner phiên
+          </h3>
+        </div>
+        <app-image-upload
+          [existingImage]="existingImage()"
+          [label]="'Ảnh banner phiên'"
+          [maxSizeMB]="5"
+          [disabled]="isSubmitting()"
+          (fileChange)="onImageFileChange($event)"
+          (imageRemoved)="imageRemoved.set($event)"
+        />
+      </app-card>
+    </section>
+
+    <!-- ===== Sản phẩm trong phiên ===== -->
+    <section class="form-section" aria-labelledby="items-heading">
+      <app-card [padding]="'default'" [variant]="'default'">
+        <div class="flex items-center justify-between gap-3 mb-4">
+          <div class="flex items-center gap-2">
+            <mat-icon class="text-primary-600 dark:text-primary-400">inventory_2</mat-icon>
+            <h3 id="items-heading" class="text-lg font-medium text-slate-900 dark:text-white">
+              Sản phẩm trong phiên
+            </h3>
+          </div>
+          <app-button
+            variant="outline"
+            icon="add"
+            label="Thêm sản phẩm"
+            (click)="addItem()"
+            [disabled]="isSubmitting()"
+          />
+        </div>
+
+        <div formArrayName="items" class="overflow-visible">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="text-left text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">
+                <th class="py-2.5 pr-3 font-medium min-w-[240px]">Sản phẩm</th>
+                <th class="py-2.5 pr-3 font-medium w-[160px]">Giá flash (₫)</th>
+                <th class="py-2.5 pr-3 font-medium w-[120px]">Kho phiên</th>
+                <th class="py-2.5 pr-3 font-medium w-[120px]">Tối đa/khách</th>
+                <th class="py-2.5 pr-3 font-medium w-[150px] text-right">Giá thường</th>
+                <th class="py-2.5 pr-3 font-medium w-[90px] text-right">Giảm</th>
+                <th class="py-2.5 font-medium w-[52px]"></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (group of items.controls; track $index; let i = $index) {
+                <tr [formGroupName]="i" class="border-b border-slate-100 dark:border-slate-800 align-top">
+                  <td class="py-3 pr-3">
+                    <app-product-picker
+                      formControlName="productId"
+                      [placeholder]="'Tìm sản phẩm ' + (i + 1) + '…'"
+                      [ariaLabel]="'Chọn sản phẩm ' + (i + 1)"
+                      [disabled]="isSubmitting()"
+                      (selectionChange)="onProductPicked(i, $event)"
+                    />
+                  </td>
+                  <td class="py-3 pr-3">
+                    <app-input
+                      id="item-price-{{ i }}"
+                      name="flashPrice"
+                      type="number"
+                      formControlName="flashPrice"
+                      placeholder="VD: 15000000"
+                      [min]="'1'"
+                      [step]="'1'"
+                      [ariaLabel]="'Giá flash sản phẩm ' + (i + 1)"
+                    />
+                    @if (isPriceInvalid(i)) {
+                      <p class="mt-1 text-xs text-danger-600 dark:text-danger-400 font-medium">
+                        Phải thấp hơn giá thường
+                      </p>
+                    }
+                  </td>
+                  <td class="py-3 pr-3">
+                    <app-input
+                      id="item-stock-{{ i }}"
+                      name="flashStock"
+                      type="number"
+                      formControlName="flashStock"
+                      placeholder="VD: 10"
+                      [min]="'1'"
+                      [step]="'1'"
+                      [ariaLabel]="'Số lượng phiên sản phẩm ' + (i + 1)"
+                    />
+                  </td>
+                  <td class="py-3 pr-3">
+                    <app-input
+                      id="item-limit-{{ i }}"
+                      name="perUserLimit"
+                      type="number"
+                      formControlName="perUserLimit"
+                      placeholder="∞"
+                      [min]="'1'"
+                      [step]="'1'"
+                      [ariaLabel]="'Giới hạn mỗi khách sản phẩm ' + (i + 1)"
+                    />
+                  </td>
+                  <td class="py-3 pr-3 text-right text-slate-500 dark:text-slate-400 tabular-nums whitespace-nowrap">
+                    {{ formatPrice(regularPriceAt(i)) }}
+                  </td>
+                  <td class="py-3 pr-3 text-right whitespace-nowrap">
+                    @if (discountPercent(i); as pct) {
+                      @if (pct > 0) {
+                        <span class="px-2 py-0.5 rounded-md text-xs font-bold text-white bg-rose-600">
+                          −{{ pct }}%
+                        </span>
+                      }
+                    } @else {
+                      <span class="text-slate-400">—</span>
+                    }
+                  </td>
+                  <td class="py-3 text-right">
+                    <button
+                      type="button"
+                      class="w-8 h-8 rounded-lg grid place-items-center text-danger-600 hover:bg-danger-50 dark:hover:bg-danger-950/40"
+                      [attr.aria-label]="'Xóa sản phẩm ' + (i + 1)"
+                      (click)="removeItem(i)"
+                      [disabled]="isSubmitting()"
+                    >
+                      <mat-icon class="!w-4 !h-4 !text-[18px] !leading-none">delete</mat-icon>
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+            <tfoot>
+              <tr class="text-slate-600 dark:text-slate-300 font-medium">
+                <td class="pt-3 pr-3">{{ items.length }} sản phẩm</td>
+                <td colspan="2" class="pt-3 pr-3"></td>
+                <td class="pt-3 pr-3"></td>
+                <td class="pt-3 pr-3 text-right text-slate-500 dark:text-slate-400">Tổng kho</td>
+                <td class="pt-3 pr-3 text-right tabular-nums">{{ totalStock() }} suất</td>
+                <td class="pt-3"></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </app-card>
+    </section>
+
+    <!-- ===== Trạng thái ===== -->
+    <section class="form-section status-section" aria-labelledby="status-heading">
+      <app-card [padding]="'default'" [variant]="'default'" [compact]="true">
+        <div class="flex items-center gap-2 mb-3">
+          <mat-icon class="text-primary-600 dark:text-primary-400">toggle_on</mat-icon>
+          <h3 id="status-heading" class="text-lg font-medium text-slate-900 dark:text-white">
+            Trạng thái
+          </h3>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              formControlName="active"
+              class="sr-only peer"
+              [attr.aria-label]="'Trạng thái hoạt động'"
+            />
+            <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-primary-600"></div>
+          </label>
+          <span class="text-sm text-slate-700 dark:text-slate-300">
+            {{ flashSaleForm.get('active')?.value ? 'Đang bật' : 'Đã tắt' }}
+          </span>
+        </div>
+      </app-card>
+    </section>
+
+    <!-- ===== Actions ===== -->
+    <div class="form-actions flex justify-end gap-3">
+      <app-button variant="outline" label="Hủy" (click)="onCancel()" [disabled]="isSubmitting()" />
+      <app-button
+        variant="primary"
+        [icon]="submitButtonIcon()"
+        [label]="submitButtonText()"
+        type="submit"
+        [loading]="isSubmitting()"
+      />
+    </div>
+  </form>
+</div>

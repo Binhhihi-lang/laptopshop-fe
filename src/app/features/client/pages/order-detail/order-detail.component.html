@@ -67,7 +67,16 @@
                   class="w-14 h-14 rounded-lg object-cover bg-slate-100 dark:bg-slate-800" />
                 <div class="flex-1 min-w-0">
                   <p class="text-sm font-medium truncate">{{ item.productName }}</p>
-                  <p class="text-xs text-slate-500">Số lượng: {{ item.quantity }}</p>
+                  <!-- Đơn giá × SL: nếu chỉ hiện thành tiền thì giá đã trừ khuyến mại
+                       bị nhầm thành đơn giá (VD đơn giá 100k, giảm 10k → hiện 90k). -->
+                  <p class="text-xs text-slate-500">
+                    {{ format(item.price) }} × {{ item.quantity }}
+                  </p>
+                  @if (item.discountAmount) {
+                    <p class="text-xs text-green-600 dark:text-green-400">
+                      Giảm giá: - {{ format(item.discountAmount) }}
+                    </p>
+                  }
                 </div>
                 <span class="font-mono tabular-nums text-sm font-semibold">
                   {{ format(item.lineTotal) }}
@@ -107,8 +116,12 @@
       <aside class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-5">
         <h2 class="font-semibold mb-4">Thông tin thanh toán</h2>
         <app-order-summary
-          [subtotal]="order()!.subtotal"
+          [subtotal]="order()!.totalBeforeDiscount ?? order()!.subtotal"
           [discount]="order()!.discountAmount"
+          [promotionDiscount]="order()!.promotionDiscount"
+          [voucherDiscount]="order()!.voucherDiscount"
+          [voucherCode]="order()!.voucherCode"
+          [promotionLines]="order()!.promotionLines"
           [shippingFee]="order()!.shippingFee"
           [total]="order()!.totalPrice"
         />

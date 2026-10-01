@@ -133,9 +133,41 @@
       <!-- Tóm tắt -->
       <aside class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-5">
         <h2 class="font-semibold mb-4">Tóm tắt đơn hàng</h2>
+
+        <!-- G8/D17: cùng luồng chọn ưu đãi với trang giỏ -->
+        <button
+          type="button"
+          class="w-full flex items-center gap-3 px-3 py-3 mb-4 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-primary-400 text-left transition"
+          (click)="openOverlay()"
+        >
+          <span class="shrink-0 w-8 h-8 rounded-lg bg-primary-50 dark:bg-primary-950/40 grid place-items-center text-primary-600 dark:text-primary-400">
+            <mat-icon class="!w-4 !h-4 !text-[18px] !leading-none">sell</mat-icon>
+          </span>
+          <span class="flex-1 min-w-0">
+            <b class="block text-sm font-semibold truncate">
+              @if (totalSaving() > 0) {
+                Đã chọn ưu đãi và khuyến mại
+              } @else {
+                Chọn ưu đãi và khuyến mại
+              }
+            </b>
+            <span class="block text-xs text-slate-500 dark:text-slate-400 truncate">
+              @if (totalSaving() > 0) {
+                Tiết kiệm {{ formatMoney(totalSaving()) }}
+              } @else {
+                Voucher, voucher
+              }
+            </span>
+          </span>
+          <mat-icon class="!w-4 !h-4 !text-[18px] !leading-none text-slate-400">chevron_right</mat-icon>
+        </button>
+
         <app-order-summary
           [subtotal]="cart()!.subtotal"
-          [discount]="couponDiscount()"
+          [discount]="voucherDiscount()"
+          [promotionDiscount]="cart()!.promotionDiscount"
+          [voucherDiscount]="voucherPreviewDiscount()"
+          [forfeitedAmount]="voucherForfeited()"
           [shippingFee]="cart()!.shippingFee"
           [total]="finalTotal(cart()!)"
         />
@@ -154,3 +186,22 @@
     </div>
   }
 </div>
+
+@if (isOverlayOpen()) {
+  <app-promo-overlay
+    [promotions]="cart()?.promotions ?? []"
+    [vouchers]="vouchers()"
+    [selectedVoucherId]="selectedVoucherId()"
+    [voucherCode]="voucherCode()"
+    [voucherNote]="voucherNote()"
+    [voucherValid]="voucherValid() ?? false"
+    [applyingVoucher]="isApplyingVoucher()"
+    [totalSaving]="totalSaving()"
+    [voucherDiscount]="voucherPreviewDiscount()"
+    [forfeitedAmount]="voucherForfeited()"
+    (closed)="closeOverlay()"
+    (voucherCodeChange)="voucherCode.set($event)"
+    (applyVoucher)="validateVoucher()"
+    (voucherChange)="onVoucherChange($event)"
+  />
+}

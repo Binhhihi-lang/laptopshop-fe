@@ -94,6 +94,12 @@ export const CLIENT_ROUTES: Routes = [
           ),
         canActivate: [clientGuestBrowseGuard],
       },
+      // Flash sale — public: khách chưa đăng nhập vẫn xem được giá sốc (D31)
+      {
+        path: 'flash-sale',
+        loadComponent: () =>
+          import('./pages/flash-sale/flash-sale.component').then((m) => m.FlashSalePageComponent),
+      },
 
       // Account (auth required)
       {
@@ -150,6 +156,15 @@ export const CLIENT_ROUTES: Routes = [
         path: 'orders/:id',
         loadComponent: () =>
           import('./pages/order-detail/order-detail.component').then((m) => m.OrderDetailComponent),
+        canActivate: [clientAuthGuard],
+      },
+      // Ví voucher (§3.4) — xem voucher đã lưu + claim từ kho (D16)
+      {
+        path: 'vouchers',
+        loadComponent: () =>
+          import('./pages/voucher-wallet/voucher-wallet.component').then(
+            (m) => m.VoucherWalletComponent,
+          ),
         canActivate: [clientAuthGuard],
       },
 

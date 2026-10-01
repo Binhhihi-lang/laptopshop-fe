@@ -53,13 +53,20 @@ export class Sidebar {
     const canManage = this.authService.hasPermission('MANAGE_ROLES_PERMISSIONS');
     const canViewUsers = this.authService.hasPermission('READ_USER');
     const canViewOrders = this.authService.hasPermission('READ_ORDER');
+    const canViewVouchers = this.authService.hasPermission('READ_VOUCHER');
+    const canViewPromotions = this.authService.hasPermission('READ_PROMOTION');
+    const canViewFlashSale = this.authService.hasPermission('READ_FLASH_SALE');
+    const canViewBanner = this.authService.hasPermission('READ_HOME_BANNER');
     const all: NavItem[] = [
       { path: '/admin/dashboard', label: 'Dashboard', icon: 'dashboard', badge: 'new' },
       { path: '/admin/users', label: 'Người dùng', icon: 'people' },
       { path: '/admin/orders', label: 'Đơn hàng', icon: 'receipt_long' },
       { path: '/admin/products', label: 'Sản phẩm', icon: 'inventory_2' },
       { path: '/admin/categories', label: 'Danh mục', icon: 'category' },
-      { path: '/admin/coupons', label: 'Mã giảm giá', icon: 'local_offer' },
+      { path: '/admin/vouchers', label: 'Voucher', icon: 'local_offer' },
+      { path: '/admin/promotions', label: 'Khuyến mại', icon: 'percent' },
+      { path: '/admin/flash-sales', label: 'Flash Sale', icon: 'bolt' },
+      { path: '/admin/home-banners', label: 'Banner trang chủ', icon: 'image' },
       { path: '/admin/roles', label: 'Vai trò', icon: 'shield' },
       { path: '/admin/permissions', label: 'Quyền', icon: 'key' },
     ];
@@ -72,6 +79,18 @@ export class Sidebar {
       }
       if (item.path === '/admin/orders') {
         return canViewOrders;
+      }
+      if (item.path === '/admin/vouchers') {
+        return canViewVouchers;
+      }
+      if (item.path === '/admin/promotions') {
+        return canViewPromotions;
+      }
+      if (item.path === '/admin/flash-sales') {
+        return canViewFlashSale;
+      }
+      if (item.path === '/admin/home-banners') {
+        return canViewBanner;
       }
       return true;
     });

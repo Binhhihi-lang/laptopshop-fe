@@ -16,9 +16,17 @@ import { ProductDetailComponent } from '@features/admin/pages/product-detail/pro
 import { CategoriesComponent } from '@features/admin/pages/categories/categories.component';
 import { CategoryFormComponent } from '@features/admin/pages/category-form/category-form.component';
 import { CategoryDetailComponent } from '@features/admin/pages/category-detail/category-detail.component';
-import { CouponsComponent } from '@features/admin/pages/coupons/coupons.component';
-import { CouponFormComponent } from '@features/admin/pages/coupon-form/coupon-form.component';
-import { CouponDetailComponent } from '@features/admin/pages/coupon-detail/coupon-detail.component';
+import { VouchersComponent } from '@features/admin/pages/vouchers/vouchers.component';
+import { VoucherFormComponent } from '@features/admin/pages/voucher-form/voucher-form.component';
+import { VoucherDetailComponent } from '@features/admin/pages/voucher-detail/voucher-detail.component';
+import { PromotionsComponent } from '@features/admin/pages/promotions/promotions.component';
+import { PromotionFormComponent } from '@features/admin/pages/promotion-form/promotion-form.component';
+import { PromotionDetailComponent } from '@features/admin/pages/promotion-detail/promotion-detail.component';
+import { FlashSalesComponent } from '@features/admin/pages/flash-sales/flash-sales.component';
+import { FlashSaleFormComponent } from '@features/admin/pages/flash-sale-form/flash-sale-form.component';
+import { FlashSaleDetailComponent } from '@features/admin/pages/flash-sale-detail/flash-sale-detail.component';
+import { HomeBannersComponent } from '@features/admin/pages/home-banners/home-banners.component';
+import { HomeBannerFormComponent } from '@features/admin/pages/home-banner-form/home-banner-form.component';
 import { OrdersComponent } from '@features/admin/pages/orders/orders.component';
 import { OrderDetailComponent } from '@features/admin/pages/order-detail/order-detail.component';
 import { RolesComponent } from '@features/admin/pages/roles/roles.component';
@@ -75,10 +83,65 @@ export const routes: Routes = [
       { path: 'categories/create', component: CategoryFormComponent },
       { path: 'categories/:id/edit', component: CategoryFormComponent },
       { path: 'categories/:id', component: CategoryDetailComponent },
-      { path: 'coupons', component: CouponsComponent },
-      { path: 'coupons/create', component: CouponFormComponent },
-      { path: 'coupons/:id/edit', component: CouponFormComponent },
-      { path: 'coupons/:id', component: CouponDetailComponent },
+      { path: 'vouchers', component: VouchersComponent },
+      { path: 'vouchers/create', component: VoucherFormComponent },
+      { path: 'vouchers/:id/edit', component: VoucherFormComponent },
+      { path: 'vouchers/:id', component: VoucherDetailComponent },
+      {
+        path: 'promotions',
+        component: PromotionsComponent,
+        data: { permissions: ['READ_PROMOTION'] },
+      },
+      {
+        path: 'promotions/create',
+        component: PromotionFormComponent,
+        data: { permissions: ['CREATE_PROMOTION'] },
+      },
+      {
+        path: 'promotions/:id/edit',
+        component: PromotionFormComponent,
+        data: { permissions: ['UPDATE_PROMOTION'] },
+      },
+      {
+        path: 'promotions/:id',
+        component: PromotionDetailComponent,
+        data: { permissions: ['READ_PROMOTION'] },
+      },
+      {
+        path: 'flash-sales',
+        component: FlashSalesComponent,
+        data: { permissions: ['READ_FLASH_SALE'] },
+      },
+      {
+        path: 'flash-sales/create',
+        component: FlashSaleFormComponent,
+        data: { permissions: ['CREATE_FLASH_SALE'] },
+      },
+      {
+        path: 'flash-sales/:id/edit',
+        component: FlashSaleFormComponent,
+        data: { permissions: ['UPDATE_FLASH_SALE'] },
+      },
+      {
+        path: 'flash-sales/:id',
+        component: FlashSaleDetailComponent,
+        data: { permissions: ['READ_FLASH_SALE'] },
+      },
+      {
+        path: 'home-banners',
+        component: HomeBannersComponent,
+        data: { permissions: ['READ_HOME_BANNER'] },
+      },
+      {
+        path: 'home-banners/create',
+        component: HomeBannerFormComponent,
+        data: { permissions: ['CREATE_HOME_BANNER'] },
+      },
+      {
+        path: 'home-banners/:id/edit',
+        component: HomeBannerFormComponent,
+        data: { permissions: ['UPDATE_HOME_BANNER'] },
+      },
       {
         path: 'orders',
         component: OrdersComponent,

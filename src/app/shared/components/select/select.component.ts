@@ -80,7 +80,17 @@ export class SelectComponent implements ControlValueAccessor {
   id = input.required<string>();
   name = input<string>('');
   options = input.required<SelectOption[]>();
-  value = input<string>('');
+  /**
+   * Giá trị do PARENT đẩy xuống. `undefined` = parent không bind — lúc đó
+   * `writeValue`/`onChange` là nguồn duy nhất, effect không được đụng vào.
+   *
+   * <p>
+   * Mặc định cũ là `''` gây bug giống {@code InputComponent}: form dùng
+   * `formControlName` (không bind `[value]`) thì effect luôn đọc `''` và ghi đè
+   * `_value` về rỗng. Chỉ lộ ra khi component được TẠO SAU khi FormControl đã có
+   * giá trị — tức select nằm trong `@if`/`@else` chọn nhánh sau `patchValue()`.
+   */
+  value = input<string | undefined>(undefined);
   placeholder = input<string>('');
   disabled = input<boolean>(false);
   required = input<boolean>(false);
@@ -102,11 +112,15 @@ export class SelectComponent implements ControlValueAccessor {
 
   // FIX: untracked() để effect chỉ theo dõi `value` (input từ parent qua [value]),
   // không tự kích hoạt lại mỗi khi writeValue()/onChange() đổi `_value()`.
-  // Nếu không, mỗi lần writeValue() set categoryId từ patchValue(), effect này
-  // tự chạy lại, thấy `value` (luôn là '' vì dùng formControlName, không bind [value])
-  // khác với _value() vừa set, rồi set _value về '' — xóa mất categoryId vừa patch.
+  //
+  // `value` mặc định undefined = parent KHÔNG bind [value] (form dùng
+  // formControlName). Lúc đó phải bỏ qua hoàn toàn — nếu so sánh với undefined
+  // thì mọi giá trị writeValue() nạp vào đều bị coi là "lệch" và bị xoá về rỗng.
   private readonly valueSyncEffect = effect(() => {
     const parentValue = this.value();
+    if (parentValue === undefined) {
+      return;
+    }
     untracked(() => {
       if (parentValue !== this._value()) {
         this._value.set(parentValue);

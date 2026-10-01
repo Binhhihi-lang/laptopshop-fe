@@ -2,20 +2,27 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { MatIconModule } from '@angular/material/icon';
+import { MatDialog } from '@angular/material/dialog';
+import { Observable } from 'rxjs';
 import { ClientCartService } from '@core/services/client-cart.service';
 import { ClientOrderService } from '@core/services/client-order.service';
 import { ClientUserService } from '@core/services/client-user.service';
+import { ClientVoucherService } from '@core/services/client-voucher.service';
 import { LocationService, Commune, Province } from '@core/services/location.service';
 import { NotificationService } from '@core/services/notification.service';
 import { Cart } from '@core/models/cart.model';
-import { CreateOrderRequest, PaymentMethod, ValidateCouponRequest } from '@core/models/order.model';
+import { CreateOrderRequest, PaymentMethod, ValidateVoucherRequest } from '@core/models/order.model';
+import { UserVoucherResponse } from '@core/models/voucher.model';
 import { UserResponse } from '@core/models/user.model';
+import { ConfirmDialogComponent } from '@shared/confirm-dialog/confirm-dialog.component';
 import {
   BreadcrumbComponent,
   ButtonComponent,
   CheckoutStepsComponent,
   LoadingComponent,
   OrderSummaryComponent,
+  PromoOverlayComponent,
   SelectComponent,
   SelectOption,
 } from '@shared/components';
@@ -27,11 +34,13 @@ import {
     CommonModule,
     FormsModule,
     RouterModule,
+    MatIconModule,
     BreadcrumbComponent,
     ButtonComponent,
     CheckoutStepsComponent,
     LoadingComponent,
     OrderSummaryComponent,
+    PromoOverlayComponent,
     SelectComponent,
   ],
   templateUrl: './checkout.component.html',
@@ -43,16 +52,25 @@ export class CheckoutComponent implements OnInit {
   private readonly cartService = inject(ClientCartService);
   private readonly orderService = inject(ClientOrderService);
   private readonly userService = inject(ClientUserService);
+  private readonly voucherService = inject(ClientVoucherService);
   private readonly locationService = inject(LocationService);
   private readonly notification = inject(NotificationService);
+  private readonly dialog = inject(MatDialog);
 
   readonly isLoading = signal(true);
   readonly isSubmitting = signal(false);
   readonly cart = signal<Cart | null>(null);
-  readonly couponCode = signal('');
-  readonly couponDiscount = signal(0);
-  readonly couponNote = signal('');
-  readonly couponValid = signal<boolean | null>(null);
+  readonly voucherCode = signal('');
+  readonly voucherDiscount = signal(0);
+  /** BR-V14: phần mệnh giá voucher không dùng được (đơn nhỏ hơn mệnh giá). */
+  readonly voucherForfeited = signal(0);
+  /** Overlay "Khuyến mại và ưu đãi" — cùng component với trang giỏ (G8). */
+  readonly isOverlayOpen = signal(false);
+  readonly vouchers = signal<UserVoucherResponse[]>([]);
+  readonly selectedVoucherId = signal<string | null>(null);
+  readonly voucherNote = signal('');
+  readonly voucherValid = signal<boolean | null>(null);
+  readonly isApplyingVoucher = signal(false);
   /** Hồ sơ khách đang đăng nhập — nguồn điền sẵn form giao hàng. */
   readonly profile = signal<UserResponse | null>(null);
 
@@ -90,13 +108,28 @@ export class CheckoutComponent implements OnInit {
   );
 
   ngOnInit(): void {
-    const coupon = this.route.snapshot.queryParamMap.get('coupon');
-    if (coupon) {
-      this.couponCode.set(coupon);
+    // Ưu đãi mang từ trang giỏ sang: `voucherId` = chọn từ ví, `code` = gõ tay.
+    // Hai khóa tách riêng vì BE chặn khi nhận đồng thời cả hai (D11).
+    const voucherId = this.route.snapshot.queryParamMap.get('voucherId');
+    if (voucherId) {
+      this.selectedVoucherId.set(voucherId);
+    }
+    const code = this.route.snapshot.queryParamMap.get('code');
+    if (code) {
+      this.voucherCode.set(code);
     }
     this.loadProvinces();
     this.loadProfile();
+    this.loadVouchers();
     this.loadCart();
+  }
+
+  /** Chỉ voucher còn dùng được mới cho chọn ở overlay. */
+  loadVouchers(): void {
+    this.voucherService.getMyVouchers('AVAILABLE').subscribe({
+      next: (vouchers) => this.vouchers.set(vouchers),
+      error: () => this.vouchers.set([]),
+    });
   }
 
   // ================== ĐIỀN SẴN TỪ HỒ SƠ ==================
@@ -212,8 +245,12 @@ export class CheckoutComponent implements OnInit {
         }
         this.cart.set(cart);
         this.isLoading.set(false);
-        if (this.couponCode()) {
-          this.validateCoupon();
+        // Ưu đãi mang từ trang giỏ: hỏi lại BE số tiền ngay khi có giỏ, vì
+        // giá trị giảm phụ thuộc nội dung giỏ (BR-V13).
+        if (this.voucherCode()) {
+          this.validateVoucher();
+        } else if (this.selectedVoucherId()) {
+          this.onVoucherChange(this.selectedVoucherId());
         }
       },
       error: (err) => {
@@ -223,26 +260,100 @@ export class CheckoutComponent implements OnInit {
     });
   }
 
-  validateCoupon(): void {
+  /**
+   * D14: chỉ gửi `code` — BE tự đọc giỏ và tự tính, FE không gửi số tiền lên.
+   */
+  validateVoucher(): void {
     const cart = this.cart();
-    const code = this.couponCode().trim();
+    const code = this.voucherCode().trim();
     if (!cart || !code) {
-      this.couponDiscount.set(0);
+      this.voucherDiscount.set(0);
       return;
     }
-    const req: ValidateCouponRequest = { code, orderTotal: cart.subtotal };
-    this.orderService.validateCoupon(req).subscribe({
+    const req: ValidateVoucherRequest = { code };
+    this.orderService.validateVoucher(req).subscribe({
       next: (res) => {
-        this.couponValid.set(res.valid);
-        this.couponNote.set(res.message);
-        this.couponDiscount.set(res.discountAmount);
+        this.voucherValid.set(res.valid);
+        this.voucherNote.set(res.message);
+        this.voucherDiscount.set(res.discountAmount);
+        this.voucherForfeited.set(res.forfeitedAmount);
       },
-      error: () => this.couponDiscount.set(0),
+      error: () => {
+        this.voucherDiscount.set(0);
+        this.voucherForfeited.set(0);
+      },
     });
   }
 
+  openOverlay(): void {
+    this.isOverlayOpen.set(true);
+  }
+
+  closeOverlay(): void {
+    this.isOverlayOpen.set(false);
+  }
+
+  /**
+   * D11: voucher từ ví và mã gõ tay loại trừ nhau — chọn cái này thì xóa cái kia,
+   * vì BE chặn khi nhận cả hai.
+   *
+   * <p>
+   * BR-V13: chọn voucher từ ví cũng phải hỏi BE số tiền — trước đây FE tự tính
+   * trên `subtotal` (bỏ qua phạm vi voucher) nên số hiển thị lệch với số thu.
+   */
+  onVoucherChange(voucherId: string | null): void {
+    this.selectedVoucherId.set(voucherId);
+    if (voucherId === null) {
+      this.voucherDiscount.set(0);
+      this.voucherForfeited.set(0);
+      this.voucherNote.set('');
+      this.voucherValid.set(null);
+      return;
+    }
+    const voucher = this.vouchers().find((v) => v.id === voucherId);
+    this.voucherCode.set('');
+    this.voucherNote.set(voucher ? `Đang kiểm tra ${voucher.code}…` : '');
+    this.isApplyingVoucher.set(true);
+    this.orderService.validateVoucher({ userVoucherId: voucherId }).subscribe({
+      next: (res) => {
+        this.voucherValid.set(res.valid);
+        this.voucherNote.set(res.message);
+        this.voucherDiscount.set(res.discountAmount);
+        this.voucherForfeited.set(res.forfeitedAmount);
+        this.isApplyingVoucher.set(false);
+      },
+      error: (err) => {
+        this.voucherValid.set(false);
+        this.voucherNote.set(this.notification.extractError(err));
+        this.voucherDiscount.set(0);
+        this.voucherForfeited.set(0);
+        this.isApplyingVoucher.set(false);
+      },
+    });
+  }
+
+  /** Tiền voucher đang chọn giảm — lấy từ BE, không tự tính (BR-V13). */
+  voucherPreviewDiscount(): number {
+    return this.voucherDiscount();
+  }
+
+  totalSaving(): number {
+    const cart = this.cart();
+    return (cart?.promotionDiscount ?? 0) + this.voucherPreviewDiscount();
+  }
+
+  /** D6/D14: dùng `payable` BE trả, không tự trừ ở FE. */
   finalTotal(cart: Cart): number {
-    return Math.max(0, cart.total - this.couponDiscount());
+    const base = cart.payable ?? cart.total;
+    return Math.max(0, base - this.voucherPreviewDiscount());
+  }
+
+  formatMoney(value: number): string {
+    return new Intl.NumberFormat('vi-VN', {
+      style: 'currency',
+      currency: 'VND',
+      maximumFractionDigits: 0,
+    }).format(value);
   }
 
   /** Phương thức chưa triển khai — chỉ báo "sắp ra mắt", không submit. */
@@ -268,6 +379,57 @@ export class CheckoutComponent implements OnInit {
       return;
     }
 
+    // Mở tab trống NGAY trong sự kiện click: gọi window.open trong callback
+    // async sẽ bị trình duyệt chặn popup. Tab này được trỏ sang VNPay sau.
+    // Dialog xác nhận BR-V14 bên dưới là async nên phải mở tab TRƯỚC nó.
+    const vnpayTab = this.paymentMethod === 'VNPAY' ? window.open('about:blank', '_blank') : null;
+
+    // BR-V14: voucher mệnh giá > tiền hàng → khách mất phần chênh, không hoàn.
+    // Hỏi lại một lần nữa ở bước chốt đơn, không chỉ cảnh báo ở overlay.
+    if (this.voucherForfeited() > 0) {
+      this.confirmForfeited().subscribe((confirmed) => {
+        if (confirmed) {
+          this.placeOrder(vnpayTab);
+        } else {
+          vnpayTab?.close();
+        }
+      });
+      return;
+    }
+
+    this.placeOrder(vnpayTab);
+  }
+
+  /** Dialog xác nhận mất tiền voucher — true nếu khách đồng ý tiếp tục. */
+  private confirmForfeited(): Observable<boolean> {
+    const nominal = this.voucherDiscount() + this.voucherForfeited();
+    const code =
+      this.voucherCode() ||
+      this.vouchers().find((v) => v.id === this.selectedVoucherId())?.code ||
+      '';
+    return this.dialog
+      .open(ConfirmDialogComponent, {
+        width: '460px',
+        data: {
+          title: 'Voucher vượt giá trị đơn',
+          message:
+            `Voucher ${code} có mệnh giá ${this.formatMoney(nominal)} nhưng chỉ giảm được ` +
+            `${this.formatMoney(this.voucherDiscount())} cho đơn này. Phần chênh ` +
+            `${this.formatMoney(this.voucherForfeited())} không được hoàn lại, và voucher ` +
+            `vẫn tính là đã dùng. Bạn vẫn muốn đặt hàng?`,
+        },
+      })
+      .afterClosed();
+  }
+
+  /** Tạo đơn thật. Tách khỏi `submit` vì dialog xác nhận là bất đồng bộ. */
+  private placeOrder(vnpayTab: Window | null): void {
+    const cart = this.cart();
+    if (!cart) {
+      vnpayTab?.close();
+      return;
+    }
+
     // Ghép địa chỉ 2 cấp thành 1 chuỗi cho cột receiverAddress của BE
     const provinceName = this.provinceName();
     const communeName = this.communeName();
@@ -283,13 +445,11 @@ export class CheckoutComponent implements OnInit {
       receiverCommuneCode: this.receiverCommuneCode,
       receiverCommuneName: communeName,
       note: this.note.trim() || undefined,
-      couponCode: this.couponCode().trim() || undefined,
+      // D11: chỉ gửi MỘT trong hai — overlay đã đảm bảo loại trừ nhau.
+      voucherCode: this.selectedVoucherId() ? undefined : this.voucherCode().trim() || undefined,
+      userVoucherId: this.selectedVoucherId() ?? undefined,
       paymentMethod: this.paymentMethod,
     };
-
-    // Mở tab trống NGAY trong sự kiện click: gọi window.open trong callback
-    // async sẽ bị trình duyệt chặn popup. Tab này được trỏ sang VNPay sau.
-    const vnpayTab = this.paymentMethod === 'VNPAY' ? window.open('about:blank', '_blank') : null;
 
     this.isSubmitting.set(true);
     this.orderService.createOrder(req).subscribe({

@@ -31,39 +31,48 @@
 
       <aside class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-5 lg:sticky lg:top-24">
         <h2 class="font-semibold mb-4">Tóm tắt đơn hàng</h2>
+
+        <!-- G8/D17: một luồng chọn ưu đãi duy nhất, dùng chung với trang thanh toán -->
+        <button
+          type="button"
+          class="w-full flex items-center gap-3 px-3 py-3 mb-4 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-primary-400 text-left transition"
+          (click)="openOverlay()"
+        >
+          <span class="shrink-0 w-8 h-8 rounded-lg bg-primary-50 dark:bg-primary-950/40 grid place-items-center text-primary-600 dark:text-primary-400">
+            <mat-icon class="!w-4 !h-4 !text-[18px] !leading-none">sell</mat-icon>
+          </span>
+          <span class="flex-1 min-w-0">
+            <b class="block text-sm font-semibold truncate">
+              @if (totalSaving() > 0) {
+                Đã chọn ưu đãi và khuyến mại
+              } @else {
+                Chọn ưu đãi và khuyến mại
+              }
+            </b>
+            <span class="block text-xs text-slate-500 dark:text-slate-400 truncate">
+              @if (totalSaving() > 0) {
+                Tiết kiệm {{ formatMoney(totalSaving()) }}
+              } @else {
+                Voucher, voucher
+              }
+            </span>
+          </span>
+          <mat-icon class="!w-4 !h-4 !text-[18px] !leading-none text-slate-400">chevron_right</mat-icon>
+        </button>
+
         <app-order-summary
           [subtotal]="cart()!.subtotal"
-          [discount]="couponDiscount()"
+          [discount]="voucherDiscount()"
+          [promotionDiscount]="cart()!.promotionDiscount"
+          [voucherDiscount]="voucherPreviewDiscount()"
+          [forfeitedAmount]="voucherForfeited()"
           [shippingFee]="cart()!.shippingFee"
           [total]="finalTotal(cart()!)"
-        >
-          <div class="mt-4 flex gap-2">
-            <input
-              type="text"
-              [ngModel]="couponCode()"
-              (ngModelChange)="couponCode.set($event.toUpperCase())"
-              placeholder="Mã giảm giá"
-              class="flex-1 h-11 px-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-sm"
-            />
-            <app-button
-              label="Áp dụng"
-              variant="outline"
-              [loading]="isApplyingCoupon()"
-              (click)="applyCoupon()"
-            />
-          </div>
-          @if (couponNote()) {
-            <p
-              class="text-xs mt-2"
-              [class]="couponValid() ? 'text-green-600 dark:text-green-400' : 'text-rose-500'"
-            >
-              {{ couponNote() }}
-            </p>
-          }
-        </app-order-summary>
+        />
 
         <a
-          [routerLink]="checkoutLink()"
+          routerLink="/checkout"
+          [queryParams]="checkoutQueryParams()"
           class="mt-5 w-full inline-flex items-center justify-center px-4 py-3 rounded-lg bg-primary-600 text-white font-semibold hover:bg-primary-700"
         >
           Thanh toán
@@ -81,3 +90,22 @@
     />
   }
 </div>
+
+@if (isOverlayOpen()) {
+  <app-promo-overlay
+    [promotions]="cart()?.promotions ?? []"
+    [vouchers]="vouchers()"
+    [selectedVoucherId]="selectedVoucherId()"
+    [voucherCode]="voucherCode()"
+    [voucherNote]="voucherNote()"
+    [voucherValid]="voucherValid() ?? false"
+    [applyingVoucher]="isApplyingVoucher()"
+    [totalSaving]="totalSaving()"
+    [voucherDiscount]="voucherPreviewDiscount()"
+    [forfeitedAmount]="voucherForfeited()"
+    (closed)="closeOverlay()"
+    (voucherCodeChange)="voucherCode.set($event)"
+    (applyVoucher)="applyVoucher()"
+    (voucherChange)="onVoucherChange($event)"
+  />
+}
