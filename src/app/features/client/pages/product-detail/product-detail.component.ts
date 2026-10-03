@@ -117,11 +117,13 @@ export class ProductDetailComponent implements OnInit {
 
   private addToGuestCart(p: ProductResponse, qty: number): void {
     const items = this.cartService.getGuestCart();
+    const cap = this.maxBuyable();
     const existing = items.find((i) => i.productId === p.id);
     if (existing) {
-      existing.quantity = Math.min(existing.quantity + qty, p.quantity);
+      // Kẹp cả tồn kho lẫn trần mỗi khách của phiên flash (BE cũng kẹp khi gộp).
+      existing.quantity = Math.min(existing.quantity + qty, cap);
     } else {
-      items.push({ productId: p.id, quantity: qty });
+      items.push({ productId: p.id, quantity: Math.min(qty, cap) });
     }
     this.cartService.setGuestCart(items);
   }
@@ -136,6 +138,60 @@ export class ProductDetailComponent implements OnInit {
   discountPercent(): number {
     const p = this.product()!;
     return Math.round(((p.originalPrice! - p.price) / p.originalPrice!) * 100);
+  }
+
+  /** Dòng này đang trong phiên flash và còn suất? */
+  hasFlash(): boolean {
+    const p = this.product();
+    return !!p && p.flashPrice != null && p.flashPrice > 0 && (p.flashStock ?? 0) > 0;
+  }
+
+  /**
+   * Số máy tối đa khách được chọn: nhỏ hơn giữa tồn kho và trần mỗi khách của
+   * phiên flash. Không có phiên thì chỉ giới hạn theo tồn kho.
+   */
+  maxBuyable(): number {
+    const p = this.product();
+    if (!p) {
+      return 1;
+    }
+    const stock = p.quantity ?? 1;
+    const limit = p.flashPerUserLimit;
+    return limit != null && limit > 0 ? Math.min(stock, limit) : stock;
+  }
+
+  /** Tổng suất phiên = còn lại (flashStock) + đã bán (flashSold). */
+  flashTotal(): number {
+    const p = this.product();
+    return (p?.flashStock ?? 0) + (p?.flashSold ?? 0);
+  }
+
+  /** % đã bán của suất flash. */
+  flashPercent(): number {
+    const total = this.flashTotal();
+    return total > 0 ? Math.min(100, Math.round(((this.product()?.flashSold ?? 0) / total) * 100)) : 0;
+  }
+
+  /** Giờ kết thúc phiên flash, định dạng cho khách. */
+  flashEndAt(): string {
+    const end = this.product()?.flashEndAt;
+    if (!end) {
+      return '';
+    }
+    return new Date(end).toLocaleString('vi-VN', {
+      day: '2-digit',
+      month: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  }
+
+  formatPrice(value: number): string {
+    return new Intl.NumberFormat('vi-VN', {
+      style: 'currency',
+      currency: 'VND',
+      maximumFractionDigits: 0,
+    }).format(value);
   }
 
   // Các cặp label/value cho thông số kỹ thuật

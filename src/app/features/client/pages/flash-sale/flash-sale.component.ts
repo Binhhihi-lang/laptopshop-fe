@@ -52,12 +52,18 @@ export class FlashSalePageComponent implements OnInit {
     this.activeTab.set(tab);
   }
 
+  /** Tổng suất phiên của một item = còn lại (flashStock) + đã bán (soldInFlash). */
+  flashTotal(item: FlashSaleItemResponse): number {
+    return (item.flashStock ?? 0) + (item.soldInFlash ?? 0);
+  }
+
   /** % đã bán của một item — vẽ thanh tiến độ. */
   soldPercent(item: FlashSaleItemResponse): number {
-    if (!item.flashStock || item.flashStock <= 0) {
+    const total = this.flashTotal(item);
+    if (total <= 0) {
       return 0;
     }
-    return Math.min(100, Math.round(((item.soldInFlash ?? 0) / item.flashStock) * 100));
+    return Math.min(100, Math.round(((item.soldInFlash ?? 0) / total) * 100));
   }
 
   /** % giảm so với giá thường. */

@@ -25,7 +25,8 @@ export interface HomeBannerCreationRequest {
   title: string;
   kicker?: string;
   subtitle?: string;
-  inputFile?: File;
+  /** URL ảnh online (thay cho file khi admin dán link). */
+  imageUrl?: string;
   removeImage?: boolean;
   targetType: BannerTargetType;
   targetValue: string;

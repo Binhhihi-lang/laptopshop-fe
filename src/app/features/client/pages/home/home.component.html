@@ -65,49 +65,23 @@
     </section>
   }
 
-  <!-- Flash sale đang chạy: đếm ngược + tiến độ; hết phiên thì tự nạp lại -->
+  <!-- Flash sale đang chạy: dải gradient tràn viền + lưới sản phẩm; hết phiên thì tự nạp lại -->
   @if (activeFlashSale(); as sale) {
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
-      <app-flash-sale-strip [sale]="sale" (expired)="onFlashSaleExpired()" />
-    </div>
+    <app-flash-sale-strip [sale]="sale" (expired)="onFlashSaleExpired()" />
   }
-
-  <!-- Trust strip -->
-  <div class="border-y border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="grid grid-cols-2 md:grid-cols-4">
-        @for (item of trustItems; track item.label) {
-          <div class="flex items-center gap-3 py-4 px-2">
-            <span
-              class="w-[38px] h-[38px] rounded-xl flex-none flex items-center justify-center"
-              [class]="item.tint"
-            >
-              <mat-icon class="!w-5 !h-5 !text-[20px]">{{ item.icon }}</mat-icon>
-            </span>
-            <div>
-              <b class="block text-sm font-semibold">{{ item.label }}</b>
-              <span class="text-xs text-slate-500 dark:text-slate-400">{{ item.note }}</span>
-            </div>
-          </div>
-        }
-      </div>
-    </div>
-  </div>
 
   @if (isLoading()) {
     <div class="max-w-7xl mx-auto px-4 py-12">
       <app-loading text="Đang tải..."></app-loading>
     </div>
   } @else {
-    <!-- Thương hiệu nổi bật (carousel) -->
+    <!-- Thương hiệu nổi bật (tile gradient, kéo ngang) -->
     @if (brands().length > 0) {
-      <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-11">
-        <div class="flex items-center justify-between gap-3 mb-5">
+      <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-9">
+        <div class="flex items-end justify-between gap-3 mb-4">
           <div>
-            <h2 class="text-2xl font-bold text-slate-900 dark:text-white">Thương hiệu nổi bật</h2>
-            <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
-              Kéo ngang hoặc dùng mũi tên để xem thêm
-            </p>
+            <span class="text-xs font-semibold uppercase tracking-wider text-primary-600">Thương hiệu</span>
+            <h2 class="text-2xl font-bold text-slate-900 dark:text-white mt-1.5">Thương hiệu nổi bật</h2>
           </div>
           <div class="flex gap-2">
             <button
@@ -131,7 +105,7 @@
 
         <div
           #brandTrack
-          class="carousel-track flex gap-3.5 overflow-x-auto snap-x snap-mandatory pb-4 cursor-grab"
+          class="carousel-track flex gap-3.5 overflow-x-auto snap-x snap-mandatory pb-3.5 cursor-grab"
           (pointerdown)="onDragStart($event)"
           (pointermove)="onDragMove($event)"
           (pointerup)="onDragEnd()"
@@ -140,16 +114,13 @@
           @for (brand of brands(); track brand) {
             <button
               type="button"
-              class="flex-none w-[136px] snap-start flex flex-col items-center gap-2.5 text-center pt-5 px-3 pb-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:shadow-md hover:border-primary-500 hover:-translate-y-0.5 transition-all"
+              class="group flex-none w-[152px] snap-start flex flex-col gap-2 text-left rounded-xl p-4 text-white hover:-translate-y-0.5 hover:shadow-md transition-all"
+              [style.background]="brandGradient($index)"
               (click)="goBrand(brand)"
             >
-              <span
-                class="w-[52px] h-[52px] rounded-full flex items-center justify-center text-white font-extrabold text-lg"
-                [style.background]="brandGradient($index)"
-              >
-                {{ brandMark(brand) }}
-              </span>
-              <b class="text-sm font-bold text-slate-900 dark:text-white">{{ brand }}</b>
+              <mat-icon class="!w-7 !h-7 !text-[26px] !leading-none opacity-90">laptop_mac</mat-icon>
+              <b class="text-base font-bold">{{ brand }}</b>
+              <span class="text-xs opacity-85">{{ brandNote(brand) }}</span>
             </button>
           }
         </div>
@@ -158,18 +129,17 @@
 
     <!-- Nhu cầu sử dụng -->
     @if (categories().length > 0) {
-      <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-11 pt-1.5">
-        <div class="mb-5">
-          <h2 class="text-2xl font-bold text-slate-900 dark:text-white">Nhu cầu sử dụng</h2>
-          <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
-            Chọn laptop theo đúng nhu cầu của bạn
-          </p>
+      <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-9 pt-1.5">
+        <div class="mb-4">
+          <span class="text-xs font-semibold uppercase tracking-wider text-primary-600">Danh mục</span>
+          <h2 class="text-2xl font-bold text-slate-900 dark:text-white mt-1.5">Chọn theo nhu cầu</h2>
         </div>
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3.5">
           @for (cat of categories(); track cat.id) {
             <app-category-tile
               [category]="cat"
               [tint]="categoryTint($index)"
+              [icon]="categoryIcon($index)"
               (select)="goCategory(cat)"
             />
           }
@@ -225,4 +195,39 @@
       </section>
     }
   }
+
+  <!-- Cam kết chính hãng — đặt sát footer, phóng to thành dải nổi bật -->
+  <section
+    class="mt-14 mb-14 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"
+    aria-label="Cam kết của LaptopShop"
+  >
+    <div
+      class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 px-5 sm:px-8 py-8"
+    >
+      <div class="text-center max-w-2xl mx-auto mb-7">
+        <h2 class="text-2xl font-bold text-slate-900 dark:text-white">Cam kết của LaptopShop</h2>
+        <p class="text-sm text-slate-500 dark:text-slate-400 mt-1.5">
+          Mua sắm yên tâm — chính hãng, bảo hành dài hạn, hỗ trợ tận tâm
+        </p>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        @for (item of trustItems; track item.label) {
+          <div
+            class="flex items-center gap-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-5 py-5 hover:shadow-md transition-shadow"
+          >
+            <span
+              class="w-14 h-14 rounded-2xl flex-none flex items-center justify-center"
+              [class]="item.tint"
+            >
+              <mat-icon class="!w-7 !h-7 !text-[28px] !leading-none">{{ item.icon }}</mat-icon>
+            </span>
+            <div class="min-w-0">
+              <b class="block text-base font-bold text-slate-900 dark:text-white">{{ item.label }}</b>
+              <span class="text-sm text-slate-500 dark:text-slate-400">{{ item.note }}</span>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </section>
 </div>

@@ -220,7 +220,16 @@
                         </div>
                       </td>
                       <td class="px-4 py-3 text-right tabular-nums text-slate-600 dark:text-slate-400">
-                        {{ formatPrice(item.price) }}
+                        @if (item.originalPrice && item.originalPrice > item.price) {
+                          <span class="block font-semibold text-rose-600 dark:text-rose-400">
+                            {{ formatPrice(item.price) }}
+                          </span>
+                          <span class="block text-xs line-through text-slate-400">
+                            {{ formatPrice(item.originalPrice) }}
+                          </span>
+                        } @else {
+                          {{ formatPrice(item.price) }}
+                        }
                       </td>
                       <td class="px-4 py-3 text-center tabular-nums font-medium text-slate-900 dark:text-white">
                         {{ item.quantity }}

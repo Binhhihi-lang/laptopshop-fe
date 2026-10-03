@@ -55,8 +55,10 @@ export interface OrderItem {
   productCode: string;
   productName: string;
   productImage: string;
-  /** Đơn giá tại thời điểm mua (chưa trừ khuyến mại của dòng). */
+  /** Đơn giá tại thời điểm mua (đã gồm giá flash nếu có). */
   price: number;
+  /** Giá gốc lúc mua (chưa trừ flash) — gạch ngang khi khác `price`. Đơn cũ = null. */
+  originalPrice?: number | null;
   quantity: number;
   /** Thành tiền = price × quantity − discountAmount. */
   lineTotal: number;

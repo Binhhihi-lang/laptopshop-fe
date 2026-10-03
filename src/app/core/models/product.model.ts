@@ -32,6 +32,7 @@ export interface ProductResponse {
   flashSold?: number | null; // đã bán trong phiên — vẽ "Đã bán x/y"
   flashSaleId?: string | null; // phiên chứa sản phẩm
   flashEndAt?: string | null; // lúc phiên kết thúc (đếm ngược)
+  flashPerUserLimit?: number | null; // trần mỗi khách; null = không giới hạn
 }
 
 export interface ProductCreationRequest {

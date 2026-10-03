@@ -54,18 +54,53 @@
           {{ product()?.name }}
         </h1>
 
-        <p class="mt-3 flex items-center gap-3">
-          <app-price
-            [price]="product()!.price"
-            [originalPrice]="product()!.originalPrice"
-            size="lg"
-          />
-          @if (hasDiscount()) {
-            <span class="px-2 py-0.5 rounded-full bg-danger-100 text-danger-700 text-xs font-semibold">
-              -{{ discountPercent() }}%
+        <p class="mt-3 flex items-center gap-3 flex-wrap">
+          @if (hasFlash()) {
+            <!-- Dòng đang trong phiên flash: giá sốc thắng, giá gốc gạch ngang -->
+            <span class="text-2xl font-bold text-rose-600 dark:text-rose-400 tabular-nums">
+              {{ formatPrice(product()!.flashPrice!) }}
             </span>
+            <span class="text-base text-slate-400 line-through tabular-nums">
+              {{ formatPrice(product()!.price) }}
+            </span>
+            <span
+              class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-rose-600 text-white text-xs font-bold"
+            >
+              <mat-icon class="!w-3.5 !h-3.5 !text-[14px] !leading-none">bolt</mat-icon>
+              FLASH SALE -{{ flashPercent() }}%
+            </span>
+          } @else {
+            <app-price
+              [price]="product()!.price"
+              [originalPrice]="product()!.originalPrice"
+              size="lg"
+            />
+            @if (hasDiscount()) {
+              <span class="px-2 py-0.5 rounded-full bg-danger-100 text-danger-700 text-xs font-semibold">
+                -{{ discountPercent() }}%
+              </span>
+            }
           }
         </p>
+
+        @if (hasFlash() && flashEndAt()) {
+          <div class="mt-3 max-w-sm">
+            <div class="flex items-center justify-between text-xs mb-1">
+              <span class="text-rose-600 dark:text-rose-400 font-semibold">
+                Đã bán {{ product()!.flashSold ?? 0 }}/{{ flashTotal() }}
+              </span>
+              <span class="text-slate-500">Kết thúc {{ flashEndAt() }}</span>
+            </div>
+            <div class="h-1.5 w-full rounded-full bg-rose-100 dark:bg-rose-950/50 overflow-hidden">
+              <div class="h-full rounded-full bg-rose-600 transition-all" [style.width.%]="flashPercent()"></div>
+            </div>
+            @if (product()!.flashPerUserLimit != null) {
+              <p class="mt-2 text-xs text-rose-600 dark:text-rose-400 font-medium">
+                Tối đa {{ product()!.flashPerUserLimit }} máy/khách trong phiên
+              </p>
+            }
+          </div>
+        }
 
         @if (product()?.shortDesc) {
           <p class="mt-4 text-slate-600 dark:text-slate-400 leading-relaxed">
@@ -77,7 +112,7 @@
           <span class="text-sm font-medium">Số lượng:</span>
           <app-qty-stepper
             [value]="quantity()"
-            [max]="product()?.quantity ?? 1"
+            [max]="maxBuyable()"
             (changeValue)="quantity.set($event)"
           />
           <span class="text-sm text-slate-500">

@@ -24,14 +24,21 @@ export class HomeBannerService {
     return this.api.get<HomeBannerResponse>(`${this.adminUrl}/${id}`);
   }
 
-  createBanner(data: HomeBannerCreationRequest): Observable<HomeBannerResponse> {
-    return this.api.post<HomeBannerResponse, FormData>(this.adminUrl, this.buildFormData(data));
+  createBanner(data: HomeBannerCreationRequest, file?: File): Observable<HomeBannerResponse> {
+    return this.api.post<HomeBannerResponse, FormData>(
+      this.adminUrl,
+      this.buildFormData(data, file),
+    );
   }
 
-  updateBanner(id: string, data: HomeBannerCreationRequest): Observable<HomeBannerResponse> {
+  updateBanner(
+    id: string,
+    data: HomeBannerCreationRequest,
+    file?: File,
+  ): Observable<HomeBannerResponse> {
     return this.api.put<HomeBannerResponse, FormData>(
       `${this.adminUrl}/${id}`,
-      this.buildFormData(data),
+      this.buildFormData(data, file),
     );
   }
 
@@ -53,29 +60,13 @@ export class HomeBannerService {
     return this.api.get<HomeBannerResponse[]>('/client/home-banners');
   }
 
-  /** FormData khớp `@ModelAttribute HomeBannerCreationRequest` ở BE. */
-  private buildFormData(data: HomeBannerCreationRequest): FormData {
+  /** FormData khớp `@RequestPart` ở BE (khuôn Product): DTO là 1 part JSON `bannerInfo`. */
+  private buildFormData(data: HomeBannerCreationRequest, file?: File): FormData {
     const formData = new FormData();
-    formData.append('title', data.title);
-    if (data.kicker) {
-      formData.append('kicker', data.kicker);
-    }
-    if (data.subtitle) {
-      formData.append('subtitle', data.subtitle);
-    }
-    formData.append('targetType', data.targetType);
-    formData.append('targetValue', data.targetValue);
-    if (data.sortOrder !== undefined && data.sortOrder !== null) {
-      formData.append('sortOrder', data.sortOrder.toString());
-    }
-    if (data.active !== undefined) {
-      formData.append('active', data.active.toString());
-    }
-    if (data.removeImage) {
-      formData.append('removeImage', 'true');
-    }
-    if (data.inputFile instanceof File) {
-      formData.append('inputFile', data.inputFile);
+    const infoBlob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+    formData.append('bannerInfo', infoBlob);
+    if (file) {
+      formData.append('inputFile', file);
     }
     return formData;
   }

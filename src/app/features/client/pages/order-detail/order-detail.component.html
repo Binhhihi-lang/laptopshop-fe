@@ -70,7 +70,20 @@
                   <!-- Đơn giá × SL: nếu chỉ hiện thành tiền thì giá đã trừ khuyến mại
                        bị nhầm thành đơn giá (VD đơn giá 100k, giảm 10k → hiện 90k). -->
                   <p class="text-xs text-slate-500">
-                    {{ format(item.price) }} × {{ item.quantity }}
+                    @if (item.originalPrice && item.originalPrice > item.price) {
+                      <span class="text-rose-600 dark:text-rose-400 font-semibold">
+                        {{ format(item.price) }}
+                      </span>
+                      <span class="line-through text-slate-400">{{ format(item.originalPrice) }}</span>
+                      <span
+                        class="ml-1 rounded bg-rose-50 dark:bg-rose-950/40 px-1 py-0.5 text-[10px] font-bold text-rose-600 dark:text-rose-400"
+                      >
+                        FLASH
+                      </span>
+                    } @else {
+                      {{ format(item.price) }}
+                    }
+                    × {{ item.quantity }}
                   </p>
                   @if (item.discountAmount) {
                     <p class="text-xs text-green-600 dark:text-green-400">

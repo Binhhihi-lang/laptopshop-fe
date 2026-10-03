@@ -65,42 +65,13 @@ export class FlashSaleService {
   }
 
   /**
-   * FormData khớp `@ModelAttribute FlashSaleCreationRequest` ở BE.
-   *
-   * <p>
-   * `items` là List<FlashSaleItemRequest> nên Spring bind theo CHỈ SỐ:
-   * `items[0].productId`, `items[0].flashPrice`... Không gửi JSON string —
-   * @ModelAttribute không parse JSON.
+   * FormData khớp `@RequestPart` ở BE (khuôn Product): toàn bộ DTO đóng gói
+   * thành 1 part JSON `flashSaleInfo`. Phiên không có ảnh.
    */
   private buildFormData(data: FlashSaleCreationRequest): FormData {
     const formData = new FormData();
-    formData.append('name', data.name);
-    if (data.description) {
-      formData.append('description', data.description);
-    }
-    // datetime-local -> ISO để BE @DateTimeFormat(iso=DATE_TIME) bind được.
-    formData.append('startAt', new Date(data.startAt).toISOString());
-    formData.append('endAt', new Date(data.endAt).toISOString());
-    if (data.active !== undefined) {
-      formData.append('active', data.active.toString());
-    }
-    if (data.removeImage) {
-      formData.append('removeImage', 'true');
-    }
-    if (data.imageUrl) {
-      formData.append('imageUrl', data.imageUrl);
-    }
-    if (data.inputFile instanceof File) {
-      formData.append('inputFile', data.inputFile);
-    }
-    data.items.forEach((item, i) => {
-      formData.append(`items[${i}].productId`, item.productId);
-      formData.append(`items[${i}].flashPrice`, item.flashPrice.toString());
-      formData.append(`items[${i}].flashStock`, item.flashStock.toString());
-      if (item.perUserLimit !== null && item.perUserLimit !== undefined) {
-        formData.append(`items[${i}].perUserLimit`, item.perUserLimit.toString());
-      }
-    });
+    const infoBlob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+    formData.append('flashSaleInfo', infoBlob);
     return formData;
   }
 }

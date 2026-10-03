@@ -106,6 +106,11 @@ export class CartComponent implements OnInit {
     });
   }
 
+  /** Bấm + vượt trần mỗi khách của phiên flash → nhắc thay vì im lặng. */
+  onLimitWarning(limit: number): void {
+    this.notification.warn(`Chỉ được mua tối đa ${limit} máy/khách cho sản phẩm này`);
+  }
+
   removeItem(item: CartItem): void {
     this.cartService.removeItem(item.productId).subscribe({
       next: (cart) => this.cart.set(cart),

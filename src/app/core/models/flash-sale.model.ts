@@ -24,7 +24,6 @@ export interface FlashSaleResponse {
   id: string;
   name: string;
   description: string;
-  bannerImage: string;
   startAt: string;
   endAt: string;
   active: boolean;
@@ -44,15 +43,12 @@ export interface FlashSaleItemRequest {
   perUserLimit?: number | null;
 }
 
-/** Khớp dto/request/FlashSale/FlashSaleCreationRequest.java (@ModelAttribute + multipart) */
+/** Khớp dto/request/FlashSale/FlashSaleCreationRequest.java (JSON part `flashSaleInfo`) */
 export interface FlashSaleCreationRequest {
   name: string;
   description?: string;
   startAt: string;
   endAt: string;
   active?: boolean;
-  inputFile?: File;
-  imageUrl?: string;
-  removeImage?: boolean;
   items: FlashSaleItemRequest[];
 }

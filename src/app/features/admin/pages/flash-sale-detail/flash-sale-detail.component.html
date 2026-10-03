@@ -160,7 +160,7 @@
                             ></div>
                           </div>
                           <span class="text-xs text-slate-500 tabular-nums whitespace-nowrap">
-                            {{ item.soldInFlash }} / {{ item.flashStock }}
+                            {{ item.soldInFlash }} / {{ item.flashStock + item.soldInFlash }}
                           </span>
                         </div>
                       </td>
@@ -189,9 +189,6 @@
               <app-info-item label="Tên phiên" [value]="sale.name" />
               <app-info-item label="Bắt đầu" [value]="formatDate(sale.startAt)" [mono]="true" />
               <app-info-item label="Kết thúc" [value]="formatDate(sale.endAt)" [mono]="true" />
-              @if (sale.bannerImage) {
-                <app-info-item label="Ảnh banner" [value]="sale.bannerImage" [mono]="true" />
-              }
               @if (sale.description) {
                 <app-info-item label="Mô tả" [value]="sale.description" />
               }

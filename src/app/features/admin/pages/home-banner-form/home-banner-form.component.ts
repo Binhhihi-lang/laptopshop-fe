@@ -85,6 +85,7 @@ export class HomeBannerFormComponent implements OnInit {
     kicker: ['', [Validators.maxLength(100)]],
     title: ['', [Validators.required, Validators.maxLength(255)]],
     subtitle: [''],
+    imageUrl: ['', [Validators.pattern(/^https?:\/\/.+/)]],
     targetType: ['CATEGORY' as BannerTargetType, [Validators.required]],
     targetValue: ['', [Validators.required]],
     sortOrder: [0, [Validators.min(0)]],
@@ -224,6 +225,8 @@ export class HomeBannerFormComponent implements OnInit {
       targetValue: banner.targetValue,
       sortOrder: banner.sortOrder,
       active: banner.active,
+      // Ảnh hiện tại hiển thị ở khối image-upload; ô URL để trống cho lần sửa.
+      imageUrl: '',
     });
     this.existingImage.set(banner.image ?? null);
     this.imageRemoved.set(false);
@@ -259,14 +262,16 @@ export class HomeBannerFormComponent implements OnInit {
       targetValue: value,
       sortOrder: v.sortOrder ?? 0,
       active: v.active ?? true,
-      inputFile: this.imageFile() ?? undefined,
+      imageUrl: v.imageUrl?.trim() || undefined,
       removeImage: this.imageRemoved(),
     };
+    // Ảnh gửi ở part riêng `inputFile` (khuôn Product), không nằm trong JSON.
+    const file = this.imageFile() ?? undefined;
 
     const request$ =
       this.isEditMode() && this.bannerId()
-        ? this.bannerService.updateBanner(this.bannerId(), payload)
-        : this.bannerService.createBanner(payload);
+        ? this.bannerService.updateBanner(this.bannerId(), payload, file)
+        : this.bannerService.createBanner(payload, file);
 
     request$.subscribe({
       next: () => {

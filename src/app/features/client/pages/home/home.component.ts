@@ -64,16 +64,26 @@ export class HomeComponent implements OnInit {
     '#d97706',
   ];
 
-  // Màu gradient cho từng thương hiệu trong carousel (xoay vòng).
+  // Màu gradient cho từng thương hiệu trong carousel (xoay vòng) — khớp mockup.
   private static readonly BRAND_TINTS = [
     ['#0f172a', '#475569'],
     ['#2563eb', '#3b82f6'],
     ['#0ea5e9', '#0891b2'],
-    ['#dc2626', '#b91c1c'],
-    ['#7c3aed', '#6366f1'],
-    ['#e11d48', '#be123c'],
+    ['#7c3aed', '#a78bfa'],
+    ['#0d9488', '#2dd4bf'],
+    ['#e11d48', '#f59e0b'],
     ['#16a34a', '#15803d'],
     ['#c026d3', '#a21caf'],
+  ];
+
+  // Icon Material cho ô "Nhu cầu sử dụng" — xoay vòng theo danh mục (khớp mockup).
+  private static readonly CATEGORY_ICONS = [
+    'local_fire_department',
+    'laptop_mac',
+    'auto_awesome',
+    'star',
+    'person',
+    'devices',
   ];
 
   readonly trustItems = [
@@ -186,12 +196,27 @@ export class HomeComponent implements OnInit {
   /** Gradient cho ô thương hiệu thứ i. */
   brandGradient(index: number): string {
     const [from, to] = HomeComponent.BRAND_TINTS[index % HomeComponent.BRAND_TINTS.length];
-    return `linear-gradient(135deg, ${from}, ${to})`;
+    return `linear-gradient(140deg, ${from}, ${to})`;
   }
 
-  /** Chữ viết tắt hiển thị trong ô tròn thương hiệu. */
-  brandMark(brand: string): string {
-    return brand.slice(0, 2).toUpperCase();
+  /** Dòng phụ dưới tên hãng — gợi ý dòng máy (mockup: "ROG · Vivobook"). */
+  brandNote(brand: string): string {
+    const notes: Record<string, string> = {
+      apple: 'MacBook Air · Pro',
+      asus: 'ROG · Vivobook',
+      dell: 'XPS · Inspiron',
+      hp: 'Spectre · Pavilion',
+      lenovo: 'ThinkPad · IdeaPad',
+      msi: 'Katana · Modern',
+      acer: 'Aspire · Nitro',
+    };
+    return notes[brand.toLowerCase()] ?? 'Laptop chính hãng';
+  }
+
+  /** Icon cho ô nhu cầu thứ i — xoay vòng theo bảng icon cố định. */
+  categoryIcon(index: number): string {
+    const icons = HomeComponent.CATEGORY_ICONS;
+    return icons[index % icons.length];
   }
 
   goCategory(cat: CategoryResponse): void {

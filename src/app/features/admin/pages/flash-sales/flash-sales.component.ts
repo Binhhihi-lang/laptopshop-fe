@@ -304,8 +304,8 @@ export class FlashSalesComponent implements OnInit, AfterViewInit {
     });
   });
 
-  /** Số suất còn lại — chân thẻ "còn X suất". */
-  remainingStock = computed(() => this.totalStockAll() - this.totalSoldAll());
+  /** Số suất còn lại — chân thẻ "còn X suất". flashStock đã là số còn lại. */
+  remainingStock = computed(() => this.totalStockAll());
 
   /** % phiên còn hiệu lực (chưa kết thúc). */
   sessionsPercent = computed(() => {
@@ -380,8 +380,9 @@ export class FlashSalesComponent implements OnInit, AfterViewInit {
     }
   }
 
+  /** Tổng suất phiên = còn lại (flashStock) + đã bán (soldInFlash). */
   totalStock(s: FlashSaleResponse): number {
-    return (s.items ?? []).reduce((sum, i) => sum + (i.flashStock ?? 0), 0);
+    return (s.items ?? []).reduce((sum, i) => sum + (i.flashStock ?? 0) + (i.soldInFlash ?? 0), 0);
   }
 
   totalSold(s: FlashSaleResponse): number {

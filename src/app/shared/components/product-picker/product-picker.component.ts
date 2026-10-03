@@ -58,11 +58,11 @@ import { ProductResponse } from '@core/models/product.model';
       }
 
       <!-- Chế độ đơn: hiện sản phẩm đang chọn thay cho ô gõ -->
-      @if (!multiple() && selected().length > 0) {
+      @if (hasSingleValue()) {
         <div
           class="flex items-center justify-between gap-2 h-10 px-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900"
         >
-          <span class="truncate text-sm text-slate-900 dark:text-white">{{ selected()[0].name }}</span>
+          <span class="truncate text-sm text-slate-900 dark:text-white">{{ displayLabel() }}</span>
           <button
             type="button"
             class="grid place-items-center w-6 h-6 rounded text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
@@ -74,7 +74,7 @@ import { ProductResponse } from '@core/models/product.model';
         </div>
       }
 
-      @if (multiple() || selected().length === 0) {
+      @if (multiple() || !hasSingleValue()) {
         <div class="relative">
           <mat-icon
             class="absolute left-3 top-1/2 -translate-y-1/2 !w-4 !h-4 !text-[18px] !leading-none text-slate-400 pointer-events-none"
@@ -147,6 +147,12 @@ export class ProductPickerComponent implements ControlValueAccessor {
   placeholder = input('Tìm sản phẩm theo tên hoặc mã…');
   ariaLabel = input('Chọn sản phẩm');
   disabled = input(false);
+  /**
+   * Tên sản phẩm đã biết trước (vd khi sửa phiên flash sale, BE trả kèm
+   * `productName`). Có giá trị → `writeValue` hiện ngay, KHÔNG gọi HTTP tra tên,
+   * nên form không bị trống rồi "đổ" lên sau khi loading xong.
+   */
+  initialLabel = input<string>('');
 
   /** Bắn ra khi danh sách chọn đổi — form cha dùng để validate ngay. */
   selectionChange = output<string[]>();
@@ -157,6 +163,19 @@ export class ProductPickerComponent implements ControlValueAccessor {
   readonly loading = signal(false);
   readonly open = signal(false);
   readonly lastPage = signal(false);
+
+  /** Giá trị thô từ form (id/code) — giữ để biết "đã chọn" kể cả khi chưa tra tên. */
+  private readonly rawValue = signal<string | string[] | null>(null);
+
+  /** Chế độ đơn đã có giá trị (từ form hoặc vừa chọn) → hiện ô tên thay vì ô gõ. */
+  hasSingleValue(): boolean {
+    return !this.multiple() && (this.selected().length > 0 || !!this.rawValue());
+  }
+
+  /** Tên hiển thị ở chế độ đơn: ưu tiên sản phẩm đã tra, fallback nhãn có sẵn. */
+  displayLabel(): string {
+    return this.selected()[0]?.name ?? this.initialLabel();
+  }
 
   private page = 0;
   private readonly search$ = new Subject<string>();
@@ -183,9 +202,15 @@ export class ProductPickerComponent implements ControlValueAccessor {
   // ===== ControlValueAccessor =====
 
   writeValue(value: string | string[] | null): void {
+    this.rawValue.set(value);
     const keys = value == null ? [] : Array.isArray(value) ? value : [value];
     if (keys.length === 0) {
       this.selected.set([]);
+      return;
+    }
+    // Có nhãn sẵn (form sửa phiên truyền productName) → hiện NGAY, không gọi HTTP.
+    // Chỉ tra tên khi thực sự chưa biết, để form không trống rồi "đổ" lên sau.
+    if (!this.multiple() && this.initialLabel()) {
       return;
     }
     // Chỉ có id/code (từ BE) — tra tên để hiện chip. Sai thì bỏ qua, không chặn form.
@@ -255,6 +280,7 @@ export class ProductPickerComponent implements ControlValueAccessor {
 
   clear(): void {
     this.selected.set([]);
+    this.rawValue.set(null);
     this.emit();
   }
 

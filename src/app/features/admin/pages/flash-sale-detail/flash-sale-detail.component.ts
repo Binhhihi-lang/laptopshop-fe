@@ -54,9 +54,12 @@ export class FlashSaleDetailComponent implements OnInit {
   errorMessage = signal('');
   permissionDenied = signal<boolean>(false);
 
-  /** Tổng kho phiên. */
+  /** Tổng kho phiên = còn lại (flashStock) + đã bán (soldInFlash). */
   totalStock = computed(() =>
-    (this.flashSale()?.items ?? []).reduce((sum, i) => sum + (i.flashStock ?? 0), 0),
+    (this.flashSale()?.items ?? []).reduce(
+      (sum, i) => sum + (i.flashStock ?? 0) + (i.soldInFlash ?? 0),
+      0,
+    ),
   );
 
   totalSold = computed(() =>
@@ -177,11 +180,10 @@ export class FlashSaleDetailComponent implements OnInit {
     return 'success';
   }
 
-  /** Phần trăm đã bán của một dòng, cho thanh tiến độ. */
+  /** Phần trăm đã bán của một dòng = đã bán / (còn lại + đã bán). */
   itemPercent(item: { flashStock: number; soldInFlash: number }): number {
-    return item.flashStock > 0
-      ? Math.min(100, Math.round((item.soldInFlash / item.flashStock) * 100))
-      : 0;
+    const total = (item.flashStock ?? 0) + (item.soldInFlash ?? 0);
+    return total > 0 ? Math.min(100, Math.round((item.soldInFlash / total) * 100)) : 0;
   }
 
   itemDiscount(item: { regularPrice: number; flashPrice: number }): number {

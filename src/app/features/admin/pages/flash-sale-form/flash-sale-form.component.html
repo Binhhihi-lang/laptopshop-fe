@@ -98,26 +98,6 @@
       </app-card>
     </section>
 
-    <!-- ===== Ảnh banner ===== -->
-    <section class="form-section" aria-labelledby="banner-heading">
-      <app-card [padding]="'default'" [variant]="'default'">
-        <div class="flex items-center gap-2 mb-4">
-          <mat-icon class="text-primary-600 dark:text-primary-400">image</mat-icon>
-          <h3 id="banner-heading" class="text-lg font-medium text-slate-900 dark:text-white">
-            Ảnh banner phiên
-          </h3>
-        </div>
-        <app-image-upload
-          [existingImage]="existingImage()"
-          [label]="'Ảnh banner phiên'"
-          [maxSizeMB]="5"
-          [disabled]="isSubmitting()"
-          (fileChange)="onImageFileChange($event)"
-          (imageRemoved)="imageRemoved.set($event)"
-        />
-      </app-card>
-    </section>
-
     <!-- ===== Sản phẩm trong phiên ===== -->
     <section class="form-section" aria-labelledby="items-heading">
       <app-card [padding]="'default'" [variant]="'default'">
@@ -143,8 +123,8 @@
               <tr class="text-left text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">
                 <th class="py-2.5 pr-3 font-medium min-w-[240px]">Sản phẩm</th>
                 <th class="py-2.5 pr-3 font-medium w-[160px]">Giá flash (₫)</th>
-                <th class="py-2.5 pr-3 font-medium w-[120px]">Kho phiên</th>
-                <th class="py-2.5 pr-3 font-medium w-[120px]">Tối đa/khách</th>
+                <th class="py-2.5 pr-3 font-medium w-[120px]">Suất còn lại</th>
+                <th class="py-2.5 pr-3 font-medium w-[120px]">Tối đa/khách <span class="text-danger-500">*</span></th>
                 <th class="py-2.5 pr-3 font-medium w-[150px] text-right">Giá thường</th>
                 <th class="py-2.5 pr-3 font-medium w-[90px] text-right">Giảm</th>
                 <th class="py-2.5 font-medium w-[52px]"></th>
@@ -159,8 +139,12 @@
                       [placeholder]="'Tìm sản phẩm ' + (i + 1) + '…'"
                       [ariaLabel]="'Chọn sản phẩm ' + (i + 1)"
                       [disabled]="isSubmitting()"
+                      [initialLabel]="itemLabelAt(i)"
                       (selectionChange)="onProductPicked(i, $event)"
                     />
+                    @if (itemError(i, 'productId'); as err) {
+                      <p class="mt-1 text-xs text-danger-600 dark:text-danger-400 font-medium">{{ err }}</p>
+                    }
                   </td>
                   <td class="py-3 pr-3">
                     <app-input
@@ -173,6 +157,9 @@
                       [step]="'1'"
                       [ariaLabel]="'Giá flash sản phẩm ' + (i + 1)"
                     />
+                    @if (itemError(i, 'flashPrice'); as err) {
+                      <p class="mt-1 text-xs text-danger-600 dark:text-danger-400 font-medium">{{ err }}</p>
+                    }
                     @if (isPriceInvalid(i)) {
                       <p class="mt-1 text-xs text-danger-600 dark:text-danger-400 font-medium">
                         Phải thấp hơn giá thường
@@ -186,10 +173,16 @@
                       type="number"
                       formControlName="flashStock"
                       placeholder="VD: 10"
-                      [min]="'1'"
+                      [min]="'0'"
                       [step]="'1'"
                       [ariaLabel]="'Số lượng phiên sản phẩm ' + (i + 1)"
                     />
+                    @if (soldAt(i); as sold) {
+                      <p class="mt-1 text-[11px] text-slate-400">Đã bán {{ sold }} suất</p>
+                    }
+                    @if (itemError(i, 'flashStock'); as err) {
+                      <p class="mt-1 text-xs text-danger-600 dark:text-danger-400 font-medium">{{ err }}</p>
+                    }
                   </td>
                   <td class="py-3 pr-3">
                     <app-input
@@ -197,11 +190,19 @@
                       name="perUserLimit"
                       type="number"
                       formControlName="perUserLimit"
-                      placeholder="∞"
+                      placeholder="VD: 1"
                       [min]="'1'"
                       [step]="'1'"
-                      [ariaLabel]="'Giới hạn mỗi khách sản phẩm ' + (i + 1)"
+                      [ariaLabel]="'Số máy tối đa mỗi khách, sản phẩm ' + (i + 1)"
                     />
+                    @if (itemError(i, 'perUserLimit'); as err) {
+                      <p class="mt-1 text-xs text-danger-600 dark:text-danger-400 font-medium">{{ err }}</p>
+                    }
+                    @if (isLimitExceedsStock(i)) {
+                      <p class="mt-1 text-xs text-danger-600 dark:text-danger-400 font-medium">
+                        Không được vượt suất còn lại
+                      </p>
+                    }
                   </td>
                   <td class="py-3 pr-3 text-right text-slate-500 dark:text-slate-400 tabular-nums whitespace-nowrap">
                     {{ formatPrice(regularPriceAt(i)) }}
@@ -236,7 +237,7 @@
                 <td class="pt-3 pr-3">{{ items.length }} sản phẩm</td>
                 <td colspan="2" class="pt-3 pr-3"></td>
                 <td class="pt-3 pr-3"></td>
-                <td class="pt-3 pr-3 text-right text-slate-500 dark:text-slate-400">Tổng kho</td>
+                <td class="pt-3 pr-3 text-right text-slate-500 dark:text-slate-400">Tổng suất còn lại</td>
                 <td class="pt-3 pr-3 text-right tabular-nums">{{ totalStock() }} suất</td>
                 <td class="pt-3"></td>
               </tr>

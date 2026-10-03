@@ -83,10 +83,26 @@ export const routes: Routes = [
       { path: 'categories/create', component: CategoryFormComponent },
       { path: 'categories/:id/edit', component: CategoryFormComponent },
       { path: 'categories/:id', component: CategoryDetailComponent },
-      { path: 'vouchers', component: VouchersComponent },
-      { path: 'vouchers/create', component: VoucherFormComponent },
-      { path: 'vouchers/:id/edit', component: VoucherFormComponent },
-      { path: 'vouchers/:id', component: VoucherDetailComponent },
+      {
+        path: 'vouchers',
+        component: VouchersComponent,
+        data: { permissions: ['READ_VOUCHER'] },
+      },
+      {
+        path: 'vouchers/create',
+        component: VoucherFormComponent,
+        data: { permissions: ['CREATE_VOUCHER'] },
+      },
+      {
+        path: 'vouchers/:id/edit',
+        component: VoucherFormComponent,
+        data: { permissions: ['UPDATE_VOUCHER'] },
+      },
+      {
+        path: 'vouchers/:id',
+        component: VoucherDetailComponent,
+        data: { permissions: ['READ_VOUCHER'] },
+      },
       {
         path: 'promotions',
         component: PromotionsComponent,

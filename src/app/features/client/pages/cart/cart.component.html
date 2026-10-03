@@ -24,6 +24,7 @@
           <app-cart-line-item
             [item]="item"
             (quantityChange)="updateQty(item, $event)"
+            (limitWarning)="onLimitWarning($event)"
             (remove)="removeItem(item)"
           />
         }

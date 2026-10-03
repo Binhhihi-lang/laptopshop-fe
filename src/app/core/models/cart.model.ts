@@ -14,6 +14,10 @@ export interface CartItem {
   originalPrice?: number;
   /** Giá sốc nếu dòng đang trong phiên flash (D25); null = không có. */
   flashPrice?: number | null;
+  /** Trần mỗi khách của phiên; null = không giới hạn. */
+  flashPerUserLimit?: number | null;
+  /** Dòng CÓ phiên nhưng khách đã dùng hết suất → về giá thường, FE báo chữ. */
+  flashLimitReached?: boolean;
   quantity: number;
   lineTotal: number;
   /** Tiền promotion giảm riêng dòng này (D5: mỗi dòng chỉ 1 promotion thắng). */

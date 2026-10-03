@@ -128,7 +128,7 @@
                       : 'text-slate-400'
                   ">
                     @if (isAvailable(item)) {
-                      Đã bán {{ item.soldInFlash }}/{{ item.flashStock }}
+                      Đã bán {{ item.soldInFlash }}/{{ flashTotal(item) }}
                     } @else {
                       Hết hàng
                     }

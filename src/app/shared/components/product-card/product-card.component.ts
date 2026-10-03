@@ -13,7 +13,7 @@ import { ProductResponse } from '@core/models/product.model';
   template: `
     <a
       [routerLink]="['/products', product().code]"
-      class="group block rounded-xl border border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-700 overflow-hidden hover:shadow-md hover:border-primary-500 transition-all"
+      class="group flex flex-col h-full rounded-xl border border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-700 overflow-hidden hover:shadow-md hover:border-primary-500 transition-all"
     >
       <div class="relative aspect-square overflow-hidden bg-slate-100 dark:bg-slate-800">
         @if (product().image) {
@@ -43,7 +43,7 @@ import { ProductResponse } from '@core/models/product.model';
         }
       </div>
 
-      <div class="p-3">
+      <div class="p-3 flex flex-col flex-1">
         <p class="text-xs text-slate-500 dark:text-slate-400 truncate">
           {{ product().factory || product().categoryName }}
         </p>
@@ -68,9 +68,10 @@ import { ProductResponse } from '@core/models/product.model';
           }
         </div>
 
-        <!-- Thanh tiến độ "Đã bán x/y" — chỉ khi có phiên flash -->
-        @if (hasFlash() && flashPercent() !== null) {
-          <div class="mt-2">
+        <!-- Khối đáy ghim xuống đáy: thanh tiến độ "Đã bán x/y" luôn ở cuối card,
+             giữ mọi card cao bằng nhau dù có/không có flash (mt-auto). -->
+        <div class="mt-auto pt-2">
+          @if (hasFlash() && flashPercent() !== null) {
             <div class="h-1.5 w-full rounded-full bg-rose-100 dark:bg-rose-950/50 overflow-hidden">
               <div
                 class="h-full rounded-full transition-all"
@@ -79,14 +80,12 @@ import { ProductResponse } from '@core/models/product.model';
               ></div>
             </div>
             <p class="text-[11px] text-rose-600 dark:text-rose-400 mt-1 font-medium">
-              Đã bán {{ product().flashSold ?? 0 }}/{{ product().flashStock ?? 0 }}
+              Đã bán {{ product().flashSold ?? 0 }}/{{ flashTotal() }}
             </p>
-          </div>
-        }
-
-        @if (showSoldCount() && !hasFlash()) {
-          <p class="text-xs text-slate-500 mt-1">Đã bán {{ product().sold }}</p>
-        }
+          } @else if (showSoldCount()) {
+            <p class="text-xs text-slate-500">Đã bán {{ product().sold }}</p>
+          }
+        </div>
       </div>
     </a>
   `,
@@ -106,29 +105,28 @@ export class ProductCardComponent {
 
   /**
    * P10: tương thích ngược — không có `flashPrice` thì card render y như cũ.
-   * Hết kho phiên cũng coi như không có flash (BE cũng bỏ khỏi resolvePriceMap).
+   * Hết kho phiên (flashStock = số còn lại = 0) cũng coi như không có flash.
    */
   hasFlash = computed(() => {
     const p = this.product();
-    return (
-      p.flashPrice != null &&
-      p.flashPrice > 0 &&
-      (p.flashStock == null || (p.flashSold ?? 0) < p.flashStock)
-    );
+    return p.flashPrice != null && p.flashPrice > 0 && (p.flashStock ?? 0) > 0;
   });
+
+  /** Tổng suất phiên = còn lại (flashStock) + đã bán (flashSold). */
+  flashTotal = computed(() => (this.product().flashStock ?? 0) + (this.product().flashSold ?? 0));
 
   onSale = computed(
     () =>
       this.product().originalPrice != null && this.product().originalPrice! > this.product().price,
   );
 
-  /** % đã bán của kho phiên; null nếu không có kho để tính. */
+  /** % đã bán = đã bán / tổng suất phiên; null nếu không có kho để tính. */
   flashPercent = computed(() => {
-    const p = this.product();
-    if (p.flashStock == null || p.flashStock <= 0) {
+    const total = this.flashTotal();
+    if (total <= 0) {
       return null;
     }
-    return Math.min(100, Math.round(((p.flashSold ?? 0) / p.flashStock) * 100));
+    return Math.min(100, Math.round(((this.product().flashSold ?? 0) / total) * 100));
   });
 
   formatPrice(value: number): string {

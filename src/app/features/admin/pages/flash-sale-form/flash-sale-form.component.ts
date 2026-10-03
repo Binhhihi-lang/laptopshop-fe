@@ -25,7 +25,6 @@ import { ButtonComponent } from '@shared/components/button/button.component';
 import { InputComponent } from '@shared/components/input/input.component';
 import { FormFieldComponent } from '@shared/components/form-field/form-field.component';
 import { LoadingComponent } from '@shared/components/loading/loading.component';
-import { ImageUploadComponent } from '@shared/components/image-upload/image-upload.component';
 import { ProductPickerComponent } from '@shared/components/product-picker/product-picker.component';
 
 /**
@@ -48,7 +47,6 @@ import { ProductPickerComponent } from '@shared/components/product-picker/produc
     InputComponent,
     FormFieldComponent,
     LoadingComponent,
-    ImageUploadComponent,
     ProductPickerComponent,
   ],
   templateUrl: './flash-sale-form.component.html',
@@ -64,9 +62,6 @@ export class FlashSaleFormComponent implements OnInit {
   isLoading = signal(false);
   isSubmitting = signal(false);
   flashSaleId = signal<string>('');
-  imageFile = signal<File | null>(null);
-  existingImage = signal<string | null>(null);
-  imageRemoved = signal(false);
 
   /**
    * Giá thường theo productId — tra từ danh sách sản phẩm của phiên (BE trả kèm
@@ -74,7 +69,7 @@ export class FlashSaleFormComponent implements OnInit {
    */
   private regularPrices = signal<Record<string, number>>({});
 
-  /** Tổng kho phiên — hiện ở dòng tổng của bảng sản phẩm. */
+  /** Tổng suất còn lại của phiên — hiện ở dòng tổng của bảng sản phẩm. */
   totalStock = computed(() =>
     this.items.controls.reduce((sum, c) => sum + (Number(c.get('flashStock')?.value) || 0), 0),
   );
@@ -143,14 +138,25 @@ export class FlashSaleFormComponent implements OnInit {
       active: sale.active,
     });
     this.items.clear();
-    // Nạp giá thường của từng sản phẩm đã có trong phiên để hiện cột "Giá thường".
+    // Nạp giá thường + tên của từng sản phẩm đã có trong phiên (BE trả kèm
+    // `regularPrice`/`productName`) để cột "Giá thường" và picker hiện ngay.
     const prices: Record<string, number> = {};
+    const labels: Record<string, string> = {};
+    const solds: Record<string, number> = {};
     (sale.items ?? []).forEach((item) => {
       if (item.productId && item.regularPrice != null) {
         prices[item.productId] = item.regularPrice;
       }
+      if (item.productId && item.productName) {
+        labels[item.productId] = item.productName;
+      }
+      if (item.productId && item.soldInFlash != null) {
+        solds[item.productId] = item.soldInFlash;
+      }
     });
     this.regularPrices.set(prices);
+    this.itemLabels.set(labels);
+    this.itemSold.set(solds);
     (sale.items ?? []).forEach((item) => {
       this.items.push(
         this.buildItemGroup({
@@ -161,17 +167,19 @@ export class FlashSaleFormComponent implements OnInit {
         }),
       );
     });
-    this.existingImage.set(sale.bannerImage ?? null);
-    this.imageRemoved.set(false);
   }
 
   private buildItemGroup(item?: FlashSaleItemRequest): FormGroup {
-    return this.fb.group({
-      productId: [item?.productId ?? '', [Validators.required]],
-      flashPrice: [item?.flashPrice ?? null, [Validators.required, Validators.min(1)]],
-      flashStock: [item?.flashStock ?? null, [Validators.required, Validators.min(1)]],
-      perUserLimit: [item?.perUserLimit ?? null, [Validators.min(1)]],
-    });
+    return this.fb.group(
+      {
+        productId: [item?.productId ?? '', [Validators.required]],
+        flashPrice: [item?.flashPrice ?? null, [Validators.required, Validators.min(1)]],
+        // flashStock = số suất CÒN LẠI: 0 = hết suất (hợp lệ), âm = sai.
+        flashStock: [item?.flashStock ?? null, [Validators.required, Validators.min(0)]],
+        perUserLimit: [item?.perUserLimit ?? null, [Validators.required, Validators.min(1)]],
+      },
+      { validators: limitWithinStockValidator },
+    );
   }
 
   addItem(): void {
@@ -196,6 +204,24 @@ export class FlashSaleFormComponent implements OnInit {
 
   /** Giá thường của sản phẩm vừa chọn từ picker (chưa có trong phiên). */
   private pickedPrices = signal<Record<string, number>>({});
+
+  /** Tên sản phẩm theo productId — nạp sẵn khi sửa phiên để picker hiện ngay. */
+  private itemLabels = signal<Record<string, string>>({});
+
+  /** Số đã bán theo productId — hiện dưới ô "Suất còn lại" khi sửa phiên. */
+  private itemSold = signal<Record<string, number>>({});
+
+  /** Số đã bán của dòng thứ i (0 nếu dòng mới). */
+  soldAt(index: number): number {
+    const id = this.items.at(index)?.get('productId')?.value;
+    return id ? (this.itemSold()[id] ?? 0) : 0;
+  }
+
+  /** Tên sản phẩm của dòng thứ i — cho picker khỏi chờ HTTP tra tên. */
+  itemLabelAt(index: number): string {
+    const id = this.items.at(index)?.get('productId')?.value;
+    return id ? (this.itemLabels()[id] ?? '') : '';
+  }
 
   /** Giá thường của sản phẩm vừa chọn từ picker (chưa có trong phiên). */
   onProductPicked(index: number, ids: string[]): void {
@@ -234,28 +260,70 @@ export class FlashSaleFormComponent implements OnInit {
     return price != null && regular != null && price >= regular;
   }
 
-  onImageFileChange(file: File | null): void {
-    this.imageFile.set(file);
-    if (file) {
-      this.imageRemoved.set(false);
+  /**
+   * Tối đa/khách vượt suất còn lại → con số vượt là ảo (cả phiên chỉ có bấy
+   * nhiêu máy). BE cũng chặn (FLASH_PER_USER_LIMIT_EXCEEDS_STOCK).
+   */
+  isLimitExceedsStock(index: number): boolean {
+    return this.items.at(index)?.hasError('limitExceedsStock') ?? false;
+  }
+
+  /** Lỗi "required" của một ô trong dòng — hiện ngay dưới ô thay vì báo chung. */
+  itemError(index: number, field: string): string {
+    const ctrl = this.items.at(index)?.get(field);
+    if (!ctrl || !ctrl.touched || !ctrl.errors) {
+      return '';
     }
+    if (ctrl.errors['required']) {
+      if (field === 'productId') {
+        return 'Chưa chọn sản phẩm';
+      }
+      if (field === 'perUserLimit') {
+        return 'Bắt buộc nhập — mỗi khách mua tối đa bao nhiêu máy?';
+      }
+      return 'Không được để trống';
+    }
+    if (ctrl.errors['min']) {
+      return 'Phải lớn hơn 0';
+    }
+    return '';
   }
 
   onSubmit(): void {
     if (this.flashSaleForm.invalid) {
       this.markFormGroupTouched(this.flashSaleForm);
-      this.notification.warn('Vui lòng điền đầy đủ thông tin bắt buộc');
+      // Chỉ rõ dòng nào đang thiếu/sai để người dùng biết sửa chỗ nào.
+      const badRow = this.items.controls.findIndex((c) => c.invalid);
+      this.notification.warn(
+        badRow >= 0
+          ? `Dòng sản phẩm ${badRow + 1} chưa hợp lệ — kiểm tra lại giá, kho và sản phẩm`
+          : 'Vui lòng điền đầy đủ thông tin bắt buộc',
+      );
       return;
     }
     // Kiểm tra trùng sản phẩm trước khi gửi — BE cũng chặn (FLASH_SALE_ITEM_DUPLICATE).
     const productIds = this.items.controls.map((c) => c.get('productId')?.value);
-    if (new Set(productIds).size !== productIds.length) {
-      this.notification.warn('Mỗi sản phẩm chỉ được thêm một lần trong phiên');
+    const dupIndex = productIds.findIndex((id, i) => productIds.indexOf(id) !== i);
+    if (dupIndex >= 0) {
+      this.notification.warn(
+        `Sản phẩm ở dòng ${dupIndex + 1} đã có trong phiên — mỗi sản phẩm chỉ được thêm một lần`,
+      );
       return;
     }
     const invalidIndex = this.items.controls.findIndex((_, i) => this.isPriceInvalid(i));
     if (invalidIndex >= 0) {
-      this.notification.warn('Giá flash sale phải thấp hơn giá bán hiện tại của sản phẩm');
+      this.notification.warn(
+        `Giá flash ở dòng ${invalidIndex + 1} phải thấp hơn giá bán hiện tại của sản phẩm`,
+      );
+      return;
+    }
+    // Tối đa/khách > suất còn lại → báo từng dòng (BE cũng chặn cùng luật).
+    const overLimitIndex = this.items.controls.findIndex((_, i) => this.isLimitExceedsStock(i));
+    if (overLimitIndex >= 0) {
+      const stock = this.items.at(overLimitIndex).get('flashStock')?.value;
+      this.notification.warn(
+        `Dòng ${overLimitIndex + 1}: tối đa mỗi khách không được vượt suất còn lại (${stock})`,
+      );
       return;
     }
 
@@ -273,8 +341,6 @@ export class FlashSaleFormComponent implements OnInit {
         flashStock: Number(c.get('flashStock')?.value),
         perUserLimit: c.get('perUserLimit')?.value ? Number(c.get('perUserLimit')?.value) : null,
       })),
-      inputFile: this.imageFile() ?? undefined,
-      removeImage: this.imageRemoved(),
     };
 
     const request$ =
@@ -346,4 +412,14 @@ function dateRangeValidator(group: AbstractControl): ValidationErrors | null {
     return null;
   }
   return new Date(end) > new Date(start) ? null : { dateRange: true };
+}
+
+/** Tối đa/khách không được vượt suất còn lại của dòng. Bỏ trống = không giới hạn. */
+function limitWithinStockValidator(group: AbstractControl): ValidationErrors | null {
+  const limit = group.get('perUserLimit')?.value;
+  const stock = group.get('flashStock')?.value;
+  if (limit == null || limit === '' || stock == null || stock === '') {
+    return null;
+  }
+  return Number(limit) > Number(stock) ? { limitExceedsStock: true } : null;
 }
