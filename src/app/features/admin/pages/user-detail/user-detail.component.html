@@ -116,7 +116,7 @@
               <dl>
                 <app-info-item label="Email" [value]="u.email" icon="mail" />
                 <app-info-item label="Số điện thoại" [value]="u.phone" icon="phone" />
-                <app-info-item label="Địa chỉ" [value]="u.address" icon="location_on" />
+                <app-info-item label="Địa chỉ" [value]="fullAddress() || '—'" icon="location_on" />
               </dl>
             </div>
           </app-card>

@@ -11,6 +11,7 @@ import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { RoleService } from '@core/services/role.service';
 import { UserService } from '@core/services/user.service';
+import { LocationService, Province, Commune } from '@core/services/location.service';
 import { RoleResponse } from '@core/models/role.model';
 import { UserResponse, UserCreationRequest, UserUpdateRequest } from '@core/models/user.model';
 import { NotificationService } from '@core/services/notification.service';
@@ -22,6 +23,7 @@ import {
   BadgeComponent,
   ButtonComponent,
   InputComponent,
+  SelectComponent,
   SelectOption,
   FormFieldComponent,
   PageHeaderComponent,
@@ -42,6 +44,7 @@ import {
     BadgeComponent,
     ButtonComponent,
     InputComponent,
+    SelectComponent,
     FormFieldComponent,
     PageHeaderComponent,
     AvatarComponent,
@@ -56,6 +59,7 @@ export class UserFormComponent implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly userService = inject(UserService);
   private readonly roleService = inject(RoleService);
+  private readonly locationService = inject(LocationService);
   private readonly notification = inject(NotificationService);
   private readonly destroy$ = new Subject<void>();
 
@@ -68,6 +72,16 @@ export class UserFormComponent implements OnInit, OnDestroy {
   avatarPreview = signal<string | null>(null);
   showPassword = signal(false);
 
+  // Địa chỉ 2 cấp (tỉnh/thành → phường/xã) — giống trang hồ sơ client
+  provinces = signal<Province[]>([]);
+  communes = signal<Commune[]>([]);
+  provinceOptions = computed<SelectOption[]>(() =>
+    this.provinces().map((p) => ({ value: String(p.code), label: p.name })),
+  );
+  communeOptions = computed<SelectOption[]>(() =>
+    this.communes().map((c) => ({ value: String(c.code), label: c.name })),
+  );
+
   // Route param
   userId = signal<string>('');
 
@@ -77,6 +91,8 @@ export class UserFormComponent implements OnInit, OnDestroy {
     password: ['', [Validators.required, Validators.minLength(6)]],
     fullName: ['', [Validators.required, Validators.minLength(2)]],
     phone: ['', [Validators.pattern(/^[0-9]{10,11}$/)]],
+    provinceCode: [''],
+    communeCode: [''],
     address: [''],
     roleNames: [[], [Validators.required]],
     active: [true],
@@ -119,11 +135,43 @@ export class UserFormComponent implements OnInit, OnDestroy {
     }
 
     this.loadData();
+    this.loadProvinces();
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  // ================== ĐỊA CHỈ 2 CẤP ==================
+
+  /** 34 tỉnh/thành sau sáp nhập — gọi API công khai, không qua BE. */
+  loadProvinces(): void {
+    this.locationService
+      .getProvinces()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (list) => this.provinces.set(list),
+        error: () => {},
+      });
+  }
+
+  onProvinceChange(provinceCode: string): void {
+    this.userForm.get('communeCode')?.setValue('');
+    this.communes.set([]);
+    if (provinceCode) {
+      this.loadCommunesFor(provinceCode);
+    }
+  }
+
+  loadCommunesFor(provinceCode: string): void {
+    this.locationService
+      .getCommunes(provinceCode)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (list) => this.communes.set(list),
+        error: () => this.communes.set([]),
+      });
   }
 
   // Effect to handle password validators based on edit/create mode
@@ -180,15 +228,42 @@ export class UserFormComponent implements OnInit, OnDestroy {
       email: user.email,
       fullName: user.fullName,
       phone: user.phone || '',
-      address: user.address || '',
+      provinceCode: user.provinceCode || '',
+      communeCode: user.communeCode || '',
+      // Ô "Địa chỉ cụ thể" chỉ chứa phần đường; dữ liệu cũ có thể đã ghép
+      // kèm phường/tỉnh → tách bỏ để không trùng với 2 select trên.
+      address: this.streetPart(user),
       roleNames: user.roleNames || [],
       active: user.active ?? true,
     });
+
+    // Nạp phường/xã của tỉnh đã lưu để select hiển thị đúng lựa chọn cũ
+    if (user.provinceCode) {
+      this.loadCommunesFor(user.provinceCode);
+    }
 
     // Set avatar preview if exists
     if (user.avatar) {
       this.avatarPreview.set(user.avatar);
     }
+  }
+
+  /**
+   * Bỏ phần phường/xã và tỉnh/thành ở CUỐI chuỗi address, chỉ giữ địa chỉ đường.
+   * Dữ liệu cũ đã ghép kèm phường/tỉnh nên cần tách ra.
+   */
+  private streetPart(user: UserResponse): string {
+    let address = (user.address ?? '').trim();
+    const suffixes = [user.communeName, user.provinceName]
+      .filter((s): s is string => !!s?.trim())
+      .map((s) => s.trim());
+    for (const suffix of suffixes) {
+      if (address.toLowerCase().endsWith(suffix.toLowerCase())) {
+        address = address.slice(0, address.length - suffix.length);
+        address = address.replace(/[,\s]+$/, '');
+      }
+    }
+    return address;
   }
 
   onAvatarSelected(event: Event): void {
@@ -228,12 +303,31 @@ export class UserFormComponent implements OnInit, OnDestroy {
 
     const formValue = this.userForm.value;
 
+    // Tên tỉnh/phường suy từ code đang chọn; nếu danh sách chưa tải được thì
+    // giữ nguyên tên đã lưu trước đó để không mất dữ liệu.
+    const provinceName =
+      this.provinces().find((p) => String(p.code) === formValue.provinceCode)?.name ??
+      this.currentUser()?.provinceName ??
+      '';
+    const communeName =
+      this.communes().find((c) => String(c.code) === formValue.communeCode)?.name ??
+      this.currentUser()?.communeName ??
+      '';
+
+    const addressFields = {
+      address: formValue.address?.trim() || undefined,
+      provinceCode: formValue.provinceCode || undefined,
+      provinceName: provinceName || undefined,
+      communeCode: formValue.communeCode || undefined,
+      communeName: communeName || undefined,
+    };
+
     if (this.isEditMode() && this.userId()) {
       const userData: UserUpdateRequest = {
         email: formValue.email,
         fullName: formValue.fullName,
         phone: formValue.phone || undefined,
-        address: formValue.address || undefined,
+        ...addressFields,
         roleNames: formValue.roleNames,
         active: formValue.active,
         ...(formValue.password ? { password: formValue.password } : {}),
@@ -255,7 +349,7 @@ export class UserFormComponent implements OnInit, OnDestroy {
         password: formValue.password,
         fullName: formValue.fullName,
         phone: formValue.phone || undefined,
-        address: formValue.address || undefined,
+        ...addressFields,
         roleNames: formValue.roleNames,
         ...(this.selectedAvatar() ? { avatar: this.selectedAvatar()! } : {}),
       };

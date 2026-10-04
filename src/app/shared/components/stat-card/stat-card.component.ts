@@ -70,7 +70,9 @@ import { MatIconModule } from '@angular/material/icon';
           class="kpi-trend mt-3 inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-xs font-medium transition-colors w-max"
           [class]="trendClass()"
         >
-          <mat-icon class="w-3.5 h-3.5">{{ trendUp() ? 'trending_up' : 'trending_down' }}</mat-icon>
+          @if (!trendNeutral()) {
+            <mat-icon class="w-3.5 h-3.5">{{ trendUp() ? 'trending_up' : 'trending_down' }}</mat-icon>
+          }
           <span>{{ trendText() }}</span>
         </div>
       }
@@ -108,6 +110,8 @@ export class StatCardComponent {
   iconClass = input<string>('');
   /** true = mũi tên tăng (xanh), false = mũi tên giảm (đỏ). */
   trendUp = input<boolean>(true);
+  /** true = pill trung tính (không mũi tên, màu xám) — dùng cho chỉ số không tăng/giảm. */
+  trendNeutral = input<boolean>(false);
   /** Text pill xu hướng; rỗng => ẩn pill. */
   trendText = input<string>('');
   /** Hậu tố nhỏ sau số, vd "đơn". Rỗng => ẩn. */
@@ -123,6 +127,9 @@ export class StatCardComponent {
   cardClick = output<void>();
 
   trendClass(): string {
+    if (this.trendNeutral()) {
+      return 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300';
+    }
     return this.trendUp()
       ? 'bg-success-light text-success dark:bg-success-light/30 dark:text-success'
       : 'bg-danger-light text-danger dark:bg-danger-light/30 dark:text-danger';

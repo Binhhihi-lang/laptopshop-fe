@@ -13,6 +13,7 @@ import { JwtHelper } from '@core/utils/jwt.helper';
 import { API_ENDPOINTS, STORAGE_KEYS } from '@core/utils/constants';
 import { IntrospectResponse, LoginResponse } from '@core/models/auth.model';
 import { UserInfo, UserResponse } from '@core/models/user.model';
+import { NotificationService } from './notification.service';
 
 @Injectable({
   providedIn: 'root',
@@ -38,6 +39,7 @@ export class AuthService {
     private api: ApiService,
     private router: Router,
     private jwtHelper: JwtHelper,
+    private notification: NotificationService,
   ) {}
 
   // Expose observable cho interceptor subscribe khi đang chờ refresh
@@ -158,8 +160,11 @@ export class AuthService {
           }
         }),
         catchError((err) => {
-          // NƠI DUY NHẤT XỬ LÝ LOGOUT KHI REFRESH THẤT BẠI
+          // NƠI DUY NHẤT XỬ LÝ LOGOUT KHI REFRESH THẤT BẠI.
+          // Phiên hết hạn → báo cho người dùng biết vì sao bị đá về trang đăng nhập,
+          // thay vì im lặng điều hướng.
           this.logout();
+          this.notification.warn('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
           return throwError(() => err);
         }),
       );

@@ -12,6 +12,7 @@ import {
   ClientResetPasswordRequest,
 } from '@core/models/client-auth.model';
 import { UserInfo } from '@core/models/user.model';
+import { NotificationService } from './notification.service';
 
 /**
  * Auth storefront — tách khỏi `AuthService` (admin): token/userInfo lưu key
@@ -29,6 +30,7 @@ const CLIENT_USER_INFO_KEY = 'client_user_info';
 export class ClientAuthService {
   private readonly api = inject(ApiService);
   private readonly jwtHelper = inject(JwtHelper);
+  private readonly notification = inject(NotificationService);
 
   // Observable để component (header) subscribe biết khi auth state đổi.
   private readonly isAuthenticatedSubject = new BehaviorSubject<boolean>(!!this.getToken());
@@ -153,7 +155,9 @@ export class ClientAuthService {
       .pipe(
         tap((res) => this.handleLoginSuccess(res)),
         catchError((err) => {
+          // Phiên hết hạn → báo cho khách biết vì sao bị đá về trang đăng nhập.
           this.clearTokens();
+          this.notification.warn('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
           return throwError(() => err);
         }),
       );

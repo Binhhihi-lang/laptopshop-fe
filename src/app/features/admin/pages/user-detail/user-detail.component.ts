@@ -56,6 +56,19 @@ export class UserDetailComponent implements OnInit {
   // Ẩn nút "Xóa" với role thiếu quyền DELETE_USER
   canDeleteUser = computed(() => this.authService.hasPermission('DELETE_USER'));
 
+  /**
+   * Địa chỉ đầy đủ để HIỂN THỊ: ghép phần đường + phường/xã + tỉnh/thành.
+   * `address` chỉ lưu phần đường, nên phải nối thêm 2 cấp còn lại.
+   */
+  fullAddress = computed(() => {
+    const u = this.user();
+    if (!u) return '';
+    return [u.address, u.communeName, u.provinceName]
+      .map((part) => part?.trim())
+      .filter((part): part is string => !!part)
+      .join(', ');
+  });
+
   // Computed helpers for badges
   statusBadge = computed(() => {
     const currentUser = this.user();

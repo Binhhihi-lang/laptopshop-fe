@@ -90,9 +90,10 @@ export class ClientProfileComponent implements OnInit {
     this.communes().map((c) => ({ value: String(c.code), label: c.name })),
   );
 
-  // Form: chỉ các trường cho phép sửa (giống admin profile)
+  // Form: các trường cho phép sửa (không role/active/password)
   readonly form: FormGroup = this.fb.group({
     fullName: ['', [Validators.required, Validators.minLength(2)]],
+    email: ['', [Validators.required, Validators.email]],
     phone: ['', [Validators.pattern(/^[0-9]{10,11}$/)]],
     provinceCode: [''],
     communeCode: [''],
@@ -138,6 +139,25 @@ export class ClientProfileComponent implements OnInit {
         this.notification.error('Không tải được danh sách phường/xã');
       },
     });
+  }
+
+  /**
+   * Bỏ phần phường/xã và tỉnh/thành ở CUỐI chuỗi address, chỉ giữ địa chỉ
+   * đường. Dữ liệu cũ (trước khi tách trường) đã ghép kèm phường/tỉnh nên cần
+   * tách ra để không hiển thị trùng với 2 select ở trên.
+   */
+  private streetPart(user: UserResponse): string {
+    let address = (user.address ?? '').trim();
+    const suffixes = [user.communeName, user.provinceName]
+      .filter((s): s is string => !!s?.trim())
+      .map((s) => s.trim());
+    for (const suffix of suffixes) {
+      if (address.toLowerCase().endsWith(suffix.toLowerCase())) {
+        address = address.slice(0, address.length - suffix.length);
+        address = address.replace(/[,\s]+$/, '');
+      }
+    }
+    return address;
   }
 
   // ================== THIẾT BỊ ĐANG ĐĂNG NHẬP ==================
@@ -282,10 +302,13 @@ export class ClientProfileComponent implements OnInit {
         this.currentUser.set(user);
         this.form.patchValue({
           fullName: user.fullName,
+          email: user.email || '',
           phone: user.phone || '',
           provinceCode: user.provinceCode || '',
           communeCode: user.communeCode || '',
-          address: user.address || '',
+          // Ô "Địa chỉ cụ thể" chỉ chứa phần đường; dữ liệu cũ có thể đã ghép
+          // kèm phường/tỉnh → tách bỏ để không hiển thị trùng với 2 select trên.
+          address: this.streetPart(user),
         });
         // Nạp phường/xã của tỉnh đã lưu để select hiển thị đúng lựa chọn cũ
         if (user.provinceCode) {
@@ -348,13 +371,12 @@ export class ClientProfileComponent implements OnInit {
       this.currentUser()?.communeName ??
       '';
 
-    // Ghép chuỗi địa chỉ đầy đủ để cột address cũ vẫn dùng được cho hiển thị
-    const fullAddress = [v.address?.trim(), communeName, provinceName].filter(Boolean).join(', ');
-
     const data: UserProfileUpdateRequest = {
       fullName: v.fullName,
+      email: v.email,
       phone: v.phone || undefined,
-      address: fullAddress || undefined,
+      // Chỉ gửi phần đường; phường/xã + tỉnh/thành gửi ở trường riêng bên dưới.
+      address: v.address?.trim() || undefined,
       provinceCode: v.provinceCode || undefined,
       provinceName: provinceName || undefined,
       communeCode: v.communeCode || undefined,

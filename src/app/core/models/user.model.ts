@@ -23,6 +23,10 @@ export interface UserCreationRequest {
   fullName?: string;
   phone?: string;
   address?: string;
+  provinceCode?: string;
+  provinceName?: string;
+  communeCode?: string;
+  communeName?: string;
   roleNames?: string[];
   avatar?: string | File;
   active?: boolean;
@@ -33,16 +37,21 @@ export interface UserUpdateRequest {
   fullName?: string;
   phone?: string;
   address?: string;
+  provinceCode?: string;
+  provinceName?: string;
+  communeCode?: string;
+  communeName?: string;
   roleNames?: string[];
   active?: boolean;
   avatar?: string | File;
 }
 
-// Chỉ các trường cho phép cập nhật ở trang "Hồ sơ cá nhân" (/admin/profile).
-// KHÔNG có email / roleNames / active / password — bảo vệ không cho user tự
-// đổi email hay vai trò của chính mình.
+// Các trường cho phép cập nhật ở trang "Hồ sơ cá nhân" (/admin/profile,
+// /profile). Có email (đổi được, validate trùng ở BE) nhưng KHÔNG có
+// roleNames / active / password — user không tự nâng quyền.
 export interface UserProfileUpdateRequest {
   fullName?: string;
+  email?: string;
   phone?: string;
   address?: string;
   provinceCode?: string;

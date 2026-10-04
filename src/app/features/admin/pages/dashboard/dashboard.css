@@ -1,55 +1,395 @@
-/* Dashboard styles - Modern Clean using Tailwind utility classes */
+/* Bảng điều khiển — chỉ định nghĩa class riêng; phần còn lại dùng utility Tailwind */
+
 :host {
   display: block;
 }
 
-/* KPI Icon smooth transitions */
-.kpi-icon {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+/* ---------- Thanh lọc khoảng thời gian ---------- */
+.range-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--color-border-primary);
+  background: var(--color-bg-secondary);
 }
 
-.kpi-icon:hover {
-  transform: scale(1.1);
-  box-shadow: 0 8px 16px -4px rgb(0 0 0 / 0.15);
+.range-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-tertiary);
 }
 
-/* Trend badge animation */
-.kpi-trend {
-  animation: slide-down 200ms ease-out;
+.seg {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 0.75rem;
+  border: 1px solid var(--color-border-secondary);
+  background: var(--color-bg-primary);
 }
 
-/* Alert item hover effect */
-.alert-item {
-  transition: background-color 0.15s ease, transform 0.15s ease;
+.seg-btn {
+  padding: 0.375rem 0.875rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text-tertiary);
+  transition: background-color 150ms, color 150ms;
 }
 
-/* Activity item animation */
-.activity-item {
-  animation: fade-in 200ms ease-out;
+.seg-btn:hover {
+  color: var(--color-text-primary);
 }
 
-/* Chart container */
-canvas#revenueChart {
-  width: 100% !important;
-  height: 100% !important;
+.seg-btn.on {
+  background: var(--color-primary);
+  color: #fff;
 }
 
-/* Respect reduced motion */
+/* ---------- Thẻ doanh thu ---------- */
+.rev-change {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.125rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: var(--color-danger-light);
+  color: var(--color-danger);
+}
+
+.rev-change.up {
+  background: var(--color-success-light);
+  color: var(--color-success);
+}
+
+.rev-change.neutral {
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-tertiary);
+}
+
+.rev-total {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.75rem;
+}
+
+.rev-total-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--color-text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.rev-total-note {
+  font-size: 0.875rem;
+  color: var(--color-text-tertiary);
+}
+
+/* ---------- Biểu đồ trạng thái ---------- */
+.status-wrap {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.status-wrap apx-chart {
+  flex-shrink: 0;
+}
+
+.status-list {
+  flex: 1;
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.status-row {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.5rem 0.625rem;
+  border-radius: 0.5rem;
+  transition: background-color 120ms;
+}
+
+.status-row:hover {
+  background: var(--color-bg-tertiary);
+}
+
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.status-name {
+  flex: 1;
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+}
+
+.status-count {
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-primary);
+}
+
+.status-percent {
+  width: 3rem;
+  text-align: right;
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-tertiary);
+}
+
+/* ---------- Danh sách (top bán chạy / sắp hết) ---------- */
+.list-row {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  padding: 0.75rem 1.25rem;
+  transition: background-color 120ms;
+}
+
+.list-row:hover {
+  background: var(--color-bg-tertiary);
+}
+
+.rank {
+  width: 1.625rem;
+  height: 1.625rem;
+  border-radius: 0.5rem;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-tertiary);
+}
+
+.rank.top1 {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #fff;
+}
+
+.rank.top2 {
+  background: var(--color-bg-active);
+  color: var(--color-text-secondary);
+}
+
+.rank.top3 {
+  background: #fcd9b6;
+  color: #92400e;
+}
+
+:host-context(.dark) .rank.top3 {
+  background: #78350f;
+  color: #fcd34d;
+}
+
+.thumb {
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 0.5rem;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-tertiary);
+  border: 1px solid var(--color-border-primary);
+}
+
+.thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.list-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.list-name {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.list-meta {
+  font-size: 0.75rem;
+  color: var(--color-text-tertiary);
+  margin-top: 2px;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+.list-amount {
+  text-align: right;
+}
+
+.list-qty {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+}
+
+.list-revenue {
+  font-size: 0.75rem;
+  color: var(--color-text-tertiary);
+  margin-top: 2px;
+  font-variant-numeric: tabular-nums;
+}
+
+.link-more {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-primary);
+}
+
+.link-more:hover {
+  color: var(--color-primary-hover);
+}
+
+/* ---------- Trạng thái trống trong khối ---------- */
+.chart-empty,
+.empty-inline {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 2.5rem 1rem;
+  text-align: center;
+  color: var(--color-text-tertiary);
+}
+
+.chart-empty mat-icon,
+.empty-inline mat-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  font-size: 2.5rem;
+  color: var(--color-text-tertiary);
+}
+
+.empty-inline.success mat-icon {
+  color: var(--color-success);
+}
+
+.chart-empty p,
+.empty-inline p {
+  font-size: 0.875rem;
+}
+
+/* ---------- Khối khuyến mại ---------- */
+.cost-list {
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cost-row {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.5rem 0.625rem;
+  border-radius: 0.5rem;
+  transition: background-color 120ms;
+}
+
+.cost-row:hover {
+  background: var(--color-bg-tertiary);
+}
+
+.cost-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.cost-name {
+  flex: 1;
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+}
+
+.cost-value {
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-primary);
+}
+
+.cost-note {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px dashed var(--color-border-primary);
+  font-size: 0.75rem;
+  color: var(--color-text-tertiary);
+}
+
+/* Chip mã voucher — đồng bộ với cột hạng của "Chương trình hiệu quả" */
+.voucher-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  flex-shrink: 0;
+  max-width: 45%;
+  padding: 0.25rem 0.625rem;
+  border-radius: 0.5rem;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-primary);
+  background: var(--color-primary-light);
+  border: 1px solid var(--color-border-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+:host-context(.dark) .voucher-chip {
+  background: color-mix(in srgb, var(--color-primary) 18%, transparent);
+}
+
+/* Tôn trọng prefers-reduced-motion */
 @media (prefers-reduced-motion: reduce) {
-  .kpi-icon,
-  .kpi-trend,
-  .alert-item,
-  .activity-item {
-    animation: none !important;
-    transition: none !important;
+  .seg-btn,
+  .status-row,
+  .list-row,
+  .cost-row {
+    transition: none;
   }
-}
-
-/* Focus visible for accessibility */
-button:focus-visible,
-a:focus-visible {
-  outline: none;
-  ring: 2px;
-  ring-offset: 2px;
-  ring-color: rgb(59 130 246 / 0.3);
 }

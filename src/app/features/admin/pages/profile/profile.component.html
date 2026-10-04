@@ -90,16 +90,18 @@
           </h2>
         </div>
         <div class="p-6 space-y-6">
-          <!-- Email (chỉ đọc, không cho đổi) -->
+          <!-- Email — sửa được; BE chặn trùng email người khác -->
           <app-form-field id="email" label="Email" [required]="true">
             <app-input
               id="email"
-              [value]="currentUser()?.email ?? ''"
+              formControlName="email"
               type="email"
+              placeholder="nguyenvana@example.com"
+              autocomplete="email"
               icon="email"
-              [readonly]="true"
               [disabled]="isSubmitting()"
-              hint="Email không thể thay đổi từ trang này"
+              [error]="hasError('email', 'required') ? 'Email là bắt buộc' : hasError('email', 'email') ? 'Email không hợp lệ' : ''"
+              hint="Đổi email được — nhưng không được trùng email của người dùng khác"
             />
           </app-form-field>
 
@@ -161,13 +163,37 @@
             </app-form-field>
           </div>
 
+          <!-- Địa chỉ 2 cấp sau sáp nhập 2025: Tỉnh/Thành → Phường/Xã -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <app-form-field id="provinceCode" label="Tỉnh / Thành phố">
+              <app-select
+                id="provinceCode"
+                formControlName="provinceCode"
+                [options]="provinceOptions()"
+                placeholder="Chọn tỉnh/thành"
+                [disabled]="isSubmitting()"
+                (valueChange)="onProvinceChange($event)"
+              />
+            </app-form-field>
+
+            <app-form-field id="communeCode" label="Phường / Xã">
+              <app-select
+                id="communeCode"
+                formControlName="communeCode"
+                [options]="communeOptions()"
+                placeholder="Chọn phường/xã"
+                [disabled]="isSubmitting() || !profileForm.get('provinceCode')?.value"
+              />
+            </app-form-field>
+          </div>
+
           <!-- Address -->
-          <app-form-field id="address" label="Địa chỉ">
+          <app-form-field id="address" label="Địa chỉ cụ thể">
             <app-input
               id="address"
               formControlName="address"
               type="textarea"
-              placeholder="Số nhà, đường, phường, quận, thành phố"
+              placeholder="Số nhà, đường"
               [rows]="3"
               icon="location_on"
               [disabled]="isSubmitting()"

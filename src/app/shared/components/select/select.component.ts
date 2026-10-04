@@ -1,5 +1,6 @@
 import {
   Component,
+  ElementRef,
   forwardRef,
   input,
   output,
@@ -7,6 +8,7 @@ import {
   computed,
   effect,
   untracked,
+  viewChild,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, NG_VALUE_ACCESSOR, ControlValueAccessor } from '@angular/forms';
@@ -34,6 +36,7 @@ export interface SelectOption {
         >
       }
       <select
+        #selectEl
         [id]="id()"
         [name]="name()"
         [value]="_value()"
@@ -124,6 +127,23 @@ export class SelectComponent implements ControlValueAccessor {
     untracked(() => {
       if (parentValue !== this._value()) {
         this._value.set(parentValue);
+      }
+    });
+  });
+
+  // Tham chiếu <select> thật để ép lại value khi danh sách option đổi.
+  private readonly selectEl = viewChild<ElementRef<HTMLSelectElement>>('selectEl');
+
+  // Re-assert value mỗi khi `options` đổi (vd: API tỉnh/phường trả về SAU khi
+  // hồ sơ đã nạp value). Không có bước này, binding [value] chạy lúc chưa có
+  // <option> khớp → browser để select trống, và không tự gán lại khi option tới.
+  private readonly optionsSyncEffect = effect(() => {
+    this.options();
+    untracked(() => {
+      const el = this.selectEl()?.nativeElement;
+      const val = this._value();
+      if (el && el.value !== val) {
+        el.value = val;
       }
     });
   });

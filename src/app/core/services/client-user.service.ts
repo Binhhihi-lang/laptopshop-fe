@@ -24,6 +24,7 @@ export class ClientUserService {
   updateMyProfile(data: UserProfileUpdateRequest): Observable<UserResponse> {
     const formData = new FormData();
     if (data.fullName !== undefined) formData.append('fullName', data.fullName);
+    if (data.email !== undefined) formData.append('email', data.email);
     if (data.phone !== undefined) formData.append('phone', data.phone);
     if (data.address !== undefined) formData.append('address', data.address);
     if (data.provinceCode !== undefined) formData.append('provinceCode', data.provinceCode);

@@ -89,6 +89,16 @@
               ></app-input>
             </app-form-field>
 
+            <app-form-field id="email" label="Email" [required]="true" [error]="hasError('email', 'required') ? 'Vui lòng nhập email' : hasError('email', 'email') ? 'Email không hợp lệ' : ''">
+              <app-input
+                id="email"
+                type="email"
+                formControlName="email"
+                placeholder="nguyenvana@example.com"
+                autocomplete="email"
+              ></app-input>
+            </app-form-field>
+
             <app-form-field id="phone" label="Số điện thoại" [error]="hasError('phone', 'pattern') ? 'Số điện thoại không hợp lệ (10-11 số)' : ''">
               <app-input
                 id="phone"

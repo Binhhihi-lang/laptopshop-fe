@@ -1,9 +1,9 @@
-<!-- Dashboard - Modern Clean with Dark Mode -->
+<!-- Bảng điều khiển — số liệu thật, biểu đồ ApexCharts, phân quyền Admin/Staff -->
 <div class="page-container">
-  <!-- Page Header (shared) -->
+  <!-- Page Header -->
   <app-page-header
     title="Bảng điều khiển"
-    subtitle="Tổng quan hiệu suất cửa hàng"
+    [subtitle]="canViewCustomers() ? 'Tổng quan hiệu suất cửa hàng' : 'Tổng quan vận hành — chế độ nhân viên'"
     [hasActions]="true">
     <app-button
       variant="secondary"
@@ -11,24 +11,36 @@
       label="Làm mới"
       [disabled]="loading()"
       (click)="loadStatistics()" />
-    <app-button variant="primary" icon="download" label="Xuất báo cáo" />
+    @if (canViewCustomers()) {
+      <app-button
+        variant="primary"
+        icon="download"
+        [label]="exporting() ? 'Đang xuất...' : 'Xuất báo cáo'"
+        [disabled]="exporting() || loading()"
+        (click)="exportReport()" />
+    }
   </app-page-header>
 
   <!-- Loading skeleton -->
   @if (loading()) {
     <div class="grid-kpi animate-fade-in" role="status" aria-label="Đang tải thống kê bảng điều khiển">
-      @for (i of [1, 2, 3, 4, 5, 6, 7, 8]; track i) {
-        <app-loading type="skeleton" [height]="'5.5rem'" [borderRadius]="'rounded-xl'" />
+      @for (i of [1, 2, 3, 4]; track i) {
+        <app-loading type="skeleton" [height]="'8rem'" [borderRadius]="'rounded-xl'" />
       }
     </div>
-    <div class="grid-2col animate-fade-in mt-6">
+    <div class="grid-kpi animate-fade-in mt-6">
+      @for (i of [1, 2, 3, 4]; track i) {
+        <app-loading type="skeleton" [height]="'8rem'" [borderRadius]="'rounded-xl'" />
+      }
+    </div>
+    <div class="grid-2col mt-6">
       @for (i of [1, 2]; track i) {
-        <app-loading type="skeleton" [height]="'16rem'" [borderRadius]="'rounded-xl'" />
+        <app-loading type="skeleton" [height]="'20rem'" [borderRadius]="'rounded-xl'" />
       }
     </div>
   }
 
-  <!-- Permission Denied State (shared empty-state, variant "permission") -->
+  <!-- Permission Denied -->
   @if (!loading() && permissionDenied()) {
     <app-empty-state
       variant="permission"
@@ -38,7 +50,7 @@
     />
   }
 
-  <!-- Error State (shared empty-state + nút thử lại) -->
+  <!-- Error -->
   @if (!loading() && errorMessage() && !permissionDenied()) {
     <app-empty-state
       variant="error"
@@ -51,160 +63,332 @@
   }
 
   <!-- Main Content -->
-  @if (!loading() && !errorMessage() && !permissionDenied()) {
-    <!-- KPI Grid (shared stat-card) -->
+  @if (!loading() && !errorMessage() && !permissionDenied() && stats(); as s) {
+    <!-- ===== KPI hàng 1 ===== -->
     <div class="grid-kpi animate-slide-up">
-      @for (kpi of kpis(); track kpi.label) {
+      <app-stat-card
+        label="Doanh thu hôm nay"
+        [value]="formatPrice(s.revenueToday)"
+        icon="payments"
+        iconClass="bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400"
+        [trendUp]="changeUp()"
+        [trendNeutral]="changeNeutral()"
+        [trendText]="changeText() + ' so với hôm qua'" />
+
+      <app-stat-card
+        label="Đơn hàng mới"
+        [value]="s.ordersTodayCount.toString()"
+        icon="receipt_long"
+        iconClass="bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400"
+        unit="đơn"
+        [trendNeutral]="true"
+        [trendText]="s.totalOrderCount + ' đơn tổng'" />
+
+      @if (canViewCustomers()) {
         <app-stat-card
-          [label]="kpi.label"
-          [value]="kpi.value"
-          [icon]="kpi.icon"
-          [iconClass]="kpi.iconClass"
-          [trendUp]="kpi.trend ? kpi.trend.up : true"
-          [trendText]="kpi.trend?.text || ''" />
+          label="Khách hàng"
+          [value]="(s.userCount ?? 0).toString()"
+          icon="people"
+          iconClass="bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400"
+          [trendNeutral]="true"
+          [trendText]="'+' + (s.newCustomerCount ?? 0) + ' mới trong 7 ngày'" />
       }
+
+      <app-stat-card
+        label="Sản phẩm"
+        [value]="s.productCount.toString()"
+        icon="inventory_2"
+        iconClass="bg-purple-50 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400"
+        [trendNeutral]="true"
+        [trendText]="s.activeProductCount + ' đang bán · ' + s.inactiveProductCount + ' tạm ẩn'" />
     </div>
 
-    <!-- Charts & Alerts Section -->
-    <div class="grid-2col animate-slide-up mt-6" style="animation-delay: 100ms">
-      <!-- Low Stock Alerts Card (shared card + badge) -->
+    <!-- ===== KPI hàng 2 ===== -->
+    <div class="grid-kpi animate-slide-up mt-6">
+      <app-stat-card
+        label="Voucher đang chạy"
+        [value]="s.activeVoucherCount.toString()"
+        icon="local_offer"
+        iconClass="bg-pink-50 text-pink-600 dark:bg-pink-900/30 dark:text-pink-400"
+        [trendNeutral]="true"
+        [trendText]="s.voucherExpiringSoonCount + ' sắp hết hạn'" />
+
+      <app-stat-card
+        label="Danh mục"
+        [value]="s.categoryCount.toString()"
+        icon="category"
+        iconClass="bg-cyan-50 text-cyan-600 dark:bg-cyan-900/30 dark:text-cyan-400"
+        [trendNeutral]="true"
+        [trendText]="s.activeCategoryCount + ' đang hoạt động'" />
+
+      <app-stat-card
+        label="Sản phẩm sắp hết"
+        [value]="s.lowStockCount.toString()"
+        icon="error_outline"
+        iconClass="bg-amber-50 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400"
+        [trendNeutral]="true"
+        [trendText]="s.criticalStockCount + ' dưới ngưỡng nguy hiểm'"
+        [clickable]="true"
+        (cardClick)="goToProducts()" />
+
+      <app-stat-card
+        label="Cần xử lý ngay"
+        [value]="s.needsActionCount.toString()"
+        icon="pending_actions"
+        iconClass="bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400"
+        unit="đơn"
+        [trendNeutral]="true"
+        trendText="Chờ xác nhận"
+        [clickable]="true"
+        (cardClick)="goToOrders()" />
+    </div>
+
+    <!-- ===== Thanh lọc khoảng thời gian ===== -->
+    <div class="range-bar animate-slide-up mt-6">
+      <span class="range-label">Khoảng thời gian</span>
+      <div class="seg" role="group" aria-label="Chọn khoảng thời gian">
+        @for (opt of ranges; track opt.value) {
+          <button
+            type="button"
+            class="seg-btn"
+            [class.on]="range() === opt.value"
+            [attr.aria-pressed]="range() === opt.value"
+            (click)="selectRange(opt.value)">
+            {{ opt.label }}
+          </button>
+        }
+      </div>
+    </div>
+
+    <!-- ===== Biểu đồ ===== -->
+    <div class="grid-2col animate-slide-up mt-6">
+      <!-- Doanh thu -->
+      <app-card [padding]="'default'">
+        <app-card-header title="Doanh thu" subtitle="Đơn hoàn thành theo khoảng đã chọn">
+          <span class="rev-change" [class.up]="changeUp()" [class.neutral]="changeNeutral()">
+            <mat-icon class="w-4 h-4">{{ changeNeutral() ? 'remove' : (changeUp() ? 'trending_up' : 'trending_down') }}</mat-icon>
+            {{ changeText() }}
+          </span>
+        </app-card-header>
+        <div class="rev-total">
+          <span class="rev-total-value">{{ formatPrice(s.revenueInRange) }}</span>
+          <span class="rev-total-note">Kỳ trước: {{ formatPrice(s.revenuePrevRange) }}</span>
+        </div>
+        @if (s.revenueSeries.length > 0) {
+          <apx-chart
+            [series]="revenueSeries()"
+            [chart]="revenueChart()"
+            [xaxis]="revenueXAxis()"
+            [yaxis]="revenueYAxis()"
+            [stroke]="revenueStroke()"
+            [fill]="revenueFill()"
+            [grid]="revenueGrid()"
+            [tooltip]="revenueTooltip()"
+            [dataLabels]="revenueDataLabels()"
+            [legend]="revenueLegend()" />
+        } @else {
+          <div class="chart-empty">
+            <mat-icon>show_chart</mat-icon>
+            <p>Chưa có dữ liệu trong khoảng này</p>
+          </div>
+        }
+      </app-card>
+
+      <!-- Trạng thái đơn -->
+      <app-card [padding]="'default'">
+        <app-card-header title="Đơn hàng theo trạng thái" subtitle="Toàn hệ thống" />
+        @if (statusTotal() > 0) {
+          <div class="status-wrap">
+            <apx-chart
+              [series]="statusSeries()"
+              [chart]="donutChart()"
+              [labels]="statusLabels()"
+              [colors]="statusColors()"
+              [plotOptions]="donutPlotOptions()"
+              [legend]="donutLegend()"
+              [responsive]="donutResponsive()" />
+            <ul class="status-list">
+              @for (row of statusMeta(); track row.key) {
+                <li class="status-row">
+                  <span class="status-dot" [style.background]="statusColors()[$index]"></span>
+                  <span class="status-name">{{ row.label }}</span>
+                  <span class="status-count">{{ row.count }}</span>
+                  <span class="status-percent">{{ percentOfTotal(row.count) }}</span>
+                </li>
+              }
+            </ul>
+          </div>
+        } @else {
+          <div class="chart-empty">
+            <mat-icon>donut_large</mat-icon>
+            <p>Chưa có đơn hàng nào</p>
+          </div>
+        }
+      </app-card>
+    </div>
+
+    <!-- ===== Danh sách ===== -->
+    <div class="grid-2col animate-slide-up mt-6">
+      <!-- Top bán chạy -->
       <app-card [padding]="'none'" class="overflow-hidden">
-        <app-card-header title="Sản phẩm sắp hết hàng">
-          <button class="btn-ghost btn-sm text-primary hover:text-primary-hover">
+        <app-card-header title="Top sản phẩm bán chạy" subtitle="Đơn hoàn thành · theo khoảng đã chọn">
+          <a class="link-more" routerLink="/admin/products">
             Xem tất cả
             <mat-icon class="w-4 h-4">chevron_right</mat-icon>
-          </button>
+          </a>
         </app-card-header>
-        <div class="p-0">
-          @if (lowStockProducts().length > 0) {
-            <div class="divide-y divide-slate-200 dark:divide-slate-700">
-              @for (product of lowStockProducts(); track product.id || product.code) {
-                <div
-                  class="alert-item p-4 flex items-center gap-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                  <div class="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-slate-100 dark:bg-slate-800">
-                    @if (product.image) {
-                      <img [src]="product.image" alt="Product" class="w-full h-full object-cover" />
-                    } @else {
-                      <div class="w-full h-full flex items-center justify-center text-slate-400 dark:text-slate-500">
-                        <mat-icon class="w-6 h-6">inventory_2</mat-icon>
-                      </div>
-                    }
-                  </div>
-                  <div class="flex-1 min-w-0">
-                    <p class="font-medium text-slate-900 dark:text-white truncate">{{ product.name }}</p>
-                    <p class="text-caption text-slate-500 dark:text-slate-400 truncate">{{ product.code }}</p>
-                  </div>
-                  <div class="flex items-center gap-2">
-                    <app-badge
-                      [label]="product.quantity + ' còn lại'"
-                      variant="warning"
-                      size="sm" />
-                    <button
-                      class="btn-icon btn-ghost p-1.5 text-slate-400 hover:text-primary"
-                      aria-label="Xem sản phẩm">
-                      <mat-icon class="w-4 h-4">visibility</mat-icon>
-                    </button>
-                  </div>
-                </div>
-              }
+        <div class="divide-y divide-slate-200 dark:divide-slate-700">
+          @for (p of topProducts(); track p.code; let i = $index) {
+            <div class="list-row">
+              <span class="rank" [class.top1]="i === 0" [class.top2]="i === 1" [class.top3]="i === 2">{{ i + 1 }}</span>
+              <span class="thumb">
+                @if (p.image) {
+                  <img [src]="p.image" [alt]="p.name" />
+                } @else {
+                  <mat-icon class="w-5 h-5">laptop_mac</mat-icon>
+                }
+              </span>
+              <div class="list-info">
+                <p class="list-name">{{ p.name }}</p>
+                <p class="list-meta">{{ p.code }}</p>
+              </div>
+              <div class="list-amount">
+                <p class="list-qty">{{ p.quantitySold }} đã bán</p>
+                <p class="list-revenue">{{ formatPrice(p.revenue) }}</p>
+              </div>
             </div>
-          } @else {
-            <div class="empty-state h-48">
-              <mat-icon class="empty-state-icon">check_circle_outline</mat-icon>
-              <p class="empty-state-title text-success">Đủ hàng</p>
-              <p class="empty-state-description">Không có sản phẩm nào sắp hết hàng</p>
+          }
+          @if (topProducts().length === 0) {
+            <div class="empty-inline">
+              <mat-icon>bar_chart</mat-icon>
+              <p>Chưa có sản phẩm nào bán trong khoảng này</p>
             </div>
           }
         </div>
       </app-card>
 
-      <!-- Recent Activity Card (shared card) -->
+      <!-- Sắp hết hàng -->
       <app-card [padding]="'none'" class="overflow-hidden">
-        <app-card-header title="Hoạt động gần đây">
-          <select
-            class="input input-sm w-auto py-1.5 pl-2 pr-8 text-xs"
-            aria-label="Khoảng thời gian">
-            <option value="today">Hôm nay</option>
-            <option value="week" selected>Tuần này</option>
-            <option value="month">Tháng này</option>
-          </select>
-        </app-card-header>
-        <div class="p-4">
-          <div class="space-y-3">
-            @for (activity of recentActivity(); track activity.id) {
-              <div
-                class="activity-item flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                <div
-                  class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
-                  [class]="activity.iconClass">
-                  <mat-icon class="w-5 h-5">{{ activity.icon }}</mat-icon>
-                </div>
-                <div class="flex-1 min-w-0">
-                  <p class="font-medium text-slate-900 dark:text-white truncate">{{ activity.title }}</p>
-                  <p class="text-caption text-slate-500 dark:text-slate-400 truncate">{{ activity.description }}</p>
-                </div>
-                <span class="text-caption text-slate-400 dark:text-slate-500 whitespace-nowrap">{{ activity.time }}</span>
-              </div>
-            }
-            @if (recentActivity().length === 0) {
-              <div class="empty-state py-8">
-                <mat-icon class="empty-state-icon">history</mat-icon>
-                <p class="empty-state-title">Chưa có hoạt động</p>
-                <p class="empty-state-description">Hoạt động sẽ hiển thị ở đây</p>
-              </div>
-            }
-          </div>
-        </div>
-        <div class="card-footer border-t border-slate-200 dark:border-slate-700 px-4 py-3">
-          <button class="btn-ghost btn-sm text-primary hover:text-primary-hover">
-            Xem tất cả hoạt động
+        <app-card-header title="Sản phẩm sắp hết hàng" subtitle="Tồn kho dưới 5 sản phẩm">
+          <a class="link-more" routerLink="/admin/products">
+            Xem tất cả
             <mat-icon class="w-4 h-4">chevron_right</mat-icon>
-          </button>
+          </a>
+        </app-card-header>
+        <div class="divide-y divide-slate-200 dark:divide-slate-700">
+          @for (p of lowStock(); track p.id) {
+            <div class="list-row">
+              <span class="thumb">
+                @if (p.image) {
+                  <img [src]="p.image" [alt]="p.name" />
+                } @else {
+                  <mat-icon class="w-5 h-5">laptop_mac</mat-icon>
+                }
+              </span>
+              <div class="list-info">
+                <p class="list-name">{{ p.name }}</p>
+                <p class="list-meta">{{ p.code }}</p>
+              </div>
+              <app-badge [label]="'Còn ' + p.quantity" [variant]="stockBadgeVariant(p.quantity)" size="sm" />
+            </div>
+          }
+          @if (lowStock().length === 0) {
+            <div class="empty-inline success">
+              <mat-icon>check_circle_outline</mat-icon>
+              <p>Đủ hàng — không có sản phẩm nào sắp hết</p>
+            </div>
+          }
         </div>
       </app-card>
     </div>
 
-    <!-- Revenue Chart Placeholder (shared card) -->
-    <app-card class="animate-slide-up mt-6" style="animation-delay: 200ms">
-      <app-card-header title="Tổng quan doanh thu">
-        <div class="flex items-center gap-2">
-          <button class="btn-ghost btn-sm" aria-label="Kỳ trước">
-            <mat-icon class="w-4 h-4">chevron_left</mat-icon>
-          </button>
-          <span class="text-sm font-medium text-slate-700 dark:text-slate-300 px-2">Tháng này</span>
-          <button class="btn-ghost btn-sm" aria-label="Kỳ sau">
-            <mat-icon class="w-4 h-4">chevron_right</mat-icon>
-          </button>
-        </div>
-      </app-card-header>
-      <div class="px-5 pb-5">
-        <div class="h-64 flex items-center justify-center bg-slate-50 dark:bg-slate-800/50 rounded-lg relative overflow-hidden">
-          <!-- Chart canvas placeholder -->
-          <canvas #revenueChart class="w-full h-full"></canvas>
-          <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div class="text-center">
-              <mat-icon class="text-slate-300 dark:text-slate-600 text-6xl mb-2">show_chart</mat-icon>
-              <p class="text-slate-500 dark:text-slate-400">Tích hợp biểu đồ sắp ra mắt</p>
-              <p class="text-caption text-slate-400 dark:text-slate-500 mt-1">Kết nối Chart.js / ApexCharts / ngx-charts</p>
-            </div>
+    <!-- ===== Hiệu quả khuyến mại ===== -->
+    @if (promotionEffect(); as pe) {
+      <div class="grid-2col animate-slide-up mt-6">
+        <!-- Tổng chi phí -->
+        <app-card [padding]="'default'">
+          <app-card-header title="Chi phí khuyến mại" subtitle="Đơn không huỷ · theo khoảng đã chọn" />
+          <div class="rev-total">
+            <span class="rev-total-value">{{ formatPrice(pe.totalCost) }}</span>
+            <span class="rev-total-note">
+              {{ pe.discountedOrders }}/{{ pe.totalOrders }} đơn có ưu đãi ({{ discountedRateText() }})
+            </span>
           </div>
-        </div>
-        <!-- Legend -->
-        <div class="flex items-center gap-4 text-sm text-slate-600 dark:text-slate-400 mt-4">
-          <span class="flex items-center gap-2">
-            <span class="w-3 h-3 rounded-full bg-primary"></span>
-            Doanh thu
-          </span>
-          <span class="flex items-center gap-2">
-            <span class="w-3 h-3 rounded-full bg-success"></span>
-            Lợi nhuận
-          </span>
-          <span class="flex items-center gap-2">
-            <span class="w-3 h-3 rounded-full bg-warning"></span>
-            Chi phí
-          </span>
-        </div>
+          <ul class="cost-list">
+            <li class="cost-row">
+              <span class="cost-dot" style="background: var(--color-primary)"></span>
+              <span class="cost-name">Khuyến mại (Promotion)</span>
+              <span class="cost-value">{{ formatPrice(pe.promotionCost) }}</span>
+            </li>
+            <li class="cost-row">
+              <span class="cost-dot" style="background: var(--color-warning)"></span>
+              <span class="cost-name">Voucher</span>
+              <span class="cost-value">{{ formatPrice(pe.voucherCost) }}</span>
+            </li>
+            <li class="cost-row">
+              <span class="cost-dot" style="background: var(--color-danger)"></span>
+              <span class="cost-name">Flash Sale</span>
+              <span class="cost-value">{{ formatPrice(pe.flashSaleCost) }}</span>
+            </li>
+          </ul>
+          <p class="cost-note">
+            Flash Sale: {{ pe.flashSale.quantitySold }} máy đã bán trong {{ pe.flashSale.orderCount }} đơn
+          </p>
+        </app-card>
+
+        <!-- Top chương trình hiệu quả -->
+        <app-card [padding]="'none'" class="overflow-hidden">
+          <app-card-header title="Chương trình hiệu quả" subtitle="Xếp theo tiền đã giảm" />
+          <div class="divide-y divide-slate-200 dark:divide-slate-700">
+            @for (p of pe.topPromotions; track p.id; let i = $index) {
+              <div class="list-row">
+                <span class="rank" [class.top1]="i === 0" [class.top2]="i === 1" [class.top3]="i === 2">{{ i + 1 }}</span>
+                <div class="list-info">
+                  <p class="list-name">{{ p.name }}</p>
+                  <p class="list-meta">{{ p.orderCount }} đơn</p>
+                </div>
+                <div class="list-amount">
+                  <p class="list-revenue">−{{ formatPrice(p.discountAmount) }}</p>
+                </div>
+              </div>
+            }
+            @if (pe.topPromotions.length === 0) {
+              <div class="empty-inline">
+                <mat-icon>percent</mat-icon>
+                <p>Không có chương trình nào được áp trong khoảng này</p>
+              </div>
+            }
+          </div>
+        </app-card>
       </div>
-    </app-card>
+
+      <!-- Top voucher — card riêng, cùng cấu trúc với "Chương trình hiệu quả" -->
+      <app-card [padding]="'none'" class="overflow-hidden animate-slide-up mt-6">
+        <app-card-header title="Voucher hiệu quả" subtitle="Xếp theo tiền đã giảm" />
+        <div class="divide-y divide-slate-200 dark:divide-slate-700">
+          @for (v of pe.topVouchers; track v.id; let i = $index) {
+            <div class="list-row">
+              <span class="rank" [class.top1]="i === 0" [class.top2]="i === 1" [class.top3]="i === 2">{{ i + 1 }}</span>
+              <span class="voucher-chip">
+                <mat-icon class="!w-4 !h-4 !text-[16px] !leading-none">sell</mat-icon>
+                {{ v.name }}
+              </span>
+              <div class="list-info">
+                <p class="list-meta">{{ v.orderCount }} đơn đã dùng</p>
+              </div>
+              <div class="list-amount">
+                <p class="list-revenue">−{{ formatPrice(v.discountAmount) }}</p>
+              </div>
+            </div>
+          }
+          @if (pe.topVouchers.length === 0) {
+            <div class="empty-inline">
+              <mat-icon>sell</mat-icon>
+              <p>Không có voucher nào được dùng trong khoảng này</p>
+            </div>
+          }
+        </div>
+      </app-card>
+    }
   }
 </div>

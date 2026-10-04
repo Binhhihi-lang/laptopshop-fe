@@ -7,10 +7,19 @@ import { DEVICE_ID_HEADER } from '@core/utils/constants';
 import { getOrCreateDeviceId } from '@core/utils/device-id.util';
 import { environment } from '@environments/environment';
 
+/** Kết quả một lần refresh dùng chung cho leader + follower. */
+type RefreshResult =
+  | { status: 'pending' }
+  | { status: 'success'; token: string }
+  | { status: 'error'; error: unknown };
+
 @Injectable()
 export class JwtInterceptor implements HttpInterceptor {
-  // Sử dụng BehaviorSubject thay vì any = null để tránh lỗi runtime : lưu giá trị token mới nhất
-  private refreshTokenSubject = new BehaviorSubject<string | null>(null);
+  // Kết quả refresh dùng chung cho leader + follower. Dùng object có trạng thái
+  // thay vì chỉ token: khi refresh THẤT BẠI, follower phải nhận LỖI để kết thúc
+  // request — nếu chỉ phát null rồi lọc bỏ, follower treo vĩnh viễn (spinner
+  // quay mãi) vì không bao giờ có next/error.
+  private refreshResultSubject = new BehaviorSubject<RefreshResult>({ status: 'pending' });
 
   constructor(private authService: AuthService) {}
 
@@ -85,33 +94,36 @@ export class JwtInterceptor implements HttpInterceptor {
     // TH1: LEADER (Request đầu tiên bị 401)
     if (!this.authService.getIsRefreshing()) {
       this.authService.setIsRefreshing(true);
-      this.refreshTokenSubject.next(null); // Reset tín hiệu hàng chờ
+      this.refreshResultSubject.next({ status: 'pending' }); // Reset tín hiệu hàng chờ
 
       return this.authService.refreshToken().pipe(
         switchMap((response) => {
           this.authService.setIsRefreshing(false);
           // Bắn token mới cho các FOLLOWER đang chờ
-          this.refreshTokenSubject.next(response.token);
+          this.refreshResultSubject.next({ status: 'success', token: response.token });
 
           // Thử lại request ban đầu của LEADER
           return next.handle(this.addToken(request, response.token));
         }),
         catchError((err) => {
-          // AuthService ĐÃ logout ở bên trong rồi, Interceptor KHÔNG gọi logout nữa.
-          // Chỉ cần trả cờ isRefreshing về false và đẩy lỗi tiếp.
+          // AuthService ĐÃ logout + báo "hết phiên" ở bên trong rồi, Interceptor
+          // KHÔNG gọi logout nữa. Phát LỖI cho follower để chúng kết thúc (tránh treo).
           this.authService.setIsRefreshing(false);
+          this.refreshResultSubject.next({ status: 'error', error: err });
           return throwError(() => err);
         }),
       );
     }
 
     // TH2: FOLLOWER (Các request đến sau, đứng vào hàng chờ)
-    return this.refreshTokenSubject.pipe(
-      filter((token) => token !== null),
+    return this.refreshResultSubject.pipe(
+      filter((r) => r.status !== 'pending'),
       take(1),
-      switchMap((token) => {
-        return next.handle(this.addToken(request, token!));
-      }),
+      switchMap((r) =>
+        r.status === 'success'
+          ? next.handle(this.addToken(request, r.token))
+          : throwError(() => r.error),
+      ),
     );
   }
 }

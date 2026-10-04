@@ -24,8 +24,7 @@ export class ApiService {
   get<T>(
     endpoint: string,
     params?: Record<string, string | number | boolean | undefined>,
-  ): Observable<T> {
-    let httpParams = new HttpParams();
+  ): Observable<T> {    let httpParams = new HttpParams();
     if (params) {
       for (const [key, value] of Object.entries(params)) {
         if (value !== undefined && value !== null && value !== '') {
@@ -90,5 +89,26 @@ export class ApiService {
       map((response) => response.result),
       catchError(this.handleError),
     );
+  }
+
+  // GET tải FILE nhị phân (Excel/PDF...) — KHÔNG bọc ApiResponse, trả nguyên body.
+  getBlob(
+    endpoint: string,
+    params?: Record<string, string | number | boolean | undefined>,
+  ): Observable<Blob> {
+    let httpParams = new HttpParams();
+    if (params) {
+      for (const [key, value] of Object.entries(params)) {
+        if (value !== undefined && value !== null) {
+          httpParams = httpParams.set(key, String(value));
+        }
+      }
+    }
+    const url = httpParams.keys().length
+      ? `${this.apiUrl}${endpoint}?${httpParams.toString()}`
+      : `${this.apiUrl}${endpoint}`;
+    return this.http
+      .get(url, { responseType: 'blob' })
+      .pipe(catchError(this.handleError));
   }
 }

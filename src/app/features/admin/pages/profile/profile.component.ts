@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
+import { Component, OnInit, signal, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   FormsModule,
@@ -14,6 +14,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { UserService } from '@core/services/user.service';
 import { AuthService } from '@core/services/auth.service';
 import { DeviceService } from '@core/services/device.service';
+import { LocationService, Commune, Province } from '@core/services/location.service';
 import { UserResponse, UserProfileUpdateRequest } from '@core/models/user.model';
 import { DeviceInfo } from '@core/models/device.model';
 import { NotificationService } from '@core/services/notification.service';
@@ -24,12 +25,14 @@ import {
   CardComponent,
   ButtonComponent,
   InputComponent,
+  SelectComponent,
   FormFieldComponent,
   PageHeaderComponent,
   AvatarComponent,
   BadgeComponent,
   LoadingComponent,
 } from '@shared/components';
+import type { SelectOption } from '@shared/components';
 
 @Component({
   selector: 'app-profile',
@@ -44,6 +47,7 @@ import {
     CardComponent,
     ButtonComponent,
     InputComponent,
+    SelectComponent,
     FormFieldComponent,
     PageHeaderComponent,
     AvatarComponent,
@@ -58,6 +62,7 @@ export class ProfileComponent implements OnInit {
   private readonly userService = inject(UserService);
   private readonly authService = inject(AuthService);
   private readonly deviceService = inject(DeviceService);
+  private readonly locationService = inject(LocationService);
   private readonly dialog = inject(MatDialog);
   private readonly router = inject(Router);
   private readonly notification = inject(NotificationService);
@@ -69,6 +74,16 @@ export class ProfileComponent implements OnInit {
   selectedAvatar = signal<File | null>(null);
   avatarPreview = signal<string | null>(null);
 
+  // Địa chỉ 2 cấp (tỉnh/thành → phường/xã) — giống trang hồ sơ client
+  provinces = signal<Province[]>([]);
+  communes = signal<Commune[]>([]);
+  provinceOptions = computed<SelectOption[]>(() =>
+    this.provinces().map((p) => ({ value: String(p.code), label: p.name })),
+  );
+  communeOptions = computed<SelectOption[]>(() =>
+    this.communes().map((c) => ({ value: String(c.code), label: c.name })),
+  );
+
   // Thiết bị đang đăng nhập
   devices = signal<DeviceInfo[]>([]);
   isLoadingDevices = signal(false);
@@ -78,16 +93,63 @@ export class ProfileComponent implements OnInit {
   /** deviceId của các thiết bị user tích chọn để đăng xuất. */
   selectedDeviceIds = signal<string[]>([]);
 
-  // Form: CHỈ các trường cho phép sửa (không email/role/active/password)
+  // Form: các trường cho phép sửa (không role/active/password)
   profileForm: FormGroup = this.fb.group({
     fullName: ['', [Validators.required, Validators.minLength(2)]],
+    email: ['', [Validators.required, Validators.email]],
     phone: ['', [Validators.pattern(/^[0-9]{10,11}$/)]],
+    provinceCode: [''],
+    communeCode: [''],
     address: [''],
   });
 
   ngOnInit(): void {
     this.loadProfile();
     this.loadDevices();
+    this.loadProvinces();
+  }
+
+  // ================== ĐỊA CHỈ 2 CẤP ==================
+
+  /** 34 tỉnh/thành sau sáp nhập — gọi API công khai, không qua BE. */
+  loadProvinces(): void {
+    this.locationService.getProvinces().subscribe({
+      next: (list) => this.provinces.set(list),
+      error: () => {},
+    });
+  }
+
+  onProvinceChange(provinceCode: string): void {
+    this.profileForm.get('communeCode')?.setValue('');
+    this.communes.set([]);
+    if (provinceCode) {
+      this.loadCommunesFor(provinceCode);
+    }
+  }
+
+  loadCommunesFor(provinceCode: string): void {
+    this.locationService.getCommunes(provinceCode).subscribe({
+      next: (list) => this.communes.set(list),
+      error: () => this.communes.set([]),
+    });
+  }
+
+  /**
+   * Bỏ phần phường/xã và tỉnh/thành ở CUỐI chuỗi address, chỉ giữ địa chỉ
+   * đường. Dữ liệu cũ đã ghép kèm phường/tỉnh nên cần tách ra.
+   */
+  private streetPart(user: UserResponse): string {
+    let address = (user.address ?? '').trim();
+    const suffixes = [user.communeName, user.provinceName]
+      .filter((s): s is string => !!s?.trim())
+      .map((s) => s.trim());
+    for (const suffix of suffixes) {
+      if (address.toLowerCase().endsWith(suffix.toLowerCase())) {
+        address = address.slice(0, address.length - suffix.length);
+        address = address.replace(/[,\s]+$/, '');
+      }
+    }
+    return address;
   }
 
   // ================== THIẾT BỊ ĐANG ĐĂNG NHẬP ==================
@@ -232,9 +294,18 @@ export class ProfileComponent implements OnInit {
         this.currentUser.set(user);
         this.profileForm.patchValue({
           fullName: user.fullName,
+          email: user.email || '',
           phone: user.phone || '',
-          address: user.address || '',
+          provinceCode: user.provinceCode || '',
+          communeCode: user.communeCode || '',
+          // Ô "Địa chỉ cụ thể" chỉ chứa phần đường; dữ liệu cũ có thể đã ghép
+          // kèm phường/tỉnh → tách bỏ để không trùng với 2 select trên.
+          address: this.streetPart(user),
         });
+        // Nạp phường/xã của tỉnh đã lưu để select hiển thị đúng lựa chọn cũ
+        if (user.provinceCode) {
+          this.loadCommunesFor(user.provinceCode);
+        }
         // Hiển thị ảnh hiện tại (user.avatar là URL Cloudinary đầy đủ)
         if (user.avatar) {
           this.avatarPreview.set(user.avatar);
@@ -283,10 +354,28 @@ export class ProfileComponent implements OnInit {
 
     this.isSubmitting.set(true);
     const formValue = this.profileForm.value;
+
+    // Tên tỉnh/phường suy từ code đang chọn; nếu danh sách chưa tải được thì
+    // giữ nguyên tên đã lưu trước đó để không mất dữ liệu.
+    const provinceName =
+      this.provinces().find((p) => String(p.code) === formValue.provinceCode)?.name ??
+      this.currentUser()?.provinceName ??
+      '';
+    const communeName =
+      this.communes().find((c) => String(c.code) === formValue.communeCode)?.name ??
+      this.currentUser()?.communeName ??
+      '';
+
     const data: UserProfileUpdateRequest = {
       fullName: formValue.fullName,
+      email: formValue.email,
       phone: formValue.phone || undefined,
-      address: formValue.address || undefined,
+      // Chỉ gửi phần đường; phường/xã + tỉnh/thành gửi ở trường riêng bên dưới.
+      address: formValue.address?.trim() || undefined,
+      provinceCode: formValue.provinceCode || undefined,
+      provinceName: provinceName || undefined,
+      communeCode: formValue.communeCode || undefined,
+      communeName: communeName || undefined,
     };
     if (this.selectedAvatar()) {
       data.avatar = this.selectedAvatar()!;
@@ -322,6 +411,9 @@ export class ProfileComponent implements OnInit {
 
   get fullNameControl() {
     return this.profileForm.get('fullName');
+  }
+  get emailControl() {
+    return this.profileForm.get('email');
   }
   get phoneControl() {
     return this.profileForm.get('phone');

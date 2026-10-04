@@ -1,7 +1,25 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, computed, effect, inject, signal } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
-import { MaterialModule } from '@shared/material.module';
+import { Router, RouterLink } from '@angular/router';
+import { MatIconModule } from '@angular/material/icon';
+import {
+  NgApexchartsModule,
+  ApexChart,
+  ApexAxisChartSeries,
+  ApexXAxis,
+  ApexYAxis,
+  ApexStroke,
+  ApexFill,
+  ApexGrid,
+  ApexTooltip,
+  ApexDataLabels,
+  ApexLegend,
+  ApexPlotOptions,
+  ApexNonAxisChartSeries,
+  ApexResponsive,
+} from 'ng-apexcharts';
+
 import {
   PageHeaderComponent,
   CardComponent,
@@ -13,37 +31,39 @@ import {
   StatCardComponent,
 } from '@shared/components';
 
+import { AuthService } from '@core/services/auth.service';
+import { ThemeService } from '@core/services/theme.service';
 import { DashboardService } from '@core/services/dashboard.service';
-import { DashboardStats } from '@core/models/dashboard.model';
+import {
+  DashboardRange,
+  DashboardStats,
+  DailyPoint,
+  TopProduct,
+} from '@core/models/dashboard.model';
+import { formatVnd, readChartTheme, shortVnd } from '@core/utils/chart-theme.util';
 
-interface KpiTrend {
-  up: boolean;
-  text: string;
-}
-
-interface Kpi {
+interface RangeOption {
+  value: DashboardRange;
   label: string;
-  value: string;
-  icon: string;
-  iconClass: string;
-  trend?: KpiTrend;
 }
 
-interface ActivityItem {
-  id: string;
-  title: string;
-  description: string;
-  time: string;
-  icon: string;
-  iconClass: string;
-}
+/** Màu semantic cho 5 trạng thái đơn — dùng chung cho donut và danh sách chú giải. */
+const STATUS_META: { key: string; label: string; cssVar: string; fallback: string }[] = [
+  { key: 'COMPLETED', label: 'Hoàn thành', cssVar: '--color-success', fallback: '#22c55e' },
+  { key: 'CONFIRMED', label: 'Đã xác nhận', cssVar: '--color-primary', fallback: '#3b82f6' },
+  { key: 'SHIPPING', label: 'Đang giao', cssVar: '--color-indigo', fallback: '#6366f1' },
+  { key: 'CANCELLED', label: 'Đã hủy', cssVar: '--color-danger', fallback: '#ef4444' },
+  { key: 'PENDING', label: 'Chờ xác nhận', cssVar: '--color-warning', fallback: '#f59e0b' },
+];
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
   imports: [
     CommonModule,
-    MaterialModule,
+    RouterLink,
+    MatIconModule,
+    NgApexchartsModule,
     PageHeaderComponent,
     CardComponent,
     CardHeaderComponent,
@@ -58,81 +78,37 @@ interface ActivityItem {
 })
 export class DashboardComponent implements OnInit {
   private readonly dashboardService = inject(DashboardService);
+  private readonly authService = inject(AuthService);
+  private readonly themeService = inject(ThemeService);
+  private readonly router = inject(Router);
 
-  // ---- State dạng Signals (thay cho class fields + ChangeDetectorRef) ----
+  // ---- State ----
   readonly loading = signal(true);
   readonly errorMessage = signal('');
   readonly permissionDenied = signal(false);
   readonly stats = signal<DashboardStats | null>(null);
+  readonly range = signal<DashboardRange>('LAST_30_DAYS');
 
-  // Doanh thu hôm nay tạm thời 0 (chưa có API doanh thu)
-  private readonly revenueToday = 0;
+  /** Phiên bản theme — bump mỗi khi đổi sáng/tối để vẽ lại biểu đồ đúng màu. */
+  private readonly themeVersion = signal(0);
 
-  readonly lowStockProducts = computed(() => this.stats()?.lowStockProducts ?? []);
-  readonly recentActivity = signal<ActivityItem[]>([]);
+  readonly ranges: RangeOption[] = [
+    { value: 'TODAY', label: 'Hôm nay' },
+    { value: 'LAST_7_DAYS', label: '7 ngày' },
+    { value: 'LAST_30_DAYS', label: '30 ngày' },
+    { value: 'THIS_MONTH', label: 'Tháng này' },
+  ];
 
-  // KPI tính lại tự động mỗi khi stats thay đổi
-  readonly kpis = computed<Kpi[]>(() => {
-    const s = this.stats();
-    if (!s) return [];
-    const recentOrdersCount = 0; // tạm giữ 0, chưa dùng orderService
-    return [
-      {
-        label: 'Tổng người dùng',
-        value: s.userCount.toString(),
-        icon: 'people',
-        iconClass: 'bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400',
-        trend: { up: true, text: `${s.activeUserCount} đang hoạt động` },
-      },
-      {
-        label: 'Tổng sản phẩm',
-        value: s.productCount.toString(),
-        icon: 'inventory_2',
-        iconClass: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400',
-        trend: { up: true, text: `${s.productCount - s.lowStockCount} còn hàng` },
-      },
-      {
-        label: 'Sản phẩm sắp hết',
-        value: s.lowStockCount.toString(),
-        icon: 'error_outline',
-        iconClass: 'bg-amber-50 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400',
-        trend: { up: false, text: 'cần nhập hàng' },
-      },
-      {
-        label: 'Danh mục',
-        value: s.categoryCount.toString(),
-        icon: 'category',
-        iconClass: 'bg-purple-50 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400',
-        trend: { up: true, text: `${s.categoryCount} đang hoạt động` },
-      },
-      {
-        label: 'Voucher',
-        value: s.voucherCount.toString(),
-        icon: 'local_offer',
-        iconClass: 'bg-pink-50 text-pink-600 dark:bg-pink-900/30 dark:text-pink-400',
-        trend: { up: true, text: `${s.voucherCount} đang hoạt động` },
-      },
-      {
-        label: 'Doanh thu hôm nay',
-        value: this.formatCurrency(this.revenueToday),
-        icon: 'attach_money',
-        iconClass: 'bg-green-50 text-green-600 dark:bg-green-900/30 dark:text-green-400',
-        trend: { up: true, text: 'so với hôm qua' },
-      },
-      {
-        label: 'Đơn hàng gần đây',
-        value: recentOrdersCount.toString(),
-        icon: 'shopping_cart',
-        iconClass: 'bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400',
-      },
-      {
-        label: 'Người dùng hoạt động',
-        value: s.activeUserCount.toString(),
-        icon: 'trending_up',
-        iconClass: 'bg-teal-50 text-teal-600 dark:bg-teal-900/30 dark:text-teal-400',
-      },
-    ];
-  });
+  /** STAFF không có READ_USER → ẩn thẻ Khách hàng + nút Xuất báo cáo (BR-D07). */
+  readonly canViewCustomers = computed(() => this.authService.hasPermission('READ_USER'));
+
+  constructor() {
+    // Đổi sáng/tối → tăng phiên bản để các computed bên dưới tính lại màu.
+    effect(() => {
+      this.themeService.isDark();
+      this.themeVersion.update((v) => v + 1);
+    });
+  }
 
   ngOnInit(): void {
     this.loadStatistics();
@@ -142,74 +118,272 @@ export class DashboardComponent implements OnInit {
     this.loading.set(true);
     this.errorMessage.set('');
 
-    this.dashboardService.getStats().subscribe({
-      next: (stats: DashboardStats) => {
+    this.dashboardService.getStats(this.range()).subscribe({
+      next: (stats) => {
         this.stats.set(stats);
-        this.recentActivity.set(this.buildSampleActivity());
-        this.loading.set(false); // Signals tự cập nhật view, không cần detectChanges
+        this.loading.set(false);
       },
       error: (error: HttpErrorResponse) => {
-        console.error('Dashboard load error:', error);
         if (error.status === 403) {
-          // Bị khóa quyền (READ_DASHBOARD) → hiện empty-state "quyền bị thu hồi"
           this.permissionDenied.set(true);
         } else {
-          this.errorMessage.set(
-            'Không thể tải thống kê bảng điều khiển' + (error.message ? ': ' + error.message : ''),
-          );
+          this.errorMessage.set('Không thể tải thống kê bảng điều khiển');
         }
         this.loading.set(false);
       },
     });
   }
 
-  // Dữ liệu mẫu hoạt động gần đây — khi có API activity sẽ thay bằng dữ liệu thật
-  private buildSampleActivity(): ActivityItem[] {
-    return [
-      {
-        id: '1',
-        title: 'Đơn hàng mới',
-        description: 'Đơn #ORD-2024-001 từ Nguyễn Văn A',
-        time: '2 phút trước',
-        icon: 'shopping_cart',
-        iconClass: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400',
-      },
-      {
-        id: '2',
-        title: 'Cảnh báo hết hàng',
-        description: 'MacBook Pro 14" chỉ còn 3 sản phẩm',
-        time: '15 phút trước',
-        icon: 'warning',
-        iconClass: 'bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400',
-      },
-      {
-        id: '3',
-        title: 'Người dùng mới',
-        description: 'Trần Thị B đăng ký với vai trò STAFF',
-        time: '1 giờ trước',
-        icon: 'person_add',
-        iconClass: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400',
-      },
-      {
-        id: '4',
-        title: 'Tạo voucher',
-        description: 'SUMMER20 - Giảm 20% tất cả laptop',
-        time: '3 giờ trước',
-        icon: 'local_offer',
-        iconClass: 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400',
-      },
-      {
-        id: '5',
-        title: 'Đơn hàng đã giao',
-        description: 'Đơn #ORD-2024-005 đã chuyển cho Viettel Post',
-        time: '5 giờ trước',
-        icon: 'local_shipping',
-        iconClass: 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400',
-      },
-    ];
+  selectRange(range: DashboardRange): void {
+    if (this.range() === range) return;
+    this.range.set(range);
+    this.loadStatistics();
   }
 
-  formatCurrency(amount: number): string {
-    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+  // ===== Định dạng =====
+
+  formatPrice(value: number | null | undefined): string {
+    return formatVnd(value ?? 0);
+  }
+
+  /** Nhãn % so kỳ trước; kỳ trước = 0 → "—" (không chia 0). */
+  changeText(): string {
+    const pct = this.stats()?.revenueChangePercent;
+    if (pct === null || pct === undefined) return '—';
+    const sign = pct > 0 ? '+' : '';
+    return `${sign}${pct.toFixed(1).replace('.', ',')}%`;
+  }
+
+  changeUp(): boolean {
+    return (this.stats()?.revenueChangePercent ?? 0) >= 0;
+  }
+
+  changeNeutral(): boolean {
+    return this.stats()?.revenueChangePercent === null;
+  }
+
+  // ===== Biểu đồ doanh thu (area) =====
+
+  readonly revenueSeries = computed<ApexAxisChartSeries>(() => {
+    this.themeVersion();
+    const s = this.stats();
+    if (!s) return [];
+    return [
+      { name: 'Kỳ này', data: s.revenueSeries.map((p) => p.revenue) },
+      { name: 'Kỳ trước', data: s.previousRevenueSeries.map((p) => p.revenue) },
+    ];
+  });
+
+  readonly revenueChart = computed<ApexChart>(() => {
+    this.themeVersion();
+    const t = readChartTheme();
+    return {
+      type: 'area',
+      height: 300,
+      fontFamily: 'Inter, system-ui, sans-serif',
+      toolbar: { show: false },
+      zoom: { enabled: false },
+      animations: { enabled: !this.prefersReducedMotion() },
+      foreColor: t.textMuted,
+    };
+  });
+
+  readonly revenueXAxis = computed<ApexXAxis>(() => {
+    const s = this.stats();
+    return {
+      categories: (s?.revenueSeries ?? []).map((p) => this.shortDate(p)),
+      tickAmount: 6,
+      labels: { style: { fontSize: '11px' } },
+      axisBorder: { show: false },
+      axisTicks: { show: false },
+    };
+  });
+
+  readonly revenueYAxis = computed<ApexYAxis>(() => ({
+    labels: { formatter: (v: number) => shortVnd(v), style: { fontSize: '11px' } },
+  }));
+
+  readonly revenueStroke = computed<ApexStroke>(() => {
+    this.themeVersion();
+    const t = readChartTheme();
+    return { curve: 'smooth', width: [2.5, 1.5], dashArray: [0, 5], colors: [t.primary, t.textMuted] };
+  });
+
+  readonly revenueFill = computed<ApexFill>(() => {
+    this.themeVersion();
+    const t = readChartTheme();
+    return {
+      type: ['gradient', 'solid'],
+      gradient: { shadeIntensity: 1, opacityFrom: 0.28, opacityTo: 0, stops: [0, 100] },
+      opacity: [1, 0],
+      colors: [t.primary, t.textMuted],
+    };
+  });
+
+  readonly revenueGrid = computed<ApexGrid>(() => {
+    this.themeVersion();
+    const t = readChartTheme();
+    return { borderColor: t.border, strokeDashArray: 4, xaxis: { lines: { show: false } } };
+  });
+
+  readonly revenueTooltip = computed<ApexTooltip>(() => {
+    this.themeVersion();
+    const t = readChartTheme();
+    const s = this.stats();
+    return {
+      theme: t.isDark ? 'dark' : 'light',
+      x: { show: true },
+      y: {
+        formatter: (v: number, opts) => {
+          const orders = s?.revenueSeries[opts?.dataPointIndex ?? 0]?.orderCount ?? 0;
+          const orderInfo = opts?.seriesIndex === 0 ? ` · ${orders} đơn` : '';
+          return formatVnd(v) + orderInfo;
+        },
+      },
+    };
+  });
+
+  readonly revenueDataLabels = computed<ApexDataLabels>(() => ({ enabled: false }));
+
+  readonly revenueLegend = computed<ApexLegend>(() => ({
+    position: 'bottom',
+    horizontalAlign: 'left',
+    fontSize: '13px',
+    markers: { size: 6 },
+  }));
+
+  // ===== Biểu đồ tròn trạng thái đơn =====
+
+  readonly statusMeta = computed(() => {
+    this.themeVersion();
+    return STATUS_META.map((m) => ({
+      ...m,
+      count: this.stats()?.ordersByStatus?.[m.key] ?? 0,
+    }));
+  });
+
+  readonly statusSeries = computed<ApexNonAxisChartSeries>(() =>
+    this.statusMeta().map((m) => m.count),
+  );
+
+  readonly statusLabels = computed<string[]>(() => this.statusMeta().map((m) => m.label));
+
+  readonly statusColors = computed<string[]>(() => {
+    this.themeVersion();
+    return STATUS_META.map((m) => {
+      const v = getComputedStyle(document.documentElement).getPropertyValue(m.cssVar).trim();
+      return v || m.fallback;
+    });
+  });
+
+  readonly donutChart = computed<ApexChart>(() => ({
+    type: 'donut',
+    height: 240,
+    fontFamily: 'Inter, system-ui, sans-serif',
+    animations: { enabled: !this.prefersReducedMotion() },
+  }));
+
+  readonly donutPlotOptions = computed<ApexPlotOptions>(() => ({
+    pie: {
+      donut: {
+        size: '68%',
+        labels: {
+          show: true,
+          name: { show: false },
+          value: {
+            show: true,
+            fontSize: '22px',
+            fontWeight: 700,
+            formatter: () => String(this.stats()?.totalOrderCount ?? 0),
+          },
+          total: {
+            show: true,
+            showAlways: true,
+            label: 'tổng đơn',
+            fontSize: '12px',
+            formatter: () => String(this.stats()?.totalOrderCount ?? 0),
+          },
+        },
+      },
+    },
+  }));
+
+  readonly donutLegend = computed<ApexLegend>(() => ({ show: false }));
+
+  readonly donutResponsive = computed<ApexResponsive[]>(() => [
+    { breakpoint: 480, options: { chart: { height: 200 } } },
+  ]);
+
+  readonly statusTotal = computed(() => this.stats()?.totalOrderCount ?? 0);
+
+  percentOfTotal(count: number): string {
+    const total = this.statusTotal();
+    if (!total) return '0%';
+    return `${((count / total) * 100).toFixed(1).replace('.', ',')}%`;
+  }
+
+  // ===== Danh sách =====
+
+  readonly topProducts = computed<TopProduct[]>(() => this.stats()?.topSellingProducts ?? []);
+  readonly lowStock = computed(() => this.stats()?.lowStockProducts ?? []);
+
+  stockBadgeVariant(quantity: number): 'danger' | 'warning' {
+    return quantity < 2 ? 'danger' : 'warning';
+  }
+
+  goToOrders(): void {
+    this.router.navigate(['/admin/orders'], { queryParams: { status: 'PENDING' } });
+  }
+
+  goToProducts(): void {
+    this.router.navigate(['/admin/products']);
+  }
+
+  // ===== Khối khuyến mại (BR-BL14) =====
+
+  readonly promotionEffect = computed(() => this.stats()?.promotionEffect ?? null);
+
+  /** Tỉ lệ đơn có khuyến mại; null → "—". */
+  discountedRateText(): string {
+    const rate = this.promotionEffect()?.discountedRate;
+    return rate === null || rate === undefined ? '—' : `${rate.toFixed(1).replace('.', ',')}%`;
+  }
+
+  // ===== Xuất báo cáo Excel =====
+
+  readonly exporting = signal(false);
+
+  exportReport(): void {
+    if (this.exporting()) return;
+    this.exporting.set(true);
+    this.dashboardService.exportReport(this.range()).subscribe({
+      next: (blob) => {
+        this.exporting.set(false);
+        this.saveBlob(blob);
+      },
+      error: () => {
+        this.exporting.set(false);
+        this.errorMessage.set('Không xuất được báo cáo. Vui lòng thử lại.');
+      },
+    });
+  }
+
+  private saveBlob(blob: Blob): void {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const stamp = new Date().toISOString().slice(0, 10);
+    a.href = url;
+    a.download = `bao-cao-${stamp}.xlsx`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  private shortDate(point: DailyPoint): string {
+    const [, month, day] = point.date.split('-');
+    return `${Number(day)}/${Number(month)}`;
+  }
+
+  private prefersReducedMotion(): boolean {
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   }
 }

@@ -7,7 +7,15 @@
   <h1 class="text-2xl font-bold mb-6">Giỏ hàng</h1>
 
   @if (isLoading()) {
-    <app-loading />
+    <!-- Skeleton khớp cấu trúc giỏ (danh sách trái + tóm tắt phải) thay vì spinner trần -->
+    <div class="grid lg:grid-cols-[1fr_360px] gap-6 items-start" role="status" aria-label="Đang tải giỏ hàng">
+      <div class="flex flex-col gap-3.5">
+        @for (i of [1, 2, 3]; track i) {
+          <app-loading type="skeleton" [height]="'6rem'" [borderRadius]="'rounded-xl'" />
+        }
+      </div>
+      <app-loading type="skeleton" [height]="'20rem'" [borderRadius]="'rounded-xl'" />
+    </div>
   } @else if (!isAuthenticated()) {
     <app-empty-state
       icon="shopping_cart"

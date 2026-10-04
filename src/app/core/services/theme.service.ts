@@ -34,14 +34,14 @@ export class ThemeService {
     }
 
     // 2. Check system preference
-    const prefersDark = this.document.defaultView?.matchMedia(this.MEDIA_QUERY).matches ?? false;
+    const prefersDark = this.document.defaultView?.matchMedia?.(this.MEDIA_QUERY)?.matches ?? false;
     const systemTheme: ThemeMode = prefersDark ? 'dark' : 'light';
     this.theme.set(systemTheme);
     this.applyTheme(systemTheme);
   }
 
   private watchSystemTheme(): void {
-    const mediaQuery = this.document.defaultView?.matchMedia(this.MEDIA_QUERY);
+    const mediaQuery = this.document.defaultView?.matchMedia?.(this.MEDIA_QUERY);
     if (!mediaQuery) return;
 
     const listener = (event: MediaQueryListEvent): void => {

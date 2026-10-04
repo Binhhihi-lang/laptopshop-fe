@@ -50,6 +50,11 @@ export class UserService {
     if (data.fullName !== undefined) formData.append('fullName', data.fullName);
     if (data.phone !== undefined) formData.append('phone', data.phone);
     if (data.address !== undefined) formData.append('address', data.address);
+    // Địa chỉ 2 cấp — gửi ở trường riêng, KHÔNG ghép vào address
+    if (data.provinceCode !== undefined) formData.append('provinceCode', data.provinceCode);
+    if (data.provinceName !== undefined) formData.append('provinceName', data.provinceName);
+    if (data.communeCode !== undefined) formData.append('communeCode', data.communeCode);
+    if (data.communeName !== undefined) formData.append('communeName', data.communeName);
     if ('active' in data && data.active !== undefined) {
       formData.append('active', String(data.active));
     }
@@ -92,8 +97,8 @@ export class UserService {
     return this.api.get<UserResponse>(`${this.apiUrl}/me`);
   }
 
-  // Cập nhật hồ sơ cá nhân (gọi PUT /admin/users/me). Chỉ gửi fullName/phone/
-  // address/avatar lên backend — KHÔNG gửi email/role/active/password.
+  // Cập nhật hồ sơ cá nhân (gọi PUT /admin/users/me). Gửi fullName/email/phone/
+  // address/province/commune/avatar lên backend — KHÔNG gửi role/active/password.
   updateMyProfile(data: UserProfileUpdateRequest): Observable<UserResponse> {
     return this.api.put<UserResponse, FormData>(
       `${this.apiUrl}/me`,
@@ -104,8 +109,13 @@ export class UserService {
   private buildProfileFormData(data: UserProfileUpdateRequest): FormData {
     const formData = new FormData();
     if (data.fullName !== undefined) formData.append('fullName', data.fullName);
+    if (data.email !== undefined) formData.append('email', data.email);
     if (data.phone !== undefined) formData.append('phone', data.phone);
     if (data.address !== undefined) formData.append('address', data.address);
+    if (data.provinceCode !== undefined) formData.append('provinceCode', data.provinceCode);
+    if (data.provinceName !== undefined) formData.append('provinceName', data.provinceName);
+    if (data.communeCode !== undefined) formData.append('communeCode', data.communeCode);
+    if (data.communeName !== undefined) formData.append('communeName', data.communeName);
     // Đọc file trực tiếp từ data.avatar, khớp tên field backend đang chờ (inputFile)
     if (data.avatar instanceof File) {
       formData.append('inputFile', data.avatar);

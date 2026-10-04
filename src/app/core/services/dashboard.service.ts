@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { ApiService } from './api.service';
 import { API_ENDPOINTS } from '@core/utils/constants';
 import { Observable } from 'rxjs';
-import { DashboardStats } from '@core/models/dashboard.model';
+import { DashboardRange, DashboardStats } from '@core/models/dashboard.model';
 
 @Injectable({
   providedIn: 'root',
@@ -12,7 +12,13 @@ export class DashboardService {
 
   constructor(private api: ApiService) {}
 
-  getStats(): Observable<DashboardStats> {
-    return this.api.get<DashboardStats>(this.apiUrl);
+  /** Số liệu tổng hợp cho Bảng điều khiển trong một khoảng thời gian. */
+  getStats(range: DashboardRange = 'LAST_30_DAYS'): Observable<DashboardStats> {
+    return this.api.get<DashboardStats>(`${this.apiUrl}?range=${range}`);
+  }
+
+  /** Tải báo cáo Excel (.xlsx) theo kỳ — chỉ ADMIN có quyền READ_USER. */
+  exportReport(range: DashboardRange = 'LAST_30_DAYS'): Observable<Blob> {
+    return this.api.getBlob(`${API_ENDPOINTS.DASHBOARD}/export`, { range });
   }
 }
