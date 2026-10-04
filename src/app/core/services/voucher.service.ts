@@ -25,75 +25,37 @@ export class VoucherService {
     return this.api.get<VoucherResponse>(`${this.apiUrl}/${id}`);
   }
 
-  private buildFormData(data: VoucherCreationRequest | VoucherUpdateRequest): FormData {
-    const formData = new FormData();
-    if (data.code !== undefined) formData.append('code', data.code);
-    if (data.title !== null && data.title !== undefined) formData.append('title', data.title);
-    if (data.description !== null && data.description !== undefined) {
-      formData.append('description', data.description);
-    }
-    if (data.discountPercent !== null && data.discountPercent !== undefined) {
-      formData.append('discountPercent', data.discountPercent.toString());
-    }
-    if (data.discountAmount !== null && data.discountAmount !== undefined) {
-      formData.append('discountAmount', data.discountAmount.toString());
-    }
-    // expiryDate: datetime-local -> ISO string để backend @DateTimeFormat(iso=DATE_TIME) bind được
-    if (data.expiryDate !== undefined && data.expiryDate !== null && data.expiryDate !== '') {
-      formData.append('expiryDate', new Date(data.expiryDate).toISOString());
-    }
-    if (data.startDate !== undefined && data.startDate !== null && data.startDate !== '') {
-      formData.append('startDate', new Date(data.startDate).toISOString());
-    }
-    if (data.usageLimit !== undefined && data.usageLimit !== null) {
-      formData.append('usageLimit', data.usageLimit.toString());
-    }
-    // Các trường mở rộng Sprint 1 (D22): gửi khi có giá trị, null = không giới hạn.
-    if (data.minOrderValue !== null && data.minOrderValue !== undefined) {
-      formData.append('minOrderValue', data.minOrderValue.toString());
-    }
-    if (data.maxDiscountAmount !== null && data.maxDiscountAmount !== undefined) {
-      formData.append('maxDiscountAmount', data.maxDiscountAmount.toString());
-    }
-    if (data.perUserLimit !== null && data.perUserLimit !== undefined) {
-      formData.append('perUserLimit', data.perUserLimit.toString());
-    }
-    if (data.scopeType) {
-      formData.append('scopeType', data.scopeType);
-    }
-    // BE nhận List<String> scopeValues qua form-data: gửi từng phần tử cùng tên.
-    if (data.scopeValues && data.scopeValues.length > 0) {
-      for (const value of data.scopeValues) {
-        formData.append('scopeValues', value);
+  /**
+   * Chuẩn hoá trước khi gửi JSON: bỏ trường undefined/null rỗng và chuyển
+   * startDate/expiryDate sang ISO để khớp LocalDateTime của BE (giống Promotion).
+   */
+  private buildPayload(
+    data: VoucherCreationRequest | VoucherUpdateRequest,
+  ): Record<string, unknown> {
+    const payload: Record<string, unknown> = { ...data };
+    for (const key of ['startDate', 'expiryDate'] as const) {
+      const value = payload[key];
+      if (value === undefined || value === null || value === '') {
+        delete payload[key];
+      } else {
+        payload[key] = new Date(value as string).toISOString();
       }
     }
-    if (data.voucherType) {
-      formData.append('voucherType', data.voucherType);
-    }
-    if ('active' in data && data.active !== undefined) {
-      formData.append('active', data.active.toString());
-    }
-    // Cờ xóa ảnh (chỉ có ở VoucherUpdateRequest)
-    if ('removeImage' in data && data.removeImage) {
-      formData.append('removeImage', 'true');
-    }
-    // URL ảnh online (thay cho inputFile khi admin dán link)
-    if (data.imageUrl) {
-      formData.append('imageUrl', data.imageUrl);
-    }
-    // File ảnh nằm TRONG data (inputFile), khớp backend @ModelAttribute + MultipartFile inputFile
-    if (data.inputFile instanceof File) {
-      formData.append('inputFile', data.inputFile);
-    }
-    return formData;
+    return payload;
   }
 
   createVoucher(data: VoucherCreationRequest): Observable<VoucherResponse> {
-    return this.api.post<VoucherResponse, FormData>(this.apiUrl, this.buildFormData(data));
+    return this.api.post<VoucherResponse, Record<string, unknown>>(
+      this.apiUrl,
+      this.buildPayload(data),
+    );
   }
 
   updateVoucher(id: string, data: VoucherUpdateRequest): Observable<VoucherResponse> {
-    return this.api.put<VoucherResponse, FormData>(`${this.apiUrl}/${id}`, this.buildFormData(data));
+    return this.api.put<VoucherResponse, Record<string, unknown>>(
+      `${this.apiUrl}/${id}`,
+      this.buildPayload(data),
+    );
   }
 
   deleteVoucher(id: string): Observable<void> {

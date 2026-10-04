@@ -145,9 +145,7 @@ export interface CreateOrderRequest {
   receiverCommuneCode: string;
   receiverCommuneName: string;
   note?: string;
-  /** Mã gõ tay. D11: không được gửi đồng thời với userVoucherId. */
-  voucherCode?: string;
-  /** Voucher lấy từ ví (id UserVoucher, KHÔNG phải mã voucher). D11. */
+  /** Voucher lấy từ ví (id UserVoucher, KHÔNG phải mã voucher). */
   userVoucherId?: string;
   paymentMethod: PaymentMethod;
 }
@@ -166,10 +164,9 @@ export interface VoucherValidation {
 
 /**
  * D14: BE tự đọc giỏ của khách nên KHÔNG còn orderTotal.
- * BR-V13: gửi ĐÚNG MỘT trong hai — `code` (mã gõ tay) hoặc `userVoucherId` (ví).
+ * Voucher chỉ vào đơn qua VÍ nên chỉ gửi `userVoucherId`.
  */
 export interface ValidateVoucherRequest {
-  code?: string;
   userVoucherId?: string;
 }
 

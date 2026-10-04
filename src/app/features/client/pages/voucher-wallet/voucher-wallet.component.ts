@@ -10,6 +10,7 @@ import {
   ButtonComponent,
   EmptyStateComponent,
   LoadingComponent,
+  VoucherCardComponent,
 } from '@shared/components';
 
 type WalletTab = 'AVAILABLE' | 'USED' | 'EXPIRED' | 'CLAIM';
@@ -28,6 +29,7 @@ type WalletTab = 'AVAILABLE' | 'USED' | 'EXPIRED' | 'CLAIM';
     ButtonComponent,
     EmptyStateComponent,
     LoadingComponent,
+    VoucherCardComponent,
   ],
   templateUrl: './voucher-wallet.component.html',
 })
@@ -114,28 +116,7 @@ export class VoucherWalletComponent implements OnInit {
     });
   }
 
-  /**
-   * Nhãn ngắn trên "vé": % hoặc số tiền. Nhận cả voucher trong ví lẫn mẫu
-   * voucher vì hai kiểu chỉ khác nhau ở các field thừa, phần mức giảm giống hệt.
-   */
-  voucherLabel(v: UserVoucherResponse | VoucherResponse): string {
-    if (v.discountPercent) {
-      return `${v.discountPercent}%`;
-    }
-    return this.format(v.discountAmount ?? 0);
-  }
-
-  conditionText(v: { minOrderValue: number | null; maxDiscountAmount: number | null }): string {
-    const parts: string[] = [];
-    if (v.minOrderValue) {
-      parts.push(`Đơn từ ${this.format(v.minOrderValue)}`);
-    }
-    if (v.maxDiscountAmount) {
-      parts.push(`Giảm tối đa ${this.format(v.maxDiscountAmount)}`);
-    }
-    return parts.length > 0 ? parts.join(' · ') : 'Không điều kiện';
-  }
-
+  /** Ngày hiển thị dạng dd/mm/yyyy; null = voucher không đặt hạn. */
   formatDate(iso: string | null): string {
     return iso ? new Date(iso).toLocaleDateString('vi-VN') : 'Không hết hạn';
   }
@@ -149,13 +130,5 @@ export class VoucherWalletComponent implements OnInit {
       default:
         return 'Hết hạn';
     }
-  }
-
-  format(value: number): string {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND',
-      maximumFractionDigits: 0,
-    }).format(value);
   }
 }

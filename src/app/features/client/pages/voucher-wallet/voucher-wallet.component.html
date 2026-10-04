@@ -75,38 +75,31 @@
       />
     }
     @for (c of claimable(); track c.id) {
-      <div
-        class="flex items-stretch border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden mb-3 bg-white dark:bg-slate-900"
+      <app-voucher-card
+        class="block mb-3"
+        [code]="c.code"
+        [discountPercent]="c.discountPercent"
+        [discountAmount]="c.discountAmount"
+        [minOrderValue]="c.minOrderValue"
+        [maxDiscountAmount]="c.maxDiscountAmount"
+        [perUserLimit]="c.perUserLimit"
+        [usageLimit]="c.usageLimit"
+        [metaText]="'HSD: ' + formatDate(c.expiryDate)"
       >
-        <div
-          class="shrink-0 w-[100px] bg-primary-50 dark:bg-primary-950/40 text-primary-700 dark:text-primary-400 flex flex-col items-center justify-center gap-0.5 border-r border-dashed border-primary-300 px-2 py-3 text-center"
-        >
-          <b class="font-mono font-extrabold text-base leading-tight">{{ voucherLabel(c) }}</b>
-          <span class="text-[10px] font-bold uppercase tracking-wide">giảm</span>
-        </div>
-        <div class="flex-1 min-w-0 px-4 py-3 flex flex-col gap-1">
-          <b class="text-sm font-bold">{{ c.code }}</b>
-          <span class="text-xs text-slate-500 dark:text-slate-400">
-            {{ conditionText(c) }}
+        @if (isClaimed(c)) {
+          <span class="inline-flex items-center gap-1.5 text-xs font-bold text-green-600 dark:text-green-400">
+            <mat-icon class="!w-3.5 !h-3.5 !text-[14px] !leading-none">check_circle</mat-icon>
+            Đã lưu
           </span>
-          <span class="text-xs text-slate-400">HSD: {{ formatDate(c.expiryDate) }}</span>
-        </div>
-        <div class="shrink-0 flex items-center px-4">
-          @if (isClaimed(c)) {
-            <span class="inline-flex items-center gap-1.5 text-xs font-bold text-green-600 dark:text-green-400">
-              <mat-icon class="!w-3.5 !h-3.5 !text-[14px] !leading-none">check_circle</mat-icon>
-              Đã lưu
-            </span>
-          } @else {
-            <app-button
-              label="Lưu mã"
-              size="sm"
-              [loading]="claimingId() === c.id"
-              (click)="claim(c)"
-            />
-          }
-        </div>
-      </div>
+        } @else {
+          <app-button
+            label="Lưu mã"
+            size="sm"
+            [loading]="claimingId() === c.id"
+            (click)="claim(c)"
+          />
+        }
+      </app-voucher-card>
     }
   } @else {
     <!-- Ví theo trạng thái -->
@@ -118,45 +111,25 @@
       />
     }
     @for (v of currentList(); track v.id) {
-      <div
-        class="flex items-stretch border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden mb-3 bg-white dark:bg-slate-900"
-        [class.opacity-60]="v.status !== 'AVAILABLE'"
+      <app-voucher-card
+        class="block mb-3"
+        [code]="v.code"
+        [discountPercent]="v.discountPercent"
+        [discountAmount]="v.discountAmount"
+        [minOrderValue]="v.minOrderValue"
+        [maxDiscountAmount]="v.maxDiscountAmount"
+        [perUserLimit]="v.perUserLimit"
+        [usageLimit]="v.usageLimit"
+        [muted]="v.status !== 'AVAILABLE'"
+        [metaText]="v.status === 'USED' && v.usedAt ? 'Đã dùng ngày ' + formatDate(v.usedAt) : 'HSD: ' + formatDate(v.expiresAt)"
       >
-        <div
-          class="shrink-0 w-[100px] flex flex-col items-center justify-center gap-0.5 border-r border-dashed px-2 py-3 text-center"
-          [class]="
-            v.status === 'AVAILABLE'
-              ? 'bg-primary-50 dark:bg-primary-950/40 text-primary-700 dark:text-primary-400 border-primary-300'
-              : 'bg-slate-100 dark:bg-slate-800 text-slate-500 border-slate-300'
-          "
+        <span
+          class="text-xs font-bold"
+          [class]="v.status === 'AVAILABLE' ? 'text-green-600 dark:text-green-400' : 'text-slate-400'"
         >
-          <b class="font-mono font-extrabold text-base leading-tight">{{ voucherLabel(v) }}</b>
-          <span class="text-[10px] font-bold uppercase tracking-wide">giảm</span>
-        </div>
-        <div class="flex-1 min-w-0 px-4 py-3 flex flex-col gap-1">
-          <b class="text-sm font-bold">{{ v.code }}</b>
-          <span class="text-xs text-slate-500 dark:text-slate-400">{{ conditionText(v) }}</span>
-          <span class="text-xs text-slate-400">
-            @if (v.status === 'USED' && v.usedAt) {
-              Đã dùng ngày {{ formatDate(v.usedAt) }}
-            } @else {
-              HSD: {{ formatDate(v.expiresAt) }}
-            }
-          </span>
-        </div>
-        <div class="shrink-0 flex items-center px-4">
-          <span
-            class="text-xs font-bold"
-            [class]="
-              v.status === 'AVAILABLE'
-                ? 'text-green-600 dark:text-green-400'
-                : 'text-slate-400'
-            "
-          >
-            {{ statusLabel(v.status) }}
-          </span>
-        </div>
-      </div>
+          {{ statusLabel(v.status) }}
+        </span>
+      </app-voucher-card>
     }
   }
 </div>

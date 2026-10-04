@@ -31,7 +31,6 @@ import { ButtonComponent } from '@shared/components/button/button.component';
 import { CardComponent } from '@shared/components/card/card.component';
 import { LoadingComponent } from '@shared/components/loading/loading.component';
 import { PageHeaderComponent } from '@shared/components/page-header/page-header.component';
-import { ImageUploadComponent } from '@shared/components/image-upload/image-upload.component';
 import { ScopePickerComponent } from '@shared/components/scope-picker/scope-picker.component';
 import { UserPickerComponent } from '@shared/components/user-picker/user-picker.component';
 
@@ -63,7 +62,6 @@ function discountXorValidator(group: AbstractControl): ValidationErrors | null {
     CardComponent,
     LoadingComponent,
     PageHeaderComponent,
-    ImageUploadComponent,
     ScopePickerComponent,
     UserPickerComponent,
   ],
@@ -81,9 +79,6 @@ export class VoucherFormComponent implements OnInit {
 
   isLoading = signal(false);
   isSubmitting = signal(false);
-  imageFile = signal<File | null>(null);
-  existingImage = signal<string | null>(null);
-  imageRemoved = signal(false);
 
   voucherId = signal<string>('');
 
@@ -104,7 +99,6 @@ export class VoucherFormComponent implements OnInit {
       perUserLimit: [null, [Validators.min(1)]],
       voucherType: ['PUBLIC' as VoucherType],
       active: [true],
-      imageUrl: ['', [Validators.pattern(/^https?:\/\/.+/)]],
     },
     { validators: discountXorValidator },
   );
@@ -342,23 +336,12 @@ export class VoucherFormComponent implements OnInit {
     });
     this.scopeType.set(voucher.scopeType ?? 'ALL');
     this.scopeValues.set(voucher.scopeValues ?? []);
-
-    this.existingImage.set(voucher.image ?? null);
-    this.imageRemoved.set(false);
   }
 
   /** Đổi loại phạm vi từ app-scope-picker — xoá lựa chọn cũ cho khỏi lẫn. */
   onScopeKindChange(kind: ScopeType): void {
     this.scopeType.set(kind);
     this.scopeValues.set([]);
-  }
-
-  // Nhận file từ app-image-upload (file mới hoặc null khi hủy file mới)
-  onImageFileChange(file: File | null): void {
-    this.imageFile.set(file);
-    if (file) {
-      this.imageRemoved.set(false);
-    }
   }
 
   onSubmit(): void {
@@ -376,8 +359,7 @@ export class VoucherFormComponent implements OnInit {
     const formValue = this.voucherForm.value;
     const isPercent = formValue.discountType === 'percent';
 
-    // File ảnh nằm TRONG data (inputFile), khớp backend @ModelAttribute + MultipartFile inputFile.
-    // buildFormData trong voucher.service sẽ append đúng field + chuyển expiryDate sang ISO.
+    // Ảnh đã bỏ khỏi Voucher — payload chỉ còn các field nghiệp vụ.
     const baseData: VoucherCreationRequest = {
       code: formValue.code,
       title: formValue.title?.trim() || null,
@@ -392,8 +374,6 @@ export class VoucherFormComponent implements OnInit {
       scopeType: this.scopeType(),
       scopeValues: this.scopeType() === 'ALL' ? [] : this.scopeValues(),
       voucherType: formValue.voucherType ?? 'PUBLIC',
-      inputFile: this.imageFile() ?? undefined,
-      imageUrl: formValue.imageUrl?.trim() || undefined,
       ...(isPercent
         ? { discountPercent: formValue.discountPercent || null, discountAmount: null }
         : { discountAmount: formValue.discountAmount || null, discountPercent: null }),
@@ -403,7 +383,6 @@ export class VoucherFormComponent implements OnInit {
       const updateData: VoucherUpdateRequest = {
         ...baseData,
         active: formValue.active ?? true,
-        removeImage: this.imageRemoved(),
       };
       this.voucherService.updateVoucher(this.voucherId(), updateData).subscribe({
         next: (saved) => {

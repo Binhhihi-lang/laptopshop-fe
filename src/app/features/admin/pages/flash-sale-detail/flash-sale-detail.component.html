@@ -43,15 +43,22 @@
         <div headerBadges class="flex items-center gap-3">
           <app-badge [label]="statusBadge().label" [variant]="statusBadge().variant" [size]="'default'" />
         </div>
-        <div headerActions class="flex items-center gap-2 sm:ml-auto">
+        <div headerActions class="flex flex-wrap items-center gap-2">
           @if (canUpdate()) {
             <app-button
               variant="secondary"
               [icon]="sale.active ? 'pause' : 'play_arrow'"
               [label]="sale.active ? 'Tạm dừng' : 'Mở lại'"
+              [ariaLabel]="sale.active ? 'Tạm dừng phiên' : 'Mở lại phiên'"
               (click)="toggleActive()"
             />
-            <app-button variant="primary" icon="edit" label="Sửa phiên" (click)="goToEdit()" />
+            <app-button
+              variant="primary"
+              icon="edit"
+              label="Sửa phiên"
+              ariaLabel="Sửa phiên"
+              (click)="goToEdit()"
+            />
           }
         </div>
       </app-detail-header>

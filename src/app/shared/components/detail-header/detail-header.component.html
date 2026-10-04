@@ -1,7 +1,10 @@
-<div class="sticky top-16 z-[90] bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
-  <div class="max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-4">
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-      <div class="flex items-center gap-3 min-w-0">
+<!-- Mobile: header cao 2-3 dòng (nút xuống hàng) nên KHÔNG sticky để khỏi che
+     nội dung; từ `sm` trở lên mới dính dưới header admin. -->
+<div class="relative sm:sticky sm:top-16 z-[90] bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
+  <div class="max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-3.5 sm:py-4">
+    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+      <!-- Hàng 1: quay lại + tiêu đề + badge -->
+      <div class="flex items-start sm:items-center gap-2 sm:gap-3 min-w-0 w-full sm:w-auto">
         @if (showBack()) {
           <app-button
             variant="ghost"
@@ -11,13 +14,21 @@
             (click)="backClick.emit()"
           />
         }
-        <div class="min-w-0">
-          <h1 class="text-xl font-bold text-slate-900 dark:text-white truncate">{{ title() }}</h1>
-          <ng-content select="[headerIdentity]"></ng-content>
+        <div class="min-w-0 flex-1">
+          <h1
+            class="text-lg sm:text-xl font-bold text-slate-900 dark:text-white leading-snug break-words"
+          >
+            {{ title() }}
+          </h1>
+          <div class="flex flex-wrap items-center gap-2 mt-1.5">
+            <ng-content select="[headerIdentity]"></ng-content>
+            <ng-content select="[headerBadges]"></ng-content>
+          </div>
         </div>
       </div>
-      <div class="flex items-center gap-3 flex-wrap">
-        <ng-content select="[headerBadges]"></ng-content>
+      <!-- Hàng 2 (mobile): các nút hành động — xuống dòng khi hết chỗ,
+           KHÔNG co nút (shrink-0 ở app-button) nên chữ không bị bóp méo. -->
+      <div class="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto sm:ml-auto">
         <ng-content select="[headerActions]"></ng-content>
       </div>
     </div>

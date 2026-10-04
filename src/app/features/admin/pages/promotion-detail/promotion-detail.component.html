@@ -46,19 +46,32 @@
         backAriaLabel="Quay về danh sách chương trình khuyến mại"
         (backClick)="goBack()"
       >
-        <div headerBadges class="flex items-center gap-3">
+        <div headerBadges class="flex flex-wrap items-center gap-2 sm:gap-3">
           <app-badge [label]="statusBadge().label" [variant]="statusBadge().variant" [size]="'default'" />
           <app-badge [label]="timeBadge().label" [variant]="timeBadge().variant" [size]="'default'" />
         </div>
-        <div headerActions class="flex items-center gap-2 sm:ml-auto">
+        <div headerActions class="flex flex-wrap items-center gap-2">
           <app-button
             variant="secondary"
             [icon]="promo.active ? 'pause' : 'play_arrow'"
             [label]="promo.active ? 'Tạm dừng' : 'Bật lại'"
+            [ariaLabel]="promo.active ? 'Tạm dừng chương trình' : 'Bật lại chương trình'"
             (click)="toggleActive()"
           />
-          <app-button variant="secondary" icon="content_copy" label="Nhân bản" (click)="duplicate()" />
-          <app-button variant="primary" icon="edit" label="Sửa chương trình" (click)="goToEdit()" />
+          <app-button
+            variant="secondary"
+            icon="content_copy"
+            label="Nhân bản"
+            ariaLabel="Nhân bản chương trình"
+            (click)="duplicate()"
+          />
+          <app-button
+            variant="primary"
+            icon="edit"
+            label="Sửa chương trình"
+            ariaLabel="Sửa chương trình"
+            (click)="goToEdit()"
+          />
         </div>
       </app-detail-header>
 

@@ -55,11 +55,12 @@
           [size]="'default'"
         />
       </div>
-      <div headerActions class="flex items-center gap-2 sm:ml-auto">
+      <div headerActions class="flex flex-wrap items-center gap-2">
         <app-button
           variant="primary"
           icon="edit"
           label="Chỉnh sửa"
+          ariaLabel="Chỉnh sửa vai trò"
           (click)="goToEdit()"
         />
         @if (canManage()) {
@@ -67,6 +68,7 @@
             variant="danger"
             icon="delete"
             label="Xóa"
+            ariaLabel="Xóa vai trò"
             (click)="deleteRole()"
           />
         }

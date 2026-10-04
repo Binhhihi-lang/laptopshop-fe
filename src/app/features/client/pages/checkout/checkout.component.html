@@ -192,16 +192,12 @@
     [promotions]="cart()?.promotions ?? []"
     [vouchers]="vouchers()"
     [selectedVoucherId]="selectedVoucherId()"
-    [voucherCode]="voucherCode()"
     [voucherNote]="voucherNote()"
     [voucherValid]="voucherValid() ?? false"
-    [applyingVoucher]="isApplyingVoucher()"
     [totalSaving]="totalSaving()"
     [voucherDiscount]="voucherPreviewDiscount()"
     [forfeitedAmount]="voucherForfeited()"
     (closed)="closeOverlay()"
-    (voucherCodeChange)="voucherCode.set($event)"
-    (applyVoucher)="validateVoucher()"
     (voucherChange)="onVoucherChange($event)"
   />
 }

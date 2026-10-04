@@ -12,7 +12,7 @@ import { ClientVoucherService } from '@core/services/client-voucher.service';
 import { LocationService, Commune, Province } from '@core/services/location.service';
 import { NotificationService } from '@core/services/notification.service';
 import { Cart } from '@core/models/cart.model';
-import { CreateOrderRequest, PaymentMethod, ValidateVoucherRequest } from '@core/models/order.model';
+import { CreateOrderRequest, PaymentMethod } from '@core/models/order.model';
 import { UserVoucherResponse } from '@core/models/voucher.model';
 import { UserResponse } from '@core/models/user.model';
 import { ConfirmDialogComponent } from '@shared/confirm-dialog/confirm-dialog.component';
@@ -60,7 +60,6 @@ export class CheckoutComponent implements OnInit {
   readonly isLoading = signal(true);
   readonly isSubmitting = signal(false);
   readonly cart = signal<Cart | null>(null);
-  readonly voucherCode = signal('');
   readonly voucherDiscount = signal(0);
   /** BR-V14: phần mệnh giá voucher không dùng được (đơn nhỏ hơn mệnh giá). */
   readonly voucherForfeited = signal(0);
@@ -70,7 +69,6 @@ export class CheckoutComponent implements OnInit {
   readonly selectedVoucherId = signal<string | null>(null);
   readonly voucherNote = signal('');
   readonly voucherValid = signal<boolean | null>(null);
-  readonly isApplyingVoucher = signal(false);
   /** Hồ sơ khách đang đăng nhập — nguồn điền sẵn form giao hàng. */
   readonly profile = signal<UserResponse | null>(null);
 
@@ -108,15 +106,10 @@ export class CheckoutComponent implements OnInit {
   );
 
   ngOnInit(): void {
-    // Ưu đãi mang từ trang giỏ sang: `voucherId` = chọn từ ví, `code` = gõ tay.
-    // Hai khóa tách riêng vì BE chặn khi nhận đồng thời cả hai (D11).
+    // Ưu đãi mang từ trang giỏ sang: `voucherId` = voucher chọn từ ví.
     const voucherId = this.route.snapshot.queryParamMap.get('voucherId');
     if (voucherId) {
       this.selectedVoucherId.set(voucherId);
-    }
-    const code = this.route.snapshot.queryParamMap.get('code');
-    if (code) {
-      this.voucherCode.set(code);
     }
     this.loadProvinces();
     this.loadProfile();
@@ -247,40 +240,13 @@ export class CheckoutComponent implements OnInit {
         this.isLoading.set(false);
         // Ưu đãi mang từ trang giỏ: hỏi lại BE số tiền ngay khi có giỏ, vì
         // giá trị giảm phụ thuộc nội dung giỏ (BR-V13).
-        if (this.voucherCode()) {
-          this.validateVoucher();
-        } else if (this.selectedVoucherId()) {
+        if (this.selectedVoucherId()) {
           this.onVoucherChange(this.selectedVoucherId());
         }
       },
       error: (err) => {
         this.notification.error(this.notification.extractError(err));
         this.isLoading.set(false);
-      },
-    });
-  }
-
-  /**
-   * D14: chỉ gửi `code` — BE tự đọc giỏ và tự tính, FE không gửi số tiền lên.
-   */
-  validateVoucher(): void {
-    const cart = this.cart();
-    const code = this.voucherCode().trim();
-    if (!cart || !code) {
-      this.voucherDiscount.set(0);
-      return;
-    }
-    const req: ValidateVoucherRequest = { code };
-    this.orderService.validateVoucher(req).subscribe({
-      next: (res) => {
-        this.voucherValid.set(res.valid);
-        this.voucherNote.set(res.message);
-        this.voucherDiscount.set(res.discountAmount);
-        this.voucherForfeited.set(res.forfeitedAmount);
-      },
-      error: () => {
-        this.voucherDiscount.set(0);
-        this.voucherForfeited.set(0);
       },
     });
   }
@@ -294,12 +260,8 @@ export class CheckoutComponent implements OnInit {
   }
 
   /**
-   * D11: voucher từ ví và mã gõ tay loại trừ nhau — chọn cái này thì xóa cái kia,
-   * vì BE chặn khi nhận cả hai.
-   *
-   * <p>
-   * BR-V13: chọn voucher từ ví cũng phải hỏi BE số tiền — trước đây FE tự tính
-   * trên `subtotal` (bỏ qua phạm vi voucher) nên số hiển thị lệch với số thu.
+   * BR-V13: chọn voucher từ ví phải hỏi BE số tiền — không tự tính trên
+   * `subtotal` (bỏ qua phạm vi voucher) nên số hiển thị lệch với số thu.
    */
   onVoucherChange(voucherId: string | null): void {
     this.selectedVoucherId.set(voucherId);
@@ -311,23 +273,19 @@ export class CheckoutComponent implements OnInit {
       return;
     }
     const voucher = this.vouchers().find((v) => v.id === voucherId);
-    this.voucherCode.set('');
     this.voucherNote.set(voucher ? `Đang kiểm tra ${voucher.code}…` : '');
-    this.isApplyingVoucher.set(true);
     this.orderService.validateVoucher({ userVoucherId: voucherId }).subscribe({
       next: (res) => {
         this.voucherValid.set(res.valid);
         this.voucherNote.set(res.message);
         this.voucherDiscount.set(res.discountAmount);
         this.voucherForfeited.set(res.forfeitedAmount);
-        this.isApplyingVoucher.set(false);
       },
       error: (err) => {
         this.voucherValid.set(false);
         this.voucherNote.set(this.notification.extractError(err));
         this.voucherDiscount.set(0);
         this.voucherForfeited.set(0);
-        this.isApplyingVoucher.set(false);
       },
     });
   }
@@ -404,9 +362,7 @@ export class CheckoutComponent implements OnInit {
   private confirmForfeited(): Observable<boolean> {
     const nominal = this.voucherDiscount() + this.voucherForfeited();
     const code =
-      this.voucherCode() ||
-      this.vouchers().find((v) => v.id === this.selectedVoucherId())?.code ||
-      '';
+      this.vouchers().find((v) => v.id === this.selectedVoucherId())?.code ?? '';
     return this.dialog
       .open(ConfirmDialogComponent, {
         width: '460px',
@@ -445,8 +401,7 @@ export class CheckoutComponent implements OnInit {
       receiverCommuneCode: this.receiverCommuneCode,
       receiverCommuneName: communeName,
       note: this.note.trim() || undefined,
-      // D11: chỉ gửi MỘT trong hai — overlay đã đảm bảo loại trừ nhau.
-      voucherCode: this.selectedVoucherId() ? undefined : this.voucherCode().trim() || undefined,
+      // Voucher chỉ vào đơn qua VÍ.
       userVoucherId: this.selectedVoucherId() ?? undefined,
       paymentMethod: this.paymentMethod,
     };

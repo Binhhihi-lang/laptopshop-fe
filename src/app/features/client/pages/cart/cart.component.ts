@@ -8,7 +8,6 @@ import { ClientCartService } from '@core/services/client-cart.service';
 import { ClientVoucherService } from '@core/services/client-voucher.service';
 import { NotificationService } from '@core/services/notification.service';
 import { Cart, CartItem } from '@core/models/cart.model';
-import { ValidateVoucherRequest } from '@core/models/order.model';
 import { UserVoucherResponse } from '@core/models/voucher.model';
 import { ClientOrderService } from '@core/services/client-order.service';
 import {
@@ -48,13 +47,11 @@ export class CartComponent implements OnInit {
 
   readonly isLoading = signal(true);
   readonly cart = signal<Cart | null>(null);
-  readonly voucherCode = signal('');
   readonly voucherDiscount = signal(0);
   /** BR-V14: phần mệnh giá voucher không dùng được (đơn nhỏ hơn mệnh giá). */
   readonly voucherForfeited = signal(0);
   readonly voucherNote = signal('');
   readonly voucherValid = signal<boolean | null>(null);
-  readonly isApplyingVoucher = signal(false);
 
   /** Overlay "Khuyến mại và ưu đãi" (G8 — dùng chung với trang thanh toán). */
   readonly isOverlayOpen = signal(false);
@@ -118,34 +115,6 @@ export class CartComponent implements OnInit {
     });
   }
 
-  /**
-   * D14: chỉ gửi `code` — BE tự đọc giỏ và tự tính. FE không gửi số tiền lên
-   * nữa nên không sửa được giá, và con số trả về khớp lúc chốt đơn.
-   */
-  applyVoucher(): void {
-    const code = this.voucherCode().trim();
-    if (!code || !this.cart()) {
-      return;
-    }
-    this.isApplyingVoucher.set(true);
-    const req: ValidateVoucherRequest = { code };
-    this.orderService.validateVoucher(req).subscribe({
-      next: (res) => {
-        this.voucherValid.set(res.valid);
-        this.voucherNote.set(res.message);
-        this.voucherDiscount.set(res.discountAmount);
-        this.voucherForfeited.set(res.forfeitedAmount);
-        this.isApplyingVoucher.set(false);
-      },
-      error: (err) => {
-        this.voucherValid.set(false);
-        this.voucherNote.set(this.notification.extractError(err));
-        this.voucherForfeited.set(0);
-        this.isApplyingVoucher.set(false);
-      },
-    });
-  }
-
   openOverlay(): void {
     this.isOverlayOpen.set(true);
   }
@@ -168,35 +137,31 @@ export class CartComponent implements OnInit {
   }
 
   /**
-   * BR-V13: voucher lấy từ ví cũng phải hỏi BE số tiền, KHÔNG tự tính ở FE.
+   * BR-V13: voucher lấy từ ví phải hỏi BE số tiền, KHÔNG tự tính ở FE.
    *
    * <p>
    * Trước đây hàm này chỉ set cờ `voucherValid = true` và để
    * {@code voucherPreviewDiscount()} tự tính trên `subtotal` — bỏ qua phạm vi
    * (scope) của voucher, nên số hiển thị lệch với số BE thu (có ca lệch hàng
-   * chục triệu). Nay gọi đúng API validate như nhánh gõ mã.
+   * chục triệu).
    */
   private revalidateWithVoucher(voucherId: string): void {
     const voucher = this.vouchers().find((v) => v.id === voucherId);
     if (!voucher) {
       return;
     }
-    this.voucherCode.set('');
-    this.isApplyingVoucher.set(true);
     this.orderService.validateVoucher({ userVoucherId: voucherId }).subscribe({
       next: (res) => {
         this.voucherValid.set(res.valid);
         this.voucherNote.set(res.message);
         this.voucherDiscount.set(res.discountAmount);
         this.voucherForfeited.set(res.forfeitedAmount);
-        this.isApplyingVoucher.set(false);
       },
       error: (err) => {
         this.voucherValid.set(false);
         this.voucherNote.set(this.notification.extractError(err));
         this.voucherDiscount.set(0);
         this.voucherForfeited.set(0);
-        this.isApplyingVoucher.set(false);
       },
     });
   }
@@ -221,18 +186,10 @@ export class CartComponent implements OnInit {
     return (cart?.promotionDiscount ?? 0) + this.voucherPreviewDiscount();
   }
 
-  /**
-   * Query mang ưu đãi đang chọn sang trang thanh toán. Tách riêng `voucherId`
-   * (chọn từ ví) và `code` (gõ tay) vì checkout cần biết đang có cái nào —
-   * trước đây cả hai dùng chung một khóa nên checkout không phân biệt được.
-   */
+  /** Query mang voucher đang chọn sang trang thanh toán. */
   checkoutQueryParams(): Record<string, string> {
     const voucherId = this.selectedVoucherId();
-    if (voucherId) {
-      return { voucherId };
-    }
-    const code = this.voucherCode().trim();
-    return code ? { code } : {};
+    return voucherId ? { voucherId } : {};
   }
 
   goLogin(): void {

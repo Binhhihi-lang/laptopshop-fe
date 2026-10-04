@@ -78,9 +78,9 @@
           [size]="'default'"
         />
       </div>
-      <div headerActions class="flex items-center gap-2 sm:ml-auto">
+      <div headerActions class="flex flex-wrap items-center gap-2">
         @if (canChangeStatus()) {
-          <div class="flex items-center gap-2">
+          <div class="flex items-center gap-2 flex-1 sm:flex-none">
             <app-select
               id="next-status"
               name="nextStatus"
@@ -89,12 +89,13 @@
               [value]="targetStatus()"
               (valueChange)="onSelectStatus($event)"
               [ariaLabel]="'Trạng thái mới'"
-              class="w-44"
+              class="flex-1 sm:w-44"
             />
             <app-button
               [variant]="targetStatus() === 'CANCELLED' ? 'danger' : 'primary'"
               icon="compare_arrows"
               label="Cập nhật"
+              ariaLabel="Cập nhật trạng thái đơn"
               [disabled]="!targetStatus()"
               [loading]="isUpdating()"
               (click)="updateStatus()"

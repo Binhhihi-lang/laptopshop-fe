@@ -61,6 +61,7 @@ export { PaginationComponent } from './pagination/pagination.component';
 export { CartLineItemComponent } from './cart-line-item/cart-line-item.component';
 export { OrderSummaryComponent } from './order-summary/order-summary.component';
 export { PromoOverlayComponent } from './promo-overlay/promo-overlay.component';
+export { VoucherCardComponent } from './voucher-card/voucher-card.component';
 export { HomeBannerCarouselComponent } from './home-banner-carousel/home-banner-carousel.component';
 export { FlashSaleStripComponent } from './flash-sale-strip/flash-sale-strip.component';
 export { CheckoutStepsComponent } from './checkout-steps/checkout-steps.component';

@@ -40,7 +40,7 @@ export type ButtonSize = 'sm' | 'default' | 'lg' | 'icon';
           />
         </svg>
       } @else if (icon()) {
-        <mat-icon class="w-5 h-5" [class.mr-2]="!iconOnly()">{{ icon() }}</mat-icon>
+        <mat-icon class="!w-5 !h-5 !text-xl !leading-none" [class.mr-2]="!iconOnly()">{{ icon() }}</mat-icon>
       }
       <span>{{ label() }}</span>
     </button>
@@ -68,7 +68,7 @@ export class ButtonComponent {
   // Computed classes based on DESIGN.md tokens
   computedClass = computed(() => {
     const base =
-      'inline-flex items-center justify-center font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/30 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-950 disabled:opacity-50 disabled:cursor-not-allowed';
+      'inline-flex shrink-0 items-center justify-center whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/30 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-950 disabled:opacity-50 disabled:cursor-not-allowed';
 
     const variantClasses: Record<ButtonVariant, string> = {
       primary: 'bg-primary-600 text-white hover:bg-primary-700 active:bg-primary-800',

@@ -1,5 +1,7 @@
 /** DTOs giỏ hàng storefront — khớp dto/response/Client + dto/request/Client ở BE. */
 
+import { PromotionDiscountType } from './promotion.model';
+
 export interface CartItem {
   id: string;
   productId: string;
@@ -30,6 +32,19 @@ export interface AppliedPromotion {
   id: string;
   name: string;
   title: string;
+  /** Cách tính: PERCENT (% trên dòng) hoặc AMOUNT (số tiền mỗi máy — D21). */
+  discountType: PromotionDiscountType;
+  /** Giá trị thô: PERCENT → 1..100; AMOUNT → số tiền mỗi máy. */
+  discountValue: number;
+  /** Trần giảm tối đa cho cả đơn; null = không trần. */
+  maxDiscountAmount: number | null;
+  /** Đơn tối thiểu để áp dụng; null = không yêu cầu. */
+  minOrderValue: number | null;
+  /** Số lượng tối thiểu MỖI DÒNG; null = không yêu cầu. */
+  minQuantity: number | null;
+  /** Ngân sách = số đơn tối đa được áp; null = không giới hạn. */
+  usageLimit: number | null;
+  /** Số tiền chương trình này giảm trên toàn giỏ (đã cap theo trần). */
   discountAmount: number;
 }
 

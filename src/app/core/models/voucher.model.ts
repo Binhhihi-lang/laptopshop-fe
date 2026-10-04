@@ -34,7 +34,6 @@ export interface VoucherResponse {
   /** Danh sách giá trị phạm vi; rỗng = toàn bộ đơn. */
   scopeValues: string[];
   voucherType: VoucherType | null;
-  image: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -55,13 +54,9 @@ export interface VoucherCreationRequest {
   scopeType?: ScopeType | null;
   scopeValues?: string[];
   voucherType?: VoucherType | null;
-  inputFile?: File;
-  imageUrl?: string; // URL ảnh online (thay cho inputFile khi dán link)
 }
 
-export interface VoucherUpdateRequest extends Partial<VoucherCreationRequest> {
-  removeImage?: boolean;
-}
+export interface VoucherUpdateRequest extends Partial<VoucherCreationRequest> {}
 
 // ===== Voucher trong ví khách =====
 
@@ -77,11 +72,16 @@ export interface UserVoucherResponse {
   /** Voucher.id — gửi lên lúc đặt hàng qua userVoucherId. */
   voucherId: string;
   code: string;
-  image: string;
   discountPercent: number | null;
   discountAmount: number | null;
   minOrderValue: number | null;
   maxDiscountAmount: number | null;
+  /** Tổng lượt dùng tối đa toàn hệ thống; 0 = không giới hạn. */
+  usageLimit: number | null;
+  /** Số lượt đã dùng trên toàn hệ thống. */
+  usedCount: number | null;
+  /** Số lượt tối đa MỖI KHÁCH; null = không giới hạn. */
+  perUserLimit: number | null;
   status: UserVoucherStatus;
   source: UserVoucherSource;
   acquiredAt: string;
