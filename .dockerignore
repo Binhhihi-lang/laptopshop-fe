@@ -1,0 +1,24 @@
+# Không đưa vào image — sẽ được cài lại bằng `npm ci` trong Dockerfile.
+node_modules/
+dist/
+.angular/
+
+# Chỉ cần khi phát triển trên máy
+.git/
+.gitignore
+.idea/
+.vscode/
+*.log
+build.log
+optimization.log
+serve.log
+serve-dev.log
+serve-dev.pid
+
+# Tài liệu
+docs/
+*.md
+
+# Biến môi trường (nếu có dùng sau này)
+.env
+.env.local
