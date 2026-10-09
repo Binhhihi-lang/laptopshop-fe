@@ -1,0 +1,32 @@
+name: CI Frontend
+
+# Chạy khi push lên main hoặc khi mở pull request.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cài Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      # `npm ci` cài đúng theo package-lock.json — build tất định, khớp với
+      # những gì chạy trên Cloudflare.
+      - name: Cài thư viện
+        run: npm ci
+
+      # Build production. Vì angular.json đã có `fileReplacements`, bước này dùng
+      # environment.prod.ts (apiUrl trỏ Render) — đúng như bản Cloudflare deploy.
+      # Build lỗi (TS sai, template sai) sẽ làm CI đỏ và chặn deploy.
+      - name: Build production
+        run: npm run build
