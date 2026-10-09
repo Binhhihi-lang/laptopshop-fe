@@ -3,8 +3,8 @@
 // "fileReplacements" trong angular.json.
 //
 // QUAN TRỌNG: đổi apiUrl thành địa chỉ backend thật trên Render trước khi deploy.
-// Ví dụ: https://laptopshop.onrender.com/api/v1
+// Ví dụ: https://laptopshop-7yl2.onrender.com/api/v1
 export const environment = {
   production: true,
-  apiUrl: 'https://laptopshop.onrender.com/api/v1'
+  apiUrl: 'https://laptopshop-7yl2.onrender.com/api/v1'
 };
