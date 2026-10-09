@@ -1,0 +1,13 @@
+{
+  // Cấu hình deploy frontend lên Cloudflare Workers (static assets).
+  // Cloudflare đọc file này để biết cần upload thư mục nào.
+  "name": "laptopshop-fe",
+  "compatibility_date": "2026-10-09",
+  "assets": {
+    // Thư mục Angular build ra (xem "outputPath" trong angular.json).
+    "directory": "./dist/laptopshop-fe/browser",
+    // Angular là SPA: đường dẫn con như /admin không tồn tại dạng file.
+    // Thiếu dòng này thì F5 ở trang con sẽ nhận 404.
+    "not_found_handling": "single-page-application"
+  }
+}
