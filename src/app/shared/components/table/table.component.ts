@@ -15,6 +15,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { EmptyStateComponent } from '../empty-state/empty-state.component';
 import { ButtonComponent } from '../button/button.component';
+import { buildPageSlots, type PageSlot } from '@shared/utils/page-window';
 
 export interface Column<T> {
   key: string;
@@ -47,8 +48,10 @@ export interface TableAction<T> {
       @if (loading()) {
         <div class="p-4 sm:p-6" role="status" aria-live="polite">
           <p class="sr-only">{{ loadingText() }}</p>
+          <!-- Skeleton phải cao bằng dữ liệu thật (pageSize dòng), nếu không
+               bảng nhảy chiều cao khi dữ liệu về → CLS ~0.17. -->
           <div class="space-y-4">
-            @for (row of [0, 1, 2, 3, 4]; track row) {
+            @for (row of skeletonRows(); track row) {
               <div class="flex items-center gap-4">
                 @if (selectable()) {
                   <div class="w-12 shrink-0 flex justify-center">
@@ -236,20 +239,46 @@ export interface TableAction<T> {
           <span class="font-medium">{{ Math.min(currentPage() * pageSize(), totalItems()) }}</span>
           của <span class="font-medium">{{ totalItems() }}</span> mục
         </div>
-        <div class="flex items-center gap-2">
+        <div class="flex flex-wrap items-center justify-center gap-2">
           <app-button
             variant="outline"
             size="sm"
             [disabled]="currentPage() === 1"
-            (click)="prevPage.emit()"
+            (click)="goPrev()"
             [icon]="'chevron_left'"
             ariaLabel="Trang trước"
           />
+
+          <!-- Dãy số trang: luôn có đầu/cuối + lân cận trang hiện tại. -->
+          @for (slot of pageSlots(); track $index) {
+            @if (slot === 'gap') {
+              <span
+                class="w-7 text-center text-sm text-slate-400 dark:text-slate-500 select-none"
+                aria-hidden="true"
+                >…</span
+              >
+            } @else {
+              <button
+                type="button"
+                [class]="
+                  slot === currentPage() - 1
+                    ? 'min-w-9 h-9 px-2 rounded-lg text-sm font-medium bg-primary-600 text-white'
+                    : 'min-w-9 h-9 px-2 rounded-lg text-sm font-medium border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700'
+                "
+                [attr.aria-current]="slot === currentPage() - 1 ? 'page' : null"
+                [attr.aria-label]="'Trang ' + pageNumber(slot)"
+                (click)="pageChange.emit(pageNumber(slot))"
+              >
+                {{ pageNumber(slot) }}
+              </button>
+            }
+          }
+
           <app-button
             variant="outline"
             size="sm"
             [disabled]="currentPage() === totalPages()"
-            (click)="nextPage.emit()"
+            (click)="goNext()"
             [icon]="'chevron_right'"
             ariaLabel="Trang sau"
           />
@@ -313,6 +342,8 @@ export class TableComponent<T = any> {
   rowClick = output<T>();
   prevPage = output<void>();
   nextPage = output<void>();
+  /** Số trang được bấm (1-based, khớp input currentPage). */
+  pageChange = output<number>();
   emptyActionClick = output<void>();
 
   // Computed
@@ -325,6 +356,32 @@ export class TableComponent<T = any> {
 
   totalPages = computed(() => Math.ceil(this.totalItems() / this.pageSize()));
   showPagination = computed(() => this.totalPages() > 1);
+  /** Số dòng skeleton bám theo cỡ trang để chiều cao không nhảy khi tải xong. */
+  skeletonRows = computed(() =>
+    Array.from({ length: Math.min(this.pageSize(), 20) }, (_, i) => i),
+  );
+
+  /** Dãy số trang rút gọn — dùng chung logic với app-pagination. */
+  pageSlots = computed<PageSlot[]>(() =>
+    buildPageSlots(this.totalPages(), this.currentPage() - 1),
+  );
+
+  /** Đổi ô (0-based) sang số trang hiển thị (1-based). */
+  pageNumber(slot: PageSlot): number {
+    return typeof slot === 'number' ? slot + 1 : 0;
+  }
+
+  // Nút ‹ › vẫn phát prevPage/nextPage như trước, đồng thời phát pageChange để
+  // trang nào chỉ bind một output vẫn chạy đúng.
+  goPrev(): void {
+    this.prevPage.emit();
+    this.pageChange.emit(Math.max(1, this.currentPage() - 1));
+  }
+
+  goNext(): void {
+    this.nextPage.emit();
+    this.pageChange.emit(Math.min(this.totalPages(), this.currentPage() + 1));
+  }
 
   densityClass = computed(() => {
     const classes: Record<string, string> = {

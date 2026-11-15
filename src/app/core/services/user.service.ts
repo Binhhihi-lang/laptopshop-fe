@@ -22,6 +22,28 @@ export class UserService {
     return this.api.get<UserResponse[]>(this.apiUrl);
   }
 
+  /**
+   * Trang danh sách người dùng cho quản trị — lọc và phân trang ở DB.
+   * keyword tìm trong họ tên/email; roleId lọc theo vai trò; active lọc trạng thái.
+   */
+  getUserPage(params: {
+    keyword?: string;
+    roleId?: string;
+    active?: boolean;
+    page?: number;
+    size?: number;
+    sort?: string;
+  }): Observable<Page<UserResponse>> {
+    return this.api.getPage<UserResponse>(`${this.apiUrl}/page`, {
+      keyword: params.keyword?.trim() || undefined,
+      roleId: params.roleId || undefined,
+      active: params.active,
+      page: params.page ?? 0,
+      size: params.size ?? 20,
+      sort: params.sort || undefined,
+    });
+  }
+
   getUserById(id: string): Observable<UserResponse> {
     return this.api.get<UserResponse>(`${this.apiUrl}/${id}`);
   }

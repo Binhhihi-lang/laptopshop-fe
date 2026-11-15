@@ -34,15 +34,17 @@ export class PromoBadgeComponent {
 
   bgClass = computed(() => {
     switch (this.variant()) {
+      // rose-600/teal-700 thay vì 500: chữ trắng trên nền 500 chỉ đạt ~3.6:1,
+      // không qua WCAG AA cho text 12px.
       case 'hot':
-        return 'bg-rose-500';
+        return 'bg-rose-600';
       case 'new':
-        return 'bg-teal-500';
+        return 'bg-teal-700';
       case 'sale':
-        return 'bg-rose-500';
+        return 'bg-rose-600';
       case 'flash':
         // Đậm hơn `sale` để phân biệt flash sale với giảm giá thường.
-        return 'bg-rose-600';
+        return 'bg-rose-700';
       case 'sold-out':
         return 'bg-slate-500';
     }

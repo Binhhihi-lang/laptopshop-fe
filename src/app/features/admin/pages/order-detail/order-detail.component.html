@@ -43,7 +43,7 @@
   } @else if (permissionDenied()) {
     <app-detail-header
       title="Chi tiết đơn hàng"
-      backAriaLabel="Quay về danh sách đơn hàng"
+      backAriaLabel="Quay lại danh sách đơn hàng"
       (backClick)="goBack()"
     />
     <div class="max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-8">
@@ -57,7 +57,7 @@
   } @else if (order(); as order) {
     <app-detail-header
       [title]="'Đơn hàng ' + order.orderCode"
-      backAriaLabel="Quay về danh sách đơn hàng"
+      backAriaLabel="Quay lại danh sách đơn hàng"
       (backClick)="goBack()"
     >
       <app-badge
@@ -112,10 +112,10 @@
         <div class="lg:col-span-2 space-y-6">
           <!-- Khách hàng -->
           <app-card [padding]="'default'">
-            <h3 class="text-title font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+            <h2 class="text-title font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
               <mat-icon class="w-5 h-5 text-slate-400 dark:text-slate-500">person</mat-icon>
               Khách hàng
-            </h3>
+            </h2>
             <dl class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div class="flex justify-between gap-3">
                 <dt class="text-slate-500 dark:text-slate-400">Họ tên</dt>
@@ -148,10 +148,10 @@
 
           <!-- Giao hàng -->
           <app-card [padding]="'default'">
-            <h3 class="text-title font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+            <h2 class="text-title font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
               <mat-icon class="w-5 h-5 text-slate-400 dark:text-slate-500">local_shipping</mat-icon>
               Thông tin giao hàng
-            </h3>
+            </h2>
             <dl class="space-y-3">
               <div class="flex justify-between gap-3">
                 <dt class="text-slate-500 dark:text-slate-400 shrink-0">Người nhận</dt>
@@ -186,10 +186,10 @@
 
           <!-- Sản phẩm -->
           <app-card [padding]="'none'">
-            <h3 class="text-title font-semibold text-slate-900 dark:text-white px-4 md:px-6 pt-5 pb-4 flex items-center gap-2">
+            <h2 class="text-title font-semibold text-slate-900 dark:text-white px-4 md:px-6 pt-5 pb-4 flex items-center gap-2">
               <mat-icon class="w-5 h-5 text-slate-400 dark:text-slate-500">inventory_2</mat-icon>
               Sản phẩm ({{ order.items.length }})
-            </h3>
+            </h2>
             <div class="overflow-x-auto">
               <table class="w-full text-sm">
                 <thead>
@@ -250,10 +250,10 @@
         <div class="space-y-6">
           <!-- Trạng thái -->
           <app-card [padding]="'default'">
-            <h3 class="text-title font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+            <h2 class="text-title font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
               <mat-icon class="w-5 h-5 text-slate-400 dark:text-slate-500">timeline</mat-icon>
               Trạng thái đơn
-            </h3>
+            </h2>
             @if (isCancelled()) {
               <!-- Đơn hủy không nằm trong luồng 4 bước → banner riêng -->
               <div class="flex items-start gap-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-4">
@@ -275,10 +275,10 @@
 
           <!-- Thanh toán -->
           <app-card [padding]="'default'">
-            <h3 class="text-title font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+            <h2 class="text-title font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
               <mat-icon class="w-5 h-5 text-slate-400 dark:text-slate-500">payments</mat-icon>
               Thanh toán
-            </h3>
+            </h2>
             <dl class="space-y-3">
               <div class="flex justify-between">
                 <dt class="text-slate-500 dark:text-slate-400">Phương thức</dt>

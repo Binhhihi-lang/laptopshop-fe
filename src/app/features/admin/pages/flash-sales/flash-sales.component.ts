@@ -2,6 +2,7 @@ import {
   Component,
   OnInit,
   AfterViewInit,
+  DestroyRef,
   signal,
   computed,
   inject,
@@ -15,7 +16,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { NotificationService } from '@core/services/notification.service';
 import { FlashSaleService } from '@core/services/flash-sale.service';
 import { AuthService } from '@core/services/auth.service';
-import { FlashSaleResponse } from '@core/models/flash-sale.model';
+import { FlashSaleResponse, FlashSaleSummary } from '@core/models/flash-sale.model';
 import { TableComponent, Column, TableAction } from '@shared/components/table/table.component';
 import { CardComponent } from '@shared/components/card/card.component';
 import { BadgeComponent } from '@shared/components/badge/badge.component';
@@ -52,19 +53,51 @@ export class FlashSalesComponent implements OnInit, AfterViewInit {
   private readonly router = inject(Router);
   private readonly notification = inject(NotificationService);
   private readonly authService = inject(AuthService);
+  private readonly destroyRef = inject(DestroyRef);
 
   canDelete = computed(() => this.authService.hasPermission('DELETE_FLASH_SALE'));
   canUpdate = computed(() => this.authService.hasPermission('UPDATE_FLASH_SALE'));
 
+  /** Một trang dữ liệu lấy từ server — không còn tải toàn bộ danh sách. */
   flashSales = signal<FlashSaleResponse[]>([]);
   isLoading = signal(false);
   permissionDenied = signal<boolean>(false);
+
+  // ===== Phân trang phía server =====
+  readonly pageSize = 20;
+  readonly currentPage = signal(0);
+  readonly totalElements = signal(0);
+  readonly totalPages = signal(0);
+
+  // ===== KPI lấy từ endpoint summary (đếm toàn bộ, không phải trang hiện tại) =====
+  readonly summary = signal<FlashSaleSummary>({
+    total: 0,
+    running: 0,
+    upcoming: 0,
+    totalItems: 0,
+    totalStock: 0,
+    totalSold: 0,
+    sessionsWithItems: 0,
+  });
 
   searchTerm = signal('');
   stateFilter = signal<'all' | 'running' | 'upcoming' | 'ended'>('all');
   activeFilter = signal<'all' | 'on' | 'off'>('all');
   sortColumn = signal<string>('');
   sortDirection = signal<'asc' | 'desc'>('asc');
+
+  /** Cột bảng -> tên property của BE, dùng cho tham số `sort`. */
+  private static readonly SORT_FIELDS: Record<string, string> = {
+    name: 'name',
+    period: 'startAt',
+    updatedAt: 'updatedAt',
+  };
+
+  private searchTimer?: ReturnType<typeof setTimeout>;
+
+  constructor() {
+    this.destroyRef.onDestroy(() => clearTimeout(this.searchTimer));
+  }
 
   columns = signal<Column<FlashSaleResponse>[]>([
     { key: 'name', label: 'Phiên', visible: true, sortable: true },
@@ -75,7 +108,8 @@ export class FlashSalesComponent implements OnInit, AfterViewInit {
     { key: 'updatedAt', label: 'Ngày sửa', visible: false, sortable: true, align: 'center' },
   ]);
 
-  filteredFlashSales = signal<FlashSaleResponse[]>([]);
+  /** Server đã lọc theo trạng thái thời gian nên chỉ cần đọc thẳng danh sách. */
+  visibleSales = computed(() => this.flashSales());
 
   @ViewChild('nameColumn') nameColumn!: TemplateRef<any>;
   @ViewChild('periodColumn') periodColumn!: TemplateRef<any>;
@@ -140,78 +174,113 @@ export class FlashSalesComponent implements OnInit, AfterViewInit {
   }
 
   loadData(): void {
+    this.loadPage();
+    this.loadSummary();
+  }
+
+  loadPage(): void {
     this.isLoading.set(true);
     this.permissionDenied.set(false);
-    this.flashSaleService.getFlashSales().subscribe({
-      next: (sales) => {
-        this.flashSales.set(sales);
-        this.applyFilter();
-        this.isLoading.set(false);
-      },
-      error: (error) => {
-        if (error instanceof HttpErrorResponse && error.status === 403) {
-          this.permissionDenied.set(true);
-        } else {
-          this.notification.error(this.notification.extractError(error));
-        }
-        this.isLoading.set(false);
-      },
+    // UI dùng 'all' cho "không lọc"; API chỉ nhận giá trị thật.
+    const st = this.stateFilter();
+    const stateParam = st === 'all' ? undefined : st;
+    this.flashSaleService
+      .getFlashSalePage({
+        keyword: this.searchTerm().trim() || undefined,
+        active: this.activeFilter() === 'all' ? undefined : this.activeFilter() === 'on',
+        state: stateParam,
+        page: this.currentPage(),
+        size: this.pageSize,
+        sort: this.sortParam(),
+      })
+      .subscribe({
+        next: (page) => {
+          this.flashSales.set(page.content ?? []);
+          this.totalElements.set(page.totalElements);
+          this.totalPages.set(page.totalPages);
+          this.isLoading.set(false);
+        },
+        error: (error) => {
+          this.flashSales.set([]);
+          if (error instanceof HttpErrorResponse && error.status === 403) {
+            this.permissionDenied.set(true);
+          } else {
+            this.notification.error(this.notification.extractError(error));
+          }
+          this.isLoading.set(false);
+        },
+      });
+  }
+
+  /** KPI đếm trên toàn bộ dữ liệu, không phải trang đang xem. */
+  private loadSummary(): void {
+    this.flashSaleService.getSummary().subscribe({
+      next: (summary) => this.summary.set(summary),
+      // Lỗi summary không chặn bảng — KPI giữ số cũ.
+      error: () => undefined,
     });
   }
 
-  applyFilter(): void {
-    let filtered = this.flashSales();
-
-    const term = this.searchTerm().trim().toLowerCase();
-    if (term) {
-      filtered = filtered.filter((s) => s.name.toLowerCase().includes(term));
+  private sortParam(): string | undefined {
+    const column = this.sortColumn();
+    if (!column) {
+      return undefined;
     }
-
-    const state = this.stateFilter();
-    if (state !== 'all') {
-      filtered = filtered.filter((s) => this.state(s) === state);
-    }
-
-    const active = this.activeFilter();
-    if (active !== 'all') {
-      filtered = filtered.filter((s) => (active === 'on' ? s.active : !s.active));
-    }
-
-    const sortCol = this.sortColumn();
-    const sortDir = this.sortDirection();
-    if (sortCol) {
-      filtered = [...filtered].sort((a, b) => {
-        const aVal =
-          sortCol === 'period' ? new Date(a.startAt).getTime() : (a as never)[sortCol];
-        const bVal =
-          sortCol === 'period' ? new Date(b.startAt).getTime() : (b as never)[sortCol];
-        if (aVal === bVal) return 0;
-        const result = aVal > bVal ? 1 : -1;
-        return sortDir === 'asc' ? result : -result;
-      });
-    }
-
-    this.filteredFlashSales.set(filtered);
+    const field = FlashSalesComponent.SORT_FIELDS[column];
+    return field ? `${field},${this.sortDirection()}` : undefined;
   }
 
   onSearchChange(): void {
-    this.applyFilter();
+    clearTimeout(this.searchTimer);
+    this.searchTimer = setTimeout(() => {
+      this.reloadFromFirstPage();
+    }, 300);
+  }
+
+  onPrevPage(): void {
+    if (this.currentPage() <= 0) {
+      return;
+    }
+    this.currentPage.update((p) => p - 1);
+    this.loadPage();
+  }
+
+  onNextPage(): void {
+    if (this.currentPage() >= this.totalPages() - 1) {
+      return;
+    }
+    this.currentPage.update((p) => p + 1);
+    this.loadPage();
+  }
+
+  /** app-table phát số trang 1-based; state nội bộ 0-based. */
+  onPageChange(page: number): void {
+    if (page - 1 === this.currentPage()) {
+      return;
+    }
+    this.currentPage.set(page - 1);
+    this.loadPage();
+  }
+
+  private reloadFromFirstPage(): void {
+    this.currentPage.set(0);
+    this.loadPage();
   }
 
   setStateFilter(state: 'all' | 'running' | 'upcoming' | 'ended'): void {
     this.stateFilter.set(state);
-    this.applyFilter();
+    this.reloadFromFirstPage();
   }
 
   setActiveFilter(active: 'all' | 'on' | 'off'): void {
     this.activeFilter.set(active);
-    this.applyFilter();
+    this.reloadFromFirstPage();
   }
 
   onSortChange(event: { column: string; direction: 'asc' | 'desc' }): void {
     this.sortColumn.set(event.column);
     this.sortDirection.set(event.direction);
-    this.applyFilter();
+    this.reloadFromFirstPage();
   }
 
   toggleColumn(columnKey: string): void {
@@ -221,10 +290,11 @@ export class FlashSalesComponent implements OnInit, AfterViewInit {
   }
 
   clearFilters(): void {
+    clearTimeout(this.searchTimer);
     this.searchTerm.set('');
     this.stateFilter.set('all');
     this.activeFilter.set('all');
-    this.applyFilter();
+    this.reloadFromFirstPage();
   }
 
   hasActiveFilters(): boolean {
@@ -258,17 +328,15 @@ export class FlashSalesComponent implements OnInit, AfterViewInit {
     });
   }
 
-  // ===== KPI =====
+  // ===== KPI (số liệu toàn hệ thống từ /summary) =====
 
-  runningCount = computed(() => this.flashSales().filter((s) => this.state(s) === 'running').length);
+  runningCount = computed(() => this.summary().running);
 
-  totalItemCount = computed(() =>
-    this.flashSales().reduce((sum, s) => sum + (s.itemCount ?? 0), 0),
-  );
+  totalItemCount = computed(() => this.summary().totalItems);
 
-  totalStockAll = computed(() => this.flashSales().reduce((sum, s) => sum + this.totalStock(s), 0));
+  totalStockAll = computed(() => this.summary().totalStock);
 
-  totalSoldAll = computed(() => this.flashSales().reduce((sum, s) => sum + this.totalSold(s), 0));
+  totalSoldAll = computed(() => this.summary().totalSold);
 
   soldPercentAll = computed(() => {
     const stock = this.totalStockAll();
@@ -277,22 +345,21 @@ export class FlashSalesComponent implements OnInit, AfterViewInit {
 
   // ===== Thẻ thống kê (chân thẻ theo mockup) =====
 
-  upcomingCount = computed(
-    () => this.flashSales().filter((s) => this.state(s) === 'upcoming').length,
-  );
+  upcomingCount = computed(() => this.summary().upcoming);
 
   /** % số phiên đang chạy so với tổng. */
   runningPercent = computed(() => {
-    const total = this.flashSales().length;
+    const total = this.summary().total;
     return total > 0 ? Math.round((this.runningCount() / total) * 100) : 0;
   });
 
   /** Số phiên có chứa sản phẩm — chân thẻ "Trải trên N phiên". */
-  sessionsWithItems = computed(
-    () => this.flashSales().filter((s) => (s.itemCount ?? 0) > 0).length,
-  );
+  sessionsWithItems = computed(() => this.summary().sessionsWithItems);
 
-  /** Giờ kết thúc của phiên đang chạy, để chân thẻ "Kết thúc HH:MM". */
+  /**
+   * Giờ kết thúc của phiên đang chạy, để chân thẻ "Kết thúc HH:MM".
+   * Chỉ tìm trong TRANG HIỆN TẠI — /summary không trả mốc giờ.
+   */
   runningEndTime = computed(() => {
     const running = this.flashSales().find((s) => this.state(s) === 'running');
     if (!running) {
@@ -307,17 +374,17 @@ export class FlashSalesComponent implements OnInit, AfterViewInit {
   /** Số suất còn lại — chân thẻ "còn X suất". flashStock đã là số còn lại. */
   remainingStock = computed(() => this.totalStockAll());
 
-  /** % phiên còn hiệu lực (chưa kết thúc). */
+  /** % phiên chưa kết thúc trên toàn hệ thống (ended = total - running - upcoming). */
   sessionsPercent = computed(() => {
-    const total = this.flashSales().length;
+    const total = this.summary().total;
     if (total === 0) return 0;
-    const ended = this.flashSales().filter((s) => this.state(s) === 'ended').length;
+    const ended = Math.max(0, total - this.summary().running - this.summary().upcoming);
     return Math.round(((total - ended) / total) * 100);
   });
 
   /** % phiên có chứa sản phẩm. */
   sessionsWithItemsPercent = computed(() => {
-    const total = this.flashSales().length;
+    const total = this.summary().total;
     return total > 0 ? Math.round((this.sessionsWithItems() / total) * 100) : 0;
   });
 

@@ -7,11 +7,14 @@ import {
   ViewChild,
   TemplateRef,
   AfterViewInit,
+  DestroyRef,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Router, RouterModule } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
+import { Subject, debounceTime } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NotificationService } from '@core/services/notification.service';
 import { MatDialog } from '@angular/material/dialog';
 import { CategoryService } from '@core/services/category.service';
@@ -59,6 +62,7 @@ export class CategoriesComponent implements OnInit, AfterViewInit {
   private readonly notification = inject(NotificationService);
   private readonly dialog = inject(MatDialog);
   private readonly authService = inject(AuthService);
+  private readonly destroyRef = inject(DestroyRef);
 
   canDeleteCategory = computed(() => this.authService.hasPermission('DELETE_CATEGORY'));
 
@@ -67,15 +71,23 @@ export class CategoriesComponent implements OnInit, AfterViewInit {
   isLoading = signal(false);
   permissionDenied = signal<boolean>(false);
 
+  // Phân trang phía server
+  readonly pageSize = 20;
+  currentPage = signal(0);
+  totalPages = signal(0);
+  totalElements = signal(0);
+
+  /** Gõ tìm kiếm phải debounce, nếu không mỗi ký tự là một request. */
+  private readonly searchInput$ = new Subject<string>();
+
   // Filter signals
   searchTerm = signal('');
   statusFilter = signal<'all' | 'active' | 'inactive'>('all');
-  createdFrom = signal('');
-  createdTo = signal('');
 
   // UI state signals
   selectedCategoryIds = signal<string[]>([]);
-  sortColumn = signal<string>('');
+  // Server mặc định sắp theo displayOrder — phản ánh đúng trên header bảng.
+  sortColumn = signal<string>('displayOrder');
   sortDirection = signal<'asc' | 'desc'>('asc');
   deletingCategoryId = signal<string | null>(null);
 
@@ -98,15 +110,14 @@ export class CategoriesComponent implements OnInit, AfterViewInit {
       visible: true,
       width: '90px',
       align: 'center',
-      sortable: true,
     },
     { key: 'status', label: 'Trạng thái', visible: true, width: '140px', align: 'center' },
     { key: 'createdAt', label: 'Ngày tạo', visible: false, sortable: true, align: 'center' },
     { key: 'updatedAt', label: 'Ngày sửa', visible: false, sortable: true, align: 'center' },
   ]);
 
-  // Filtered categories
-  filteredCategories = signal<CategoryResponse[]>([]);
+  // Danh mục của TRANG hiện tại do server trả về
+  // (trước đây tải toàn bộ danh sách rồi lọc ở client).
 
   // Table column templates
   @ViewChild('imageColumn') imageColumn!: TemplateRef<any>;
@@ -151,106 +162,105 @@ export class CategoriesComponent implements OnInit, AfterViewInit {
   ];
 
   ngOnInit() {
-    this.loadData();
+    this.searchInput$
+      .pipe(debounceTime(300), takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.reloadFromFirstPage());
+    this.loadCategories();
   }
 
-  loadData() {
+  loadCategories() {
     this.isLoading.set(true);
     this.permissionDenied.set(false);
-    this.categoryService.getCategories().subscribe({
-      next: (categories) => {
-        this.categories.set(categories);
-        this.applyFilter();
-        this.isLoading.set(false);
-      },
-      error: (error) => {
-        console.error('Error loading categories:', error);
-        this.isLoading.set(false);
-        if (error instanceof HttpErrorResponse && error.status === 403) {
-          this.permissionDenied.set(true);
-        }
-      },
-    });
+    this.categoryService
+      .getCategoryPage({
+        keyword: this.searchTerm(),
+        active: this.activeParam(),
+        page: this.currentPage(),
+        size: this.pageSize,
+        sort: this.sortParam(),
+      })
+      .subscribe({
+        next: (page) => {
+          this.categories.set(page.content);
+          this.totalElements.set(page.totalElements);
+          this.totalPages.set(page.totalPages);
+          // Server tự kẹp trang khi bộ lọc làm giảm tổng số trang
+          if (page.number !== this.currentPage()) {
+            this.currentPage.set(page.number);
+          }
+          this.isLoading.set(false);
+        },
+        error: (error) => {
+          console.error('Error loading categories:', error);
+          if (error instanceof HttpErrorResponse && error.status === 403) {
+            this.permissionDenied.set(true);
+          }
+          this.isLoading.set(false);
+        },
+      });
   }
 
-  applyFilter() {
-    let filtered = this.categories();
+  /** Mọi thay đổi bộ lọc đều quay về trang đầu rồi tải lại. */
+  private reloadFromFirstPage(): void {
+    this.currentPage.set(0);
+    this.selectedCategoryIds.set([]);
+    this.loadCategories();
+  }
 
-    // Search by name or description
-    const term = this.searchTerm().trim().toLowerCase();
-    if (term) {
-      filtered = filtered.filter(
-        (category) =>
-          (category.name || '').toLowerCase().includes(term) ||
-          (category.description || '').toLowerCase().includes(term),
-      );
-    }
+  private activeParam(): boolean | undefined {
+    const status = this.statusFilter();
+    if (status === 'active') return true;
+    if (status === 'inactive') return false;
+    return undefined;
+  }
 
-    // Filter by status
-    if (this.statusFilter() !== 'all') {
-      if (this.statusFilter() === 'active') {
-        filtered = filtered.filter((category) => category.active);
-      } else if (this.statusFilter() === 'inactive') {
-        filtered = filtered.filter((category) => !category.active);
-      }
-    }
+  /** Mặc định sắp theo thứ tự hiển thị — khớp cách danh mục được trình bày. */
+  private sortParam(): string {
+    const column = this.sortColumn();
+    return column ? `${column},${this.sortDirection()}` : 'displayOrder,asc';
+  }
 
-    // Filter by created date range
-    const from = this.createdFrom();
-    const to = this.createdTo();
-    if (from) {
-      filtered = filtered.filter((category) => (category.createdAt || '').slice(0, 10) >= from);
-    }
-    if (to) {
-      filtered = filtered.filter((category) => (category.createdAt || '').slice(0, 10) <= to);
-    }
+  onPrevPage(): void {
+    if (this.currentPage() === 0) return;
+    this.currentPage.update((p) => p - 1);
+    this.selectedCategoryIds.set([]);
+    this.loadCategories();
+  }
 
-    // Apply sorting
-    const sortCol = this.sortColumn();
-    const sortDir = this.sortDirection();
-    if (sortCol) {
-      filtered = [...filtered].sort((a, b) => {
-        const aVal = (a as any)[sortCol];
-        const bVal = (b as any)[sortCol];
-        if (aVal === bVal) return 0;
-        const result = aVal > bVal ? 1 : -1;
-        return sortDir === 'asc' ? result : -result;
-      });
-    }
+  onNextPage(): void {
+    if (this.currentPage() >= this.totalPages() - 1) return;
+    this.currentPage.update((p) => p + 1);
+    this.selectedCategoryIds.set([]);
+    this.loadCategories();
+  }
 
-    this.filteredCategories.set(filtered);
+  /** app-table phát số trang 1-based; state nội bộ 0-based. */
+  onPageChange(page: number): void {
+    if (page - 1 === this.currentPage()) return;
+    this.currentPage.set(page - 1);
+    this.selectedCategoryIds.set([]);
+    this.loadCategories();
   }
 
   onSearchChange() {
-    this.applyFilter();
+    this.searchInput$.next(this.searchTerm());
   }
 
   setStatusFilter(status: 'all' | 'active' | 'inactive') {
     if (this.statusFilter() !== status) {
       this.statusFilter.set(status);
-      this.applyFilter();
+      this.reloadFromFirstPage();
     }
-  }
-
-  onDateChange() {
-    this.applyFilter();
   }
 
   clearFilters() {
     this.searchTerm.set('');
     this.statusFilter.set('all');
-    this.createdFrom.set('');
-    this.createdTo.set('');
-    this.applyFilter();
+    this.reloadFromFirstPage();
   }
 
   hasActiveFilters(): boolean {
-    return (
-      this.searchTerm().trim() !== '' ||
-      this.statusFilter() !== 'all' ||
-      this.createdFrom() !== '' ||
-      this.createdTo() !== ''
-    );
+    return this.searchTerm().trim() !== '' || this.statusFilter() !== 'all';
   }
 
   ngAfterViewInit(): void {
@@ -293,7 +303,7 @@ export class CategoriesComponent implements OnInit, AfterViewInit {
   onSort(sortData: { column: string; direction: 'asc' | 'desc' }): void {
     this.sortColumn.set(sortData.column);
     this.sortDirection.set(sortData.direction);
-    this.applyFilter();
+    this.reloadFromFirstPage();
   }
 
   // Selection
@@ -348,7 +358,7 @@ export class CategoriesComponent implements OnInit, AfterViewInit {
       this.categoryService.bulkDeleteCategories(idsToDelete).subscribe({
         next: () => {
           this.notification.success('Xóa danh mục thành công');
-          this.loadData();
+          this.loadCategories();
           this.selectedCategoryIds.set([]);
           this.deletingCategoryId.set(null);
         },
@@ -377,7 +387,7 @@ export class CategoriesComponent implements OnInit, AfterViewInit {
     this.categoryService.bulkUpdateCategoryStatus(ids, active).subscribe({
       next: () => {
         this.notification.success(`${active ? 'Kích hoạt' : 'Khóa'} danh mục thành công`);
-        this.loadData();
+        this.loadCategories();
         this.selectedCategoryIds.set([]);
       },
       error: (error) => {
@@ -401,7 +411,7 @@ export class CategoriesComponent implements OnInit, AfterViewInit {
         this.categoryService.deleteCategory(category.id).subscribe({
           next: () => {
             this.notification.success('Xóa danh mục thành công');
-            this.loadData();
+            this.loadCategories();
             this.deletingCategoryId.set(null);
           },
           error: (error) => {
@@ -423,7 +433,7 @@ export class CategoriesComponent implements OnInit, AfterViewInit {
     this.categoryService.bulkUpdateCategoryStatus([category.id], newActive).subscribe({
       next: () => {
         this.notification.success(`${newActive ? 'Kích hoạt' : 'Khóa'} danh mục thành công`);
-        this.loadData();
+        this.loadCategories();
       },
       error: (error) => {
         console.error('Error toggling category status:', error);

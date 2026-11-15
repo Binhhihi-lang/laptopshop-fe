@@ -3,7 +3,6 @@
   <button
     (click)="toggle()"
     class="flex items-center gap-2 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-    aria-label="Menu người dùng"
     [attr.aria-expanded]="showMenu()"
     aria-haspopup="true">
     <app-avatar
@@ -14,7 +13,7 @@
       shape="circle"
       [shadow]="'sm'" />
     <span class="hidden lg:block text-sm font-medium text-slate-700 dark:text-slate-200 truncate max-w-[120px]">{{ displayName() }}</span>
-    <mat-icon class="w-5 h-5 text-slate-400 hidden lg:block transition-transform duration-200" [class.rotate-180]="showMenu()">expand_more</mat-icon>
+    <mat-icon aria-hidden="true" class="w-5 h-5 text-slate-500 dark:text-slate-400 hidden lg:block transition-transform duration-200" [class.rotate-180]="showMenu()">expand_more</mat-icon>
   </button>
 
   @if (showMenu()) {

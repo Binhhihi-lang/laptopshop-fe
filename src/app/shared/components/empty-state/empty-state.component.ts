@@ -17,7 +17,9 @@ export type EmptyStateVariant = 'no-data' | 'no-results' | 'error' | 'permission
       >
         <mat-icon class="w-10 h-10" [class]="iconColorClass()">{{ icon() }}</mat-icon>
       </div>
-      <h3 class="text-lg font-medium mb-2" [class]="titleColorClass()">{{ title() }}</h3>
+      <!-- h2 chứ không h3: empty-state thường đứng ngay sau h1 của trang, nhảy
+           cấp sang h3 làm heading-order của Lighthouse báo lỗi. -->
+      <h2 class="text-lg font-medium mb-2" [class]="titleColorClass()">{{ title() }}</h2>
       <p class="text-sm mb-6 max-w-md mx-auto" [class]="descriptionColorClass()">
         {{ description() }}
       </p>

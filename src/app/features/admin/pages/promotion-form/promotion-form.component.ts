@@ -213,13 +213,9 @@ export class PromotionFormComponent implements OnInit {
       next: (categories) => this.categories.set(categories),
       error: () => this.categories.set([]),
     });
-    this.productService.getProducts().subscribe({
-      next: (products) => {
-        const factories = Array.from(
-          new Set((products ?? []).map((p) => p.factory).filter((f) => !!f)),
-        ).sort();
-        this.brands.set(factories);
-      },
+    // Chỉ cần danh sách hãng — không tải toàn bộ sản phẩm (shop có thể có hàng chục nghìn).
+    this.productService.getBrands().subscribe({
+      next: (brands) => this.brands.set(brands ?? []),
       error: () => this.brands.set([]),
     });
   }

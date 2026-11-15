@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { ApiService } from './api.service';
 import { API_ENDPOINTS } from '@core/utils/constants';
 import { Observable } from 'rxjs';
+import { Page } from '@core/models/page.model';
 import {
   CategoryResponse,
   CategoryCreationRequest,
@@ -19,6 +20,26 @@ export class CategoryService {
 
   getCategories(): Observable<CategoryResponse[]> {
     return this.api.get<CategoryResponse[]>(this.apiUrl);
+  }
+
+  /**
+   * Trang danh mục cho quản trị — lọc + phân trang ở DB.
+   * keyword tìm trong tên danh mục; active lọc trạng thái.
+   */
+  getCategoryPage(params: {
+    keyword?: string;
+    active?: boolean;
+    page?: number;
+    size?: number;
+    sort?: string;
+  }): Observable<Page<CategoryResponse>> {
+    return this.api.getPage<CategoryResponse>(`${this.apiUrl}/page`, {
+      keyword: params.keyword?.trim() || undefined,
+      active: params.active,
+      page: params.page ?? 0,
+      size: params.size ?? 20,
+      sort: params.sort || 'displayOrder,asc',
+    });
   }
 
   getCategoryById(id: string): Observable<CategoryResponse> {

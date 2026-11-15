@@ -1,10 +1,10 @@
 <div class="vouchers-container min-h-screen bg-slate-50 dark:bg-slate-950">
   <!-- Page Header -->
-  <div class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-16 z-[90]">
+  <div class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
     <div class="max-w-screen-2xl mx-auto px-4 md:px-6 lg:px-8 py-4">
       <app-page-header
         title="Voucher"
-        [subtitle]="'Phiếu giảm giá cấp đơn — khách tự chọn ở checkout hoặc gõ mã (' + filteredVouchers().length + '/' + vouchers().length + ')'"
+        [subtitle]="'Phiếu giảm giá cấp đơn — khách tự chọn ở checkout hoặc gõ mã (' + totalElements() + ')'"
         [hasActions]="true"
       >
         <app-button
@@ -31,7 +31,7 @@
         icon="card_giftcard"
         iconClass="bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400"
         label="Tổng voucher"
-        [value]="vouchers().length + ''"
+        [value]="summaryTotal() + ''"
         [meter]="notPausedPercent()"
         meterClass="bg-indigo-500"
         [caption]="typeBreakdown()"
@@ -48,10 +48,10 @@
         icon="local_offer"
         iconClass="bg-violet-100 dark:bg-violet-900/40 text-violet-600 dark:text-violet-400"
         label="Đang hoạt động"
-        [value]="(vouchers().length - pausedCount()) + ''"
+        [value]="(summaryTotal() - pausedCount()) + ''"
         [meter]="notPausedPercent()"
         meterClass="bg-violet-500"
-        [caption]="'Tổng ' + vouchers().length + ' voucher'"
+        [caption]="'Tổng ' + summaryTotal() + ' voucher'"
       />
       <app-stat-card
         icon="inventory"
@@ -169,6 +169,11 @@
         [sortColumn]="sortColumn()"
         [sortDirection]="sortDirection()"
         (sortChange)="onSort($event)"
+        [paginated]="true"
+        [currentPage]="currentPage() + 1"
+        [pageSize]="pageSize"
+        [totalItems]="totalElements()"
+        (pageChange)="onPageChange($event)"
         [emptyIcon]="'local_offer'"
         [emptyTitle]="'Không tìm thấy voucher'"
         [emptyDescription]="'Thử thay đổi bộ lọc hoặc thêm voucher mới'"

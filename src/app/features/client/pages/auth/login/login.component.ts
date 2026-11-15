@@ -1,6 +1,8 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, DestroyRef, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { MatIconModule } from '@angular/material/icon';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { ClientAuthService } from '@core/services/client-auth.service';
 import { ClientCartService } from '@core/services/client-cart.service';
@@ -24,6 +26,7 @@ import { ButtonComponent, FormFieldComponent, InputComponent } from '@shared/com
     CommonModule,
     ReactiveFormsModule,
     RouterModule,
+    MatIconModule,
     ButtonComponent,
     FormFieldComponent,
     InputComponent,
@@ -39,11 +42,14 @@ export class ClientLoginComponent {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly notification = inject(NotificationService);
+  private readonly destroyRef = inject(DestroyRef);
 
   /** Mã lỗi BE trả khi user đã đủ số thiết bị tối đa (ErrorCode.DEVICE_LIMIT_EXCEEDED). */
   private readonly DEVICE_LIMIT_ERROR_CODE = 1013;
 
   readonly isSubmitting = signal(false);
+  /** Lỗi đăng nhập hiện ngay trong form — toast ở góc màn hình bị chậm và xa chỗ nhập. */
+  readonly errorMessage = signal('');
   /** Checkbox "Ghi nhớ đăng nhập" — chỉ là UI, chưa triển khai gia hạn phiên. */
   readonly rememberMe = signal(true);
   readonly form: FormGroup = this.fb.group({
@@ -58,11 +64,21 @@ export class ClientLoginComponent {
     return this.form.get('password');
   }
 
+  constructor() {
+    // Người dùng sửa lại email/mật khẩu là lỗi cũ phải biến mất ngay.
+    this.form.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+      if (this.errorMessage()) {
+        this.errorMessage.set('');
+      }
+    });
+  }
+
   onSubmit(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
     }
+    this.errorMessage.set('');
     this.isSubmitting.set(true);
     const { email, password } = this.form.value;
     this.auth.login({ email, password }).subscribe({
@@ -77,10 +93,27 @@ export class ClientLoginComponent {
           return;
         }
         this.isSubmitting.set(false);
-        const message = err?.error?.message || 'Email hoặc mật khẩu không đúng';
-        this.notification.error(message);
+        this.errorMessage.set(this.toLoginErrorMessage(err));
       },
     });
+  }
+
+  /** Chọn câu ngắn theo mã lỗi thay vì bê nguyên văn message dài của BE. */
+  private toLoginErrorMessage(err: any): string {
+    const code = err?.error?.code;
+    if (code === 1005) {
+      return 'Email hoặc mật khẩu không đúng.';
+    }
+    if (code === 1010) {
+      return err?.error?.message || 'Tài khoản đã bị khóa.';
+    }
+    if (code === 9006) {
+      return 'Hệ thống đang bận, vui lòng thử lại sau ít phút.';
+    }
+    const raw = err?.error?.message;
+    return typeof raw === 'string' && raw.length > 0 && raw.length <= 90
+      ? raw
+      : 'Đăng nhập thất bại, vui lòng thử lại.';
   }
 
   /**

@@ -35,6 +35,17 @@ export interface FlashSaleResponse {
   updatedAt: string;
 }
 
+/** Khớp `GET /api/v1/admin/flash-sales/summary` — số liệu KPI toàn hệ thống. */
+export interface FlashSaleSummary {
+  total: number;
+  running: number;
+  upcoming: number;
+  totalItems: number;
+  totalStock: number;
+  totalSold: number;
+  sessionsWithItems: number;
+}
+
 /** Khớp dto/request/FlashSale/FlashSaleItemRequest.java */
 export interface FlashSaleItemRequest {
   productId: string;

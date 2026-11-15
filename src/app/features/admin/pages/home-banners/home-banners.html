@@ -1,5 +1,5 @@
 <div class="home-banners-container min-h-screen bg-slate-50 dark:bg-slate-950">
-  <div class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-16 z-[90]">
+  <div class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
     <div class="max-w-screen-2xl mx-auto px-4 md:px-6 lg:px-8 py-4">
       <app-page-header
         title="Banner trang chủ"
@@ -25,13 +25,13 @@
       <!-- Danh sách slide -->
       <app-card [padding]="'default'">
         <div class="flex flex-wrap items-baseline justify-between gap-2 mb-4">
-          <h3 class="text-title font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+          <h2 class="text-title font-semibold text-slate-900 dark:text-white flex items-center gap-2">
             <mat-icon class="w-5 h-5 text-slate-400 dark:text-slate-500">view_carousel</mat-icon>
             Slide đang hiển thị
             <span class="text-sm font-normal text-slate-500 dark:text-slate-400">
               ({{ activeCount() }}/5 đang bật)
             </span>
-          </h3>
+          </h2>
           <p class="text-sm text-slate-500 dark:text-slate-400">
             Kéo để đổi thứ tự · tắt để ẩn khỏi trang chủ
           </p>
@@ -188,10 +188,10 @@
 
       <!-- Hướng dẫn gắn liên kết -->
       <app-card [padding]="'default'">
-        <h3 class="text-title font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+        <h2 class="text-title font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
           <mat-icon class="w-5 h-5 text-slate-400 dark:text-slate-500">info</mat-icon>
           Cách gắn liên kết cho slide
-        </h3>
+        </h2>
         <div class="overflow-x-auto">
           <table class="w-full text-sm min-w-[620px]">
             <thead>

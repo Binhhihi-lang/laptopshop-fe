@@ -59,7 +59,7 @@ import { ProductResponse } from '@core/models/product.model';
               <span class="text-lg font-bold text-rose-600 dark:text-rose-400 tabular-nums">
                 {{ formatPrice(product().flashPrice!) }}
               </span>
-              <span class="text-sm text-slate-400 line-through tabular-nums">
+              <span class="text-sm text-slate-500 line-through tabular-nums">
                 {{ formatPrice(product().price) }}
               </span>
             </div>

@@ -43,6 +43,17 @@
     </a>
   </div>
 
+  @if (errorMessage()) {
+    <div
+      role="alert"
+      aria-live="assertive"
+      class="flex items-start gap-2 rounded-lg border border-danger-200 bg-danger-50 px-3 py-2.5 text-sm text-danger-700 dark:border-danger-800 dark:bg-danger-900/30 dark:text-danger-300"
+    >
+      <mat-icon class="!w-4 !h-4 !text-[16px] !leading-none shrink-0 mt-0.5">error_outline</mat-icon>
+      <span class="leading-snug">{{ errorMessage() }}</span>
+    </div>
+  }
+
   <app-button
     type="submit"
     label="Đăng nhập"

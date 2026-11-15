@@ -1,10 +1,10 @@
 <div class="products-container min-h-screen bg-slate-50 dark:bg-slate-950">
   <!-- Page Header -->
-  <div class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-16 z-[90]">
+  <div class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
     <div class="max-w-screen-2xl mx-auto px-4 md:px-6 lg:px-8 py-4">
       <app-page-header
         title="Quản lý sản phẩm"
-        [subtitle]="'Tìm kiếm, lọc và quản lý danh sách sản phẩm (' + filteredProducts().length + '/' + products().length + ')'"
+        [subtitle]="'Tìm kiếm, lọc và quản lý danh sách sản phẩm (' + totalElements() + ')'"
         [hasActions]="true"
       >
         <app-button
@@ -22,7 +22,7 @@
     <app-card [padding]="'sm'" [compact]="true">
       <div class="filter-row flex flex-wrap gap-4 items-end">
         <!-- Search -->
-        <div class="relative flex-1 min-w-[250px] max-w-[400px]">
+        <div class="relative w-full sm:w-[300px] shrink-0">
           <app-input
             id="product-search"
             name="search"
@@ -34,22 +34,22 @@
           />
         </div>
 
-        <!-- Category Filter -->
-        @if (!isLoadingCategories()) {
-          <app-select
-            id="category-filter"
-            name="category"
-            [options]="categoryOptions()"
-            [placeholder]="'Lọc theo danh mục'"
-            [value]="categoryFilter()"
-            (valueChange)="onCategoryChange($event)"
-            [icon]="'category'"
-            [ariaLabel]="'Lọc theo danh mục'"
-          />
-        }
+        <!-- Category Filter: luôn render. Trước đây bọc @if(!isLoadingCategories())
+             nên khi categories về thì ô này xuất hiện làm cả hàng lọc nhảy (CLS 0.15). -->
+        <app-select
+          class="block w-full sm:w-[200px] shrink-0"
+          id="category-filter"
+          name="category"
+          [options]="categoryOptions()"
+          [placeholder]="'Lọc theo danh mục'"
+          [value]="categoryFilter()"
+          (valueChange)="onCategoryChange($event)"
+          [icon]="'category'"
+          [ariaLabel]="'Lọc theo danh mục'"
+        />
 
         <!-- Status Filter -->
-        <div class="status-filter-group flex items-center gap-2">
+        <div class="status-filter-group flex items-center gap-2 shrink-0">
           <span class="filter-label text-sm text-slate-600 dark:text-slate-400 font-medium">Trạng thái:</span>
           <div class="flex gap-1 bg-slate-100 dark:bg-slate-800 rounded-lg p-1">
             <button
@@ -126,7 +126,7 @@
   <div class="max-w-screen-2xl mx-auto px-4 md:px-6 lg:px-8 pb-8">
     <app-card [padding]="'none'">
       <app-table
-        [data]="filteredProducts()"
+        [data]="products()"
         [columns]="columns()"
         [loading]="isLoading()"
         [loadingText]="'Đang tải sản phẩm...'"
@@ -140,6 +140,11 @@
         [sortColumn]="sortColumn()"
         [sortDirection]="sortDirection()"
         (sortChange)="onSort($event)"
+        [paginated]="true"
+        [currentPage]="currentPage() + 1"
+        [pageSize]="pageSize"
+        [totalItems]="totalElements()"
+        (pageChange)="onPageChange($event)"
         [emptyIcon]="'inventory_2'"
         [emptyTitle]="'Không tìm thấy sản phẩm'"
         [emptyDescription]="'Thử thay đổi bộ lọc hoặc thêm sản phẩm mới'"

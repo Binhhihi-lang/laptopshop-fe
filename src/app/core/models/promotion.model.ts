@@ -57,3 +57,19 @@ export interface PromotionCreationRequest {
 }
 
 export type PromotionUpdateRequest = Partial<PromotionCreationRequest>;
+
+/**
+ * Số liệu tổng hợp cho dải thẻ KPI — GET /admin/promotions/summary.
+ * Danh sách nay phân trang ở server nên KPI không thể đếm từ mảng trang hiện tại.
+ */
+export interface PromotionSummary {
+  total: number;
+  running: number;
+  upcoming: number;
+  ended: number;
+  inactive: number;
+  budgetUsed: number;
+  budgetLimit: number;
+  hitCap: number;
+  scopeTypeCount: number;
+}

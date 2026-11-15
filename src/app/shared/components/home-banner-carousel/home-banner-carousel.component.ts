@@ -12,6 +12,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { HomeBannerResponse } from '@core/models/home-banner.model';
+import { cloudinarySrcset } from '@shared/utils/cloudinary-srcset';
 
 /**
  * Carousel slide trang chủ (§0.6). Thay hero hardcode khi admin có banner.
@@ -53,9 +54,13 @@ import { HomeBannerResponse } from '@core/models/home-banner.model';
               @if (banner.image) {
                 <img
                   [src]="banner.image"
+                  [attr.srcset]="cloudinarySrcset(banner.image)"
+                  sizes="100vw"
                   [alt]="banner.title"
                   class="absolute inset-0 w-full h-full object-cover"
-                  [attr.loading]="i === 0 ? 'eager' : 'lazy'"
+                  [attr.loading]="i < 3 ? 'eager' : 'lazy'"
+                  [attr.fetchpriority]="i === 0 ? 'high' : null"
+                  decoding="async"
                 />
               }
               <!-- Scrim trái→phải để chữ đọc được trên mọi ảnh, cả 2 mode -->
@@ -118,12 +123,16 @@ import { HomeBannerResponse } from '@core/models/home-banner.model';
           @for (banner of banners(); track banner.id; let i = $index) {
             <button
               type="button"
-              class="h-1.5 rounded-full transition-all"
-              [class]="i === currentIndex() ? 'w-6 bg-white' : 'w-1.5 bg-white/50 hover:bg-white/80'"
+              class="w-6 h-6 grid place-items-center rounded-full"
               [attr.aria-label]="'Tới banner ' + (i + 1)"
               [attr.aria-current]="i === currentIndex()"
               (click)="goTo(i)"
-            ></button>
+            >
+              <span
+                class="h-1.5 rounded-full transition-all"
+                [class]="i === currentIndex() ? 'w-6 bg-white' : 'w-1.5 bg-white/50'"
+              ></span>
+            </button>
           }
         </div>
       }
@@ -141,6 +150,8 @@ export class HomeBannerCarouselComponent {
   banners = input.required<HomeBannerResponse[]>();
 
   readonly currentIndex = signal(0);
+  /** Dùng trong template để sinh srcset cho banner Cloudinary. */
+  readonly cloudinarySrcset = cloudinarySrcset;
   private timer: ReturnType<typeof setInterval> | null = null;
   private readonly destroyRef = inject(DestroyRef);
   private readonly host = inject(ElementRef<HTMLElement>);

@@ -1,4 +1,4 @@
-import { Component, input, output } from '@angular/core';
+import { Component, computed, input, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 
@@ -21,17 +21,17 @@ import { MatIconModule } from '@angular/material/icon';
       [class.clickable]="clickable()"
       [attr.role]="clickable() ? 'button' : null"
       [attr.tabindex]="clickable() ? 0 : null"
-      [attr.aria-label]="clickable() ? label() + ' — lọc nhanh' : null"
       (click)="onClick()"
       (keydown.enter)="onClick()"
       (keydown.space)="onClick()"
     >
       <div class="flex items-center gap-3 min-w-0">
         <div
+          aria-hidden="true"
           class="kpi-icon p-3 rounded-xl shrink-0"
           [class]="iconClass() + ' group-hover:scale-110 transition-transform duration-200'"
         >
-          <mat-icon class="w-6 h-6">{{ icon() }}</mat-icon>
+          <mat-icon aria-hidden="true" class="w-6 h-6">{{ icon() }}</mat-icon>
         </div>
         <div class="min-w-0 flex-1">
           <p class="text-caption text-slate-500 dark:text-slate-400">{{ label() }}</p>
@@ -40,7 +40,7 @@ import { MatIconModule } from '@angular/material/icon';
           >
             {{ value() }}
             @if (unit()) {
-              <span class="text-sm font-semibold text-slate-400 dark:text-slate-500 ml-1">{{
+              <span class="text-sm font-semibold text-slate-500 dark:text-slate-400 ml-1">{{
                 unit()
               }}</span>
             }
@@ -60,7 +60,7 @@ import { MatIconModule } from '@angular/material/icon';
             ></div>
           </div>
           @if (caption()) {
-            <span class="text-xs text-slate-400 dark:text-slate-500 whitespace-nowrap">{{
+            <span class="text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">{{
               caption()
             }}</span>
           }
@@ -71,7 +71,7 @@ import { MatIconModule } from '@angular/material/icon';
           [class]="trendClass()"
         >
           @if (!trendNeutral()) {
-            <mat-icon class="w-3.5 h-3.5">{{ trendUp() ? 'trending_up' : 'trending_down' }}</mat-icon>
+            <mat-icon aria-hidden="true" class="w-3.5 h-3.5">{{ trendUp() ? 'trending_up' : 'trending_down' }}</mat-icon>
           }
           <span>{{ trendText() }}</span>
         </div>
@@ -115,6 +115,15 @@ export class StatCardComponent {
   /** Text pill xu hướng; rỗng => ẩn pill. */
   trendText = input<string>('');
   /** Hậu tố nhỏ sau số, vd "đơn". Rỗng => ẩn. */
+  /** Nhãn đầy đủ cho screen reader — phải khớp toàn bộ chữ nhìn thấy (WCAG 2.5.3). */
+  clickableLabel = computed(() => {
+    const parts = [this.label(), this.value()];
+    if (this.unit()) parts.push(this.unit());
+    if (this.caption()) parts.push(this.caption());
+    if (this.trendText()) parts.push(this.trendText());
+    parts.push('lọc nhanh');
+    return parts.join(' ');
+  });
   unit = input<string>('');
   /** Tỉ lệ % 0–100 cho thanh ngang dưới thẻ; null => không hiện thanh. */
   meter = input<number | null>(null);

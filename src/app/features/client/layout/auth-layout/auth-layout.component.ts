@@ -56,8 +56,8 @@ import { MatIconModule } from '@angular/material/icon';
         </svg>
       </aside>
 
-      <!-- Panel form -->
-      <div class="flex items-center justify-center px-4 py-10 bg-slate-50 dark:bg-slate-950">
+      <!-- Panel form: <main> để mọi trang auth có landmark chính. -->
+      <main class="flex items-center justify-center px-4 py-10 bg-slate-50 dark:bg-slate-950">
         <div class="w-full max-w-[424px]">
           <a routerLink="/" class="lg:hidden inline-flex items-center gap-2 mb-6">
             <mat-icon class="!w-7 !h-7 !text-3xl text-primary-600">laptop_chromebook</mat-icon>
@@ -70,7 +70,7 @@ import { MatIconModule } from '@angular/material/icon';
             <router-outlet />
           </div>
         </div>
-      </div>
+      </main>
     </div>
   `,
   styles: [

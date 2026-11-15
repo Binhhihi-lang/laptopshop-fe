@@ -2,9 +2,11 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiService } from './api.service';
 import { API_ENDPOINTS } from '@core/utils/constants';
+import { Page } from '@core/models/page.model';
 import {
   PromotionCreationRequest,
   PromotionResponse,
+  PromotionSummary,
   PromotionUpdateRequest,
 } from '@core/models/promotion.model';
 
@@ -16,6 +18,34 @@ export class PromotionService {
 
   getPromotions(): Observable<PromotionResponse[]> {
     return this.api.get<PromotionResponse[]>(this.apiUrl);
+  }
+
+  /** Danh sách quản trị có phân trang — lọc/sắp xếp ở DB. */
+  getPromotionPage(params: {
+    keyword?: string;
+    active?: boolean;
+    timeState?: 'running' | 'upcoming' | 'ended';
+    discountType?: 'PERCENT' | 'AMOUNT';
+    scopeType?: 'ALL' | 'CATEGORY' | 'BRAND' | 'PRODUCT';
+    page?: number;
+    size?: number;
+    sort?: string;
+  }): Observable<Page<PromotionResponse>> {
+    return this.api.get<Page<PromotionResponse>>(`${this.apiUrl}/page`, {
+      keyword: params.keyword,
+      active: params.active,
+      timeState: params.timeState,
+      discountType: params.discountType,
+      scopeType: params.scopeType,
+      page: params.page ?? 0,
+      size: params.size ?? 20,
+      sort: params.sort ?? 'createdAt,desc',
+    });
+  }
+
+  /** Số liệu toàn bảng cho dải thẻ KPI (trang chỉ còn 1 trang dữ liệu). */
+  getPromotionSummary(): Observable<PromotionSummary> {
+    return this.api.get<PromotionSummary>(`${this.apiUrl}/summary`);
   }
 
   getPromotionById(id: string): Observable<PromotionResponse> {

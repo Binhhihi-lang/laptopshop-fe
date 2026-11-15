@@ -11,7 +11,7 @@ import { Component, input, computed } from '@angular/core';
     <span class="inline-flex items-baseline gap-1.5 font-mono tabular-nums">
       <span [class]="currentClass()">{{ format(price()) }}</span>
       @if (showOriginal()) {
-        <span class="text-sm text-slate-400 line-through">{{ format(originalPrice()!) }}</span>
+        <span class="text-sm text-slate-500 line-through">{{ format(originalPrice()!) }}</span>
       }
     </span>
   `,

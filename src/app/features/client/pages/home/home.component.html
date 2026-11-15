@@ -1,4 +1,9 @@
 <div class="bg-white dark:bg-slate-950">
+  <!-- Khi có banner, carousel chỉ có h2 (tiêu đề slide) nên trang thiếu h1 —
+       heading-order của Lighthouse báo lỗi. h1 ẩn giữ đúng cấu trúc ngữ nghĩa. -->
+  @if (banners().length > 0) {
+    <h1 class="sr-only">LaptopShop — Laptop chính hãng, giá tốt mỗi ngày</h1>
+  }
   <!-- Banner carousel do admin cấu hình; chưa có banner nào thì rơi về hero mặc định -->
   @if (banners().length > 0) {
     <app-home-banner-carousel [banners]="banners()" />
@@ -71,7 +76,8 @@
   }
 
   @if (isLoading()) {
-    <div class="max-w-7xl mx-auto px-4 py-12">
+    <!-- Giữ chỗ đủ cao để footer không bị đẩy xuống khi dữ liệu về (CLS). -->
+    <div class="max-w-7xl mx-auto px-4 py-12 min-h-screen">
       <app-loading text="Đang tải..."></app-loading>
     </div>
   } @else {
@@ -104,9 +110,12 @@
         </div>
 
         <div
-          #brandTrack
+          #brandScroller
           class="carousel-track flex gap-3.5 overflow-x-auto snap-x snap-mandatory pb-3.5 cursor-grab"
-          (pointerdown)="onDragStart($event)"
+          role="region"
+          aria-label="Danh sách thương hiệu"
+          tabindex="0"
+          (pointerdown)="onDragStart($event, brandScroller)"
           (pointermove)="onDragMove($event)"
           (pointerup)="onDragEnd()"
           (pointercancel)="onDragEnd()"
@@ -130,18 +139,52 @@
     <!-- Nhu cầu sử dụng -->
     @if (categories().length > 0) {
       <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-9 pt-1.5">
-        <div class="mb-4">
-          <span class="text-xs font-semibold uppercase tracking-wider text-primary-600">Danh mục</span>
-          <h2 class="text-2xl font-bold text-slate-900 dark:text-white mt-1.5">Chọn theo nhu cầu</h2>
+        <div class="flex items-end justify-between gap-3 mb-4">
+          <div>
+            <span class="text-xs font-semibold uppercase tracking-wider text-primary-600">Danh mục</span>
+            <h2 class="text-2xl font-bold text-slate-900 dark:text-white mt-1.5">Chọn theo nhu cầu</h2>
+          </div>
+          <div class="flex gap-2">
+            <button
+              type="button"
+              class="car-btn"
+              (click)="scrollCategories(-1)"
+              aria-label="Danh mục trước"
+            >
+              <mat-icon>chevron_left</mat-icon>
+            </button>
+            <button
+              type="button"
+              class="car-btn"
+              (click)="scrollCategories(1)"
+              aria-label="Danh mục sau"
+            >
+              <mat-icon>chevron_right</mat-icon>
+            </button>
+          </div>
         </div>
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3.5">
+
+        <div
+          #categoryScroller
+          class="carousel-track flex gap-3.5 overflow-x-auto snap-x snap-mandatory pb-3.5 cursor-grab"
+          role="region"
+          aria-label="Danh sách danh mục"
+          tabindex="0"
+          (pointerdown)="onDragStart($event, categoryScroller)"
+          (pointermove)="onDragMove($event)"
+          (pointerup)="onDragEnd()"
+          (pointercancel)="onDragEnd()"
+        >
           @for (cat of categories(); track cat.id) {
-            <app-category-tile
-              [category]="cat"
-              [tint]="categoryTint($index)"
-              [icon]="categoryIcon($index)"
-              (select)="goCategory(cat)"
-            />
+            <div class="flex-none w-[152px] snap-start">
+              <app-category-tile
+                class="block w-full"
+                [category]="cat"
+                [tint]="categoryTint($index)"
+                [icon]="categoryIcon($index)"
+                (select)="goCategory(cat)"
+              />
+            </div>
           }
         </div>
       </section>
@@ -196,7 +239,9 @@
     }
   }
 
-  <!-- Cam kết chính hãng — đặt sát footer, phóng to thành dải nổi bật -->
+  <!-- Cam kết chính hãng — chỉ render khi đã tải xong. Nếu hiện sớm, nội dung
+       phía trên đẩy nó xuống và tạo layout shift lớn (CLS đo được 0.266). -->
+  @if (!isLoading()) {
   <section
     class="mt-14 mb-14 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"
     aria-label="Cam kết của LaptopShop"
@@ -230,4 +275,5 @@
       </div>
     </div>
   </section>
+  }
 </div>

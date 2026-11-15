@@ -7,7 +7,10 @@ import {
   ViewChild,
   TemplateRef,
   AfterViewInit,
+  DestroyRef,
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Subject, debounceTime } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Router, RouterModule } from '@angular/router';
@@ -16,7 +19,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { NotificationService } from '@core/services/notification.service';
 import { VoucherService } from '@core/services/voucher.service';
 import { AuthService } from '@core/services/auth.service';
-import { VoucherResponse, VoucherType } from '@core/models/voucher.model';
+import { VoucherResponse, VoucherSummary, VoucherType } from '@core/models/voucher.model';
 import { TableComponent, Column, TableAction } from '@shared/components/table/table.component';
 import { ConfirmDialogComponent } from '@shared/confirm-dialog/confirm-dialog.component';
 import { CardComponent } from '@shared/components/card/card.component';
@@ -70,6 +73,28 @@ export class VouchersComponent implements OnInit, AfterViewInit {
   isLoading = signal(false);
   isBulkDeleting = signal(false);
   permissionDenied = signal<boolean>(false);
+
+  // Phân trang phía server: danh sách chỉ còn 1 trang dữ liệu trong bộ nhớ.
+  readonly pageSize = 20;
+  currentPage = signal(0);
+  totalPages = signal(0);
+  totalElements = signal(0);
+
+  /** Số liệu toàn bảng cho 4 thẻ KPI — trang không còn giữ toàn bộ voucher. */
+  summary = signal<VoucherSummary | null>(null);
+
+  private readonly destroyRef = inject(DestroyRef);
+  /** Gõ tìm kiếm liên tục không nên bắn 1 request/ký tự. */
+  private readonly searchInput$ = new Subject<void>();
+
+  constructor() {
+    this.searchInput$
+      .pipe(debounceTime(300), takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        this.currentPage.set(0);
+        this.loadData();
+      });
+  }
 
   searchTerm = signal('');
   statusFilter = signal<'all' | 'running' | 'soon' | 'ended' | 'paused'>('all');
@@ -168,89 +193,99 @@ export class VouchersComponent implements OnInit, AfterViewInit {
   loadData() {
     this.isLoading.set(true);
     this.permissionDenied.set(false);
-    this.voucherService.getVouchers().subscribe({
-      next: (vouchers) => {
-        this.vouchers.set(vouchers);
-        this.applyFilter();
-        this.isLoading.set(false);
-      },
-      error: (error) => {
-        if (error instanceof HttpErrorResponse && error.status === 403) {
-          this.permissionDenied.set(true);
-        }
-        this.isLoading.set(false);
-      },
+    // Bộ lọc có giá trị 'all' ở UI nhưng API chỉ nhận giá trị thật.
+    const status = this.statusFilter();
+    const statusParam = status === 'all' ? undefined : status;
+    const kind = this.discountTypeFilter();
+    const discountParam = kind === 'all' ? undefined : kind === 'PERCENT' ? 'percent' : 'amount';
+    const vType = this.voucherTypeFilter();
+    const typeParam = vType === 'all' ? undefined : vType;
+    this.voucherService
+      .getVoucherPage({
+        keyword: this.searchTerm().trim() || undefined,
+        status: statusParam,
+        discountKind: discountParam,
+        voucherType: typeParam,
+        page: this.currentPage(),
+        size: this.pageSize,
+        sort: this.buildSortParam(),
+      })
+      .subscribe({
+        next: (page) => {
+          this.vouchers.set(page.content);
+          this.totalElements.set(page.totalElements);
+          this.totalPages.set(page.totalPages);
+          this.currentPage.set(page.number);
+          // Danh sách đã lọc ở server; ở đây chỉ đồng bộ lại để template đọc.
+          this.filteredVouchers.set(page.content);
+          this.isLoading.set(false);
+        },
+        error: (error) => {
+          if (error instanceof HttpErrorResponse && error.status === 403) {
+            this.permissionDenied.set(true);
+          }
+          this.isLoading.set(false);
+        },
+      });
+    this.loadSummary();
+  }
+
+  /** KPI tính trên toàn bảng nên gọi riêng, không phụ thuộc trang hiện tại. */
+  private loadSummary(): void {
+    this.voucherService.getVoucherSummary().subscribe({
+      next: (summary) => this.summary.set(summary),
+      error: () => {},
     });
   }
 
-  applyFilter() {
-    let filtered = this.vouchers();
+  /** Cột bảng -> field entity để BE sắp xếp; cột không map được dùng mặc định. */
+  private buildSortParam(): string {
+    const sortFieldMap: Record<string, string> = { code: 'code' };
+    const field = sortFieldMap[this.sortColumn()];
+    return field ? `${field},${this.sortDirection()}` : 'createdAt,desc';
+  }
 
-    const term = this.searchTerm().trim().toLowerCase();
-    if (term) {
-      filtered = filtered.filter(
-        (c) =>
-          c.code.toLowerCase().includes(term) ||
-          (c.title ?? '').toLowerCase().includes(term),
-      );
+  goToPage(page: number): void {
+    if (page < 0 || page >= this.totalPages() || page === this.currentPage()) {
+      return;
     }
+    this.currentPage.set(page);
+    this.loadData();
+  }
 
-    const status = this.statusFilter();
-    if (status !== 'all') {
-      filtered = filtered.filter((c) => this.statusKey(c) === status);
-    }
+  /** app-table phát số trang 1-based; goToPage nhận 0-based. */
+  onPageChange(page: number): void {
+    this.goToPage(page - 1);
+  }
 
-    const dType = this.discountTypeFilter();
-    if (dType !== 'all') {
-      filtered = filtered.filter((c) => this.discountKind(c) === dType);
-    }
-
-    const vType = this.voucherTypeFilter();
-    if (vType !== 'all') {
-      filtered = filtered.filter((c) => this.voucherTypeOf(c) === vType);
-    }
-
-    const sortCol = this.sortColumn();
-    const sortDir = this.sortDirection();
-    if (sortCol) {
-      filtered = [...filtered].sort((a, b) => {
-        let aVal: any = (a as any)[sortCol];
-        let bVal: any = (b as any)[sortCol];
-        if (sortCol === 'expiryDate') {
-          aVal = aVal ? new Date(aVal).getTime() : 0;
-          bVal = bVal ? new Date(bVal).getTime() : 0;
-        }
-        if (aVal === bVal) return 0;
-        const result = aVal > bVal ? 1 : -1;
-        return sortDir === 'asc' ? result : -result;
-      });
-    }
-
-    this.filteredVouchers.set(filtered);
+  /** Mọi đổi bộ lọc đều quay về trang đầu rồi nạp lại từ server. */
+  private reloadFromFirstPage(): void {
+    this.currentPage.set(0);
+    this.loadData();
   }
 
   onSearchChange() {
-    this.applyFilter();
+    this.searchInput$.next();
   }
 
   setStatusFilter(status: 'all' | 'running' | 'soon' | 'ended' | 'paused') {
     if (this.statusFilter() !== status) {
       this.statusFilter.set(status);
-      this.applyFilter();
+      this.reloadFromFirstPage();
     }
   }
 
   setDiscountTypeFilter(type: 'all' | 'PERCENT' | 'AMOUNT') {
     if (this.discountTypeFilter() !== type) {
       this.discountTypeFilter.set(type);
-      this.applyFilter();
+      this.reloadFromFirstPage();
     }
   }
 
   setVoucherTypeFilter(type: 'all' | VoucherType) {
     if (this.voucherTypeFilter() !== type) {
       this.voucherTypeFilter.set(type);
-      this.applyFilter();
+      this.reloadFromFirstPage();
     }
   }
 
@@ -259,7 +294,9 @@ export class VouchersComponent implements OnInit, AfterViewInit {
     this.statusFilter.set('all');
     this.discountTypeFilter.set('all');
     this.voucherTypeFilter.set('all');
-    this.applyFilter();
+    // Từ khóa lọc ở server nên phải tải lại trang đầu.
+    this.currentPage.set(0);
+    this.loadData();
   }
 
   hasActiveFilters(): boolean {
@@ -271,46 +308,47 @@ export class VouchersComponent implements OnInit, AfterViewInit {
     );
   }
 
-  // ===== KPI =====
+  // ===== KPI (tính trên toàn bảng qua /summary) =====
 
-  runningCount = computed(
-    () => this.vouchers().filter((v) => this.statusKey(v) === 'running').length,
-  );
+  summaryTotal = computed(() => this.summary()?.total ?? 0);
 
-  soonCount = computed(() => this.vouchers().filter((v) => this.statusKey(v) === 'soon').length);
+  runningCount = computed(() => this.summary()?.running ?? 0);
 
-  pausedCount = computed(
-    () => this.vouchers().filter((v) => this.statusKey(v) === 'paused').length,
-  );
+  soonCount = computed(() => this.summary()?.soon ?? 0);
+
+  pausedCount = computed(() => this.summary()?.paused ?? 0);
 
   /** Tổng lượt đã dùng / tổng lượt phát — thanh meter ở thẻ KPI. */
-  totalUsed = computed(() => this.vouchers().reduce((s, v) => s + (v.usedCount ?? 0), 0));
+  totalUsed = computed(() => this.summary()?.usedTotal ?? 0);
 
-  totalLimit = computed(() => this.vouchers().reduce((s, v) => s + (v.usageLimit ?? 0), 0));
+  totalLimit = computed(() => this.summary()?.limitTotal ?? 0);
 
   usedPercent = computed(() => {
     const limit = this.totalLimit();
     return limit > 0 ? Math.min(100, Math.round((this.totalUsed() / limit) * 100)) : 0;
   });
 
-  /** Phân bố kiểu phát hành, hiện ở dòng phụ thẻ "Tổng voucher". */
   /** % voucher đang chạy — chân thẻ KPI. */
   runningPercent = computed(() => {
-    const total = this.vouchers().length;
+    const total = this.summaryTotal();
     return total > 0 ? Math.round((this.runningCount() / total) * 100) : 0;
   });
 
   /** % voucher chưa bị tạm dừng — chân thẻ "Tổng N voucher". */
   notPausedPercent = computed(() => {
-    const total = this.vouchers().length;
+    const total = this.summaryTotal();
     return total > 0 ? Math.round(((total - this.pausedCount()) / total) * 100) : 0;
   });
 
   typeBreakdown = computed(() => {
-    const publicCount = this.vouchers().filter((v) => this.voucherTypeOf(v) === 'PUBLIC').length;
-    const assigned = this.vouchers().filter((v) => this.voucherTypeOf(v) === 'ASSIGNED').length;
-    const parts: string[] = [`${publicCount} công khai`];
-    if (assigned > 0) parts.push(`${assigned} gán`);
+    const s = this.summary();
+    if (!s) {
+      return '';
+    }
+    const parts: string[] = [`${s.publicCount} công khai`];
+    if (s.assignedCount > 0) {
+      parts.push(`${s.assignedCount} gán`);
+    }
     return parts.join(' · ');
   });
 
@@ -352,7 +390,7 @@ export class VouchersComponent implements OnInit, AfterViewInit {
     });
   }
 
-  /** Xuất danh sách đang lọc ra CSV — mở bằng Excel. */
+  /** Xuất các dòng đang thấy trên TRANG HIỆN TẠI ra CSV — mở bằng Excel. */
   exportCsv(): void {
     const rows = this.filteredVouchers();
     if (rows.length === 0) {
@@ -414,7 +452,8 @@ export class VouchersComponent implements OnInit, AfterViewInit {
   onSort(sortData: { column: string; direction: 'asc' | 'desc' }): void {
     this.sortColumn.set(sortData.column);
     this.sortDirection.set(sortData.direction);
-    this.applyFilter();
+    this.currentPage.set(0);
+    this.loadData();
   }
 
   selectedVouchers = computed(() =>

@@ -32,8 +32,8 @@
     </ul>
   </aside>
 
-  <!-- Panel form -->
-  <div class="flex items-center justify-center px-4 py-10 bg-slate-50 dark:bg-slate-950">
+  <!-- Panel form: dùng <main> để trang có landmark chính (a11y). -->
+  <main class="flex items-center justify-center px-4 py-10 bg-slate-50 dark:bg-slate-950">
     <div class="w-full max-w-[400px]">
       <div class="lg:hidden inline-flex items-center gap-2 mb-6">
         <mat-icon class="!w-7 !h-7 !text-3xl text-primary-600">admin_panel_settings</mat-icon>
@@ -90,8 +90,8 @@
             ></app-input>
           </app-form-field>
 
-          @if (errorMessage) {
-            <p class="text-sm text-danger-600" role="alert">{{ errorMessage }}</p>
+          @if (errorMessage()) {
+            <p class="text-sm text-danger-600" role="alert">{{ errorMessage() }}</p>
           }
 
           <app-button
@@ -100,16 +100,16 @@
             variant="primary"
             size="lg"
             class="w-full"
-            [loading]="loading"
-            [disabled]="loading"
+            [loading]="loading()"
+            [disabled]="loading()"
           ></app-button>
         </form>
       </div>
 
-      <p class="text-xs text-slate-400 text-center mt-4">
+      <p class="text-xs text-slate-500 text-center mt-4">
         Không phải quản trị viên?
-        <a routerLink="/login" class="text-primary-600 hover:underline">Về trang khách hàng</a>
+        <a routerLink="/login" class="text-primary-600 underline">Về trang khách hàng</a>
       </p>
     </div>
-  </div>
+  </main>
 </div>

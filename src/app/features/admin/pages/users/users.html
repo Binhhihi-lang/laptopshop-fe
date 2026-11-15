@@ -1,11 +1,11 @@
 <!-- Users Page - Modern Clean with Tailwind using Shared Components -->
 <div class="users-container min-h-screen bg-slate-50 dark:bg-slate-950">
   <!-- Page Header -->
-  <div class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-16 z-[90]">
+  <div class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
     <div class="max-w-screen-2xl mx-auto px-4 md:px-6 lg:px-8 py-4">
       <app-page-header
         title="Quản lý người dùng"
-        [subtitle]="'Tìm kiếm, lọc và quản lý tài khoản người dùng (' + filteredUsers().length + '/' + users().length + ')'"
+        [subtitle]="'Tìm kiếm, lọc và quản lý tài khoản người dùng (' + totalElements() + ' tài khoản)'"
         [hasActions]="true"
       >
         <app-button
@@ -127,7 +127,7 @@
         />
       } @else {
         <app-table
-          [data]="filteredUsers()"
+          [data]="users()"
         [columns]="columns()"
         [loading]="isLoading()"
         [loadingText]="'Đang tải người dùng...'"
@@ -135,6 +135,14 @@
         [trackByFn]="trackByUserId"
         [selectable]="true"
         [rowClickable]="true"
+        [sortColumn]="sortColumn()"
+        [sortDirection]="sortDirection()"
+        (sortChange)="onSort($event)"
+        [paginated]="true"
+        [currentPage]="currentPage() + 1"
+        [pageSize]="pageSize"
+        [totalItems]="totalElements()"
+        (pageChange)="onPageChange($event)"
         (rowClick)="viewUser($event)"
         [selectedRows]="selectedUsers()"
         (selectionChange)="onSelectionChange($event)"

@@ -13,24 +13,26 @@ const TINT = ['#7c3aed', '#2563eb', '#0891b2', '#0d9488', '#4f46e5', '#d97706'];
   template: `
     <button
       type="button"
-      class="cat-tile w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 flex flex-col items-center gap-2.5 hover:shadow-md hover:border-primary-500 hover:-translate-y-0.5 transition-all"
+      class="cat-tile w-full h-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 flex flex-col items-center justify-start gap-2.5 hover:shadow-md hover:border-primary-500 hover:-translate-y-0.5 transition-all"
       (click)="select.emit()"
     >
       <span
-        class="w-[42px] h-[42px] rounded-lg flex items-center justify-center text-white"
+        class="w-[42px] h-[42px] shrink-0 rounded-lg flex items-center justify-center text-white"
         [style.background]="tint()"
       >
         <mat-icon class="!w-6 !h-6 !text-[22px] !leading-none">{{ icon() }}</mat-icon>
       </span>
-      <span class="text-xs font-semibold text-slate-700 dark:text-slate-200 text-center leading-snug">{{
-        category().name
-      }}</span>
+      <span
+        class="text-xs font-semibold text-slate-700 dark:text-slate-200 text-center leading-snug line-clamp-2 min-h-[2rem] flex items-center"
+        >{{ category().name }}</span
+      >
     </button>
   `,
   styles: [
     `
       :host {
         display: block;
+        height: 100%;
       }
     `,
   ],

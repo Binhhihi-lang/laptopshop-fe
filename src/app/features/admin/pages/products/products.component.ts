@@ -1,5 +1,6 @@
 import {
   Component,
+  DestroyRef,
   OnInit,
   signal,
   computed,
@@ -10,14 +11,16 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule, ReactiveFormsModule, FormControl } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
-import { forkJoin } from 'rxjs';
+import { Subject, debounceTime, forkJoin } from 'rxjs';
 import { ProductService } from '@core/services/product.service';
 import { CategoryService } from '@core/services/category.service';
 import { AuthService } from '@core/services/auth.service';
 import { ProductResponse } from '@core/models/product.model';
 import { CategoryResponse } from '@core/models/category.model';
+import { Page } from '@core/models/page.model';
 import { NotificationService } from '@core/services/notification.service';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
@@ -71,6 +74,7 @@ export class ProductsComponent implements OnInit, AfterViewInit {
   private readonly dialog = inject(MatDialog);
   protected readonly router = inject(Router);
   private readonly authService = inject(AuthService);
+  private readonly destroyRef = inject(DestroyRef);
 
   canDeleteProduct = computed(() => this.authService.hasPermission('DELETE_PRODUCT'));
 
@@ -121,8 +125,14 @@ export class ProductsComponent implements OnInit, AfterViewInit {
     this.categories().map((c) => ({ value: c.id, label: c.name })),
   );
 
-  // Filtered products
-  filteredProducts = signal<ProductResponse[]>([]);
+  // Pagination — trạng thái trang do server trả về, 0-based như Page.number
+  readonly pageSize = 20;
+  currentPage = signal(0);
+  totalPages = signal(0);
+  totalElements = signal(0);
+
+  // Ô tìm kiếm gõ liên tục: gộp 300ms mới gọi API để không bắn request mỗi ký tự
+  private readonly searchInput$ = new Subject<string>();
 
   // Table column templates
   @ViewChild('imageColumn') imageColumn!: TemplateRef<any>;
@@ -169,23 +179,28 @@ export class ProductsComponent implements OnInit, AfterViewInit {
   ];
 
   ngOnInit() {
+    // Gõ tìm kiếm: chờ 300ms rồi mới gọi API trang đầu.
+    this.searchInput$
+      .pipe(debounceTime(300), takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.loadPage(0));
+
     this.loadData();
     this.loadPresets();
   }
 
+  /** Tải lần đầu: danh mục cho bộ lọc + trang đầu tiên. */
   loadData() {
     this.isLoading.set(true);
     this.isLoadingCategories.set(true);
     this.permissionDenied.set(false);
 
     forkJoin({
-      products: this.productService.getProducts(),
+      products: this.productService.getProductsPage(this.buildQuery(0)),
       categories: this.categoryService.getCategories(),
     }).subscribe({
       next: ({ products, categories }) => {
-        this.products.set(products);
         this.categories.set(categories);
-        this.applyFilter();
+        this.applyPage(products);
         this.isLoading.set(false);
         this.isLoadingCategories.set(false);
       },
@@ -200,77 +215,69 @@ export class ProductsComponent implements OnInit, AfterViewInit {
     });
   }
 
-  applyFilter() {
-    let filtered = this.products();
+  /** Lấy một trang theo bộ lọc hiện tại — mọi thay đổi lọc/sắp xếp đều đi qua đây. */
+  loadPage(page: number) {
+    this.isLoading.set(true);
+    this.permissionDenied.set(false);
+    this.productService.getProductsPage(this.buildQuery(page)).subscribe({
+      next: (result) => {
+        // Xoá hết dòng của trang cuối thì lùi về trang trước thay vì hiện bảng rỗng
+        if (result.content.length === 0 && page > 0 && result.totalElements > 0) {
+          this.loadPage(page - 1);
+          return;
+        }
+        this.applyPage(result);
+        this.isLoading.set(false);
+      },
+      error: (error) => {
+        console.error('Error loading products:', error);
+        this.products.set([]);
+        this.isLoading.set(false);
+        if (error instanceof HttpErrorResponse && error.status === 403) {
+          this.permissionDenied.set(true);
+        }
+      },
+    });
+  }
 
-    // Search by name or code
-    const term = this.searchTerm().trim().toLowerCase();
-    if (term) {
-      filtered = filtered.filter(
-        (product) =>
-          (product.name || '').toLowerCase().includes(term) ||
-          (product.code || '').toLowerCase().includes(term),
-      );
-    }
+  private applyPage(result: Page<ProductResponse>) {
+    this.products.set(result.content);
+    this.currentPage.set(result.number);
+    this.totalPages.set(result.totalPages);
+    this.totalElements.set(result.totalElements);
+    this.selectedProductIds.set([]);
+  }
 
-    // Filter by category
-    const catId = this.categoryFilter();
-    if (catId) {
-      filtered = filtered.filter((p) => p.categoryId === catId);
-    }
-
-    // Filter by status
-    if (this.statusFilter() !== 'all') {
-      if (this.statusFilter() === 'active') {
-        filtered = filtered.filter((product) => product.active);
-      } else if (this.statusFilter() === 'inactive') {
-        filtered = filtered.filter((product) => !product.active);
-      }
-    }
-
-    // Filter by stock
+  private buildQuery(page: number) {
+    const status = this.statusFilter();
     const stock = this.stockFilter();
-    if (stock !== 'all') {
-      if (stock === 'out') {
-        filtered = filtered.filter((p) => p.quantity === 0);
-      } else if (stock === 'low') {
-        filtered = filtered.filter((p) => p.quantity > 0 && p.quantity < 5);
-      } else if (stock === 'in') {
-        filtered = filtered.filter((p) => p.quantity >= 5);
-      }
-    }
-
-    // Apply sorting
     const sortCol = this.sortColumn();
-    const sortDir = this.sortDirection();
-    if (sortCol) {
-      filtered = [...filtered].sort((a, b) => {
-        const aVal = (a as any)[sortCol];
-        const bVal = (b as any)[sortCol];
-        if (aVal === bVal) return 0;
-        const result = aVal > bVal ? 1 : -1;
-        return sortDir === 'asc' ? result : -result;
-      });
-    }
-
-    this.filteredProducts.set(filtered);
+    return {
+      keyword: this.searchTerm().trim() || undefined,
+      categoryId: this.categoryFilter() || undefined,
+      active: status === 'all' ? undefined : status === 'active',
+      stockStatus: stock === 'all' ? undefined : stock,
+      page,
+      size: this.pageSize,
+      sort: sortCol ? `${sortCol},${this.sortDirection()}` : 'createdAt,desc',
+    };
   }
 
   onSearchChange() {
-    this.applyFilter();
+    this.searchInput$.next(this.searchTerm());
   }
 
   onCategoryChange(value?: string) {
     if (value !== undefined) {
       this.categoryFilter.set(value);
     }
-    this.applyFilter();
+    this.loadPage(0);
   }
 
   setStatusFilter(status: 'all' | 'active' | 'inactive') {
     if (this.statusFilter() !== status) {
       this.statusFilter.set(status);
-      this.applyFilter();
+      this.loadPage(0);
     }
   }
 
@@ -279,7 +286,7 @@ export class ProductsComponent implements OnInit, AfterViewInit {
     this.statusFilter.set('all');
     this.categoryFilter.set('');
     this.stockFilter.set('all');
-    this.applyFilter();
+    this.loadPage(0);
   }
 
   hasActiveFilters(): boolean {
@@ -337,7 +344,7 @@ export class ProductsComponent implements OnInit, AfterViewInit {
         this.productService.deleteProduct(product.id).subscribe({
           next: () => {
             this.notification.success('Xóa sản phẩm thành công');
-            this.loadData();
+            this.loadPage(this.currentPage());
           },
           error: (error) => {
             console.error('Error deleting product:', error);
@@ -354,11 +361,28 @@ export class ProductsComponent implements OnInit, AfterViewInit {
     );
   }
 
-  // Sorting
+  // Sorting — sắp xếp do server làm, đổi cột là quay về trang đầu
   onSort(sortData: { column: string; direction: 'asc' | 'desc' }): void {
     this.sortColumn.set(sortData.column);
     this.sortDirection.set(sortData.direction);
-    this.applyFilter();
+    this.loadPage(0);
+  }
+
+  onPrevPage(): void {
+    if (this.currentPage() > 0) {
+      this.loadPage(this.currentPage() - 1);
+    }
+  }
+
+  onNextPage(): void {
+    if (this.currentPage() < this.totalPages() - 1) {
+      this.loadPage(this.currentPage() + 1);
+    }
+  }
+
+  /** app-table phát số trang 1-based; state nội bộ 0-based. */
+  onPageChange(page: number): void {
+    this.loadPage(page - 1);
   }
 
   // Selection
@@ -415,7 +439,7 @@ export class ProductsComponent implements OnInit, AfterViewInit {
       this.productService.bulkDeleteProducts(idsToDelete).subscribe({
         next: () => {
           this.notification.success('Xóa sản phẩm thành công');
-          this.loadData();
+          this.loadPage(this.currentPage());
           this.selectedProductIds.set([]);
           this.deletingProductId.set(null);
         },
@@ -444,7 +468,7 @@ export class ProductsComponent implements OnInit, AfterViewInit {
     this.productService.bulkUpdateProductStatus(ids, active).subscribe({
       next: () => {
         this.notification.success(`${active ? 'Kích hoạt' : 'Khóa'} sản phẩm thành công`);
-        this.loadData();
+        this.loadPage(this.currentPage());
         this.selectedProductIds.set([]);
       },
       error: (error) => {
@@ -463,7 +487,7 @@ export class ProductsComponent implements OnInit, AfterViewInit {
     this.productService.bulkUpdateProductStatus([product.id], newActive).subscribe({
       next: () => {
         this.notification.success(`${newActive ? 'Kích hoạt' : 'Khóa'} sản phẩm thành công`);
-        this.loadData();
+        this.loadPage(this.currentPage());
       },
       error: (error) => {
         console.error('Error toggling product status:', error);
@@ -509,7 +533,7 @@ export class ProductsComponent implements OnInit, AfterViewInit {
     this.categoryFilter.set(preset['categoryId'] ?? '');
     this.statusFilter.set(preset['status'] ?? 'all');
     this.stockFilter.set(preset['stock'] ?? 'all');
-    this.applyFilter();
+    this.loadPage(0);
   }
 
   saveCurrentPreset(): void {

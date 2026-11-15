@@ -2,11 +2,13 @@ import { Injectable } from '@angular/core';
 import { ApiService } from './api.service';
 import { API_ENDPOINTS } from '@core/utils/constants';
 import { Observable } from 'rxjs';
+import { Page } from '@core/models/page.model';
 import {
   VoucherResponse,
   VoucherCreationRequest,
   VoucherUpdateRequest,
   VoucherHolderResponse,
+  VoucherSummary,
 } from '@core/models/voucher.model';
 
 @Injectable({
@@ -19,6 +21,34 @@ export class VoucherService {
 
   getVouchers(): Observable<VoucherResponse[]> {
     return this.api.get<VoucherResponse[]>(this.apiUrl);
+  }
+
+  /** Danh sách quản trị có phân trang — lọc/sắp xếp ở DB. */
+  getVoucherPage(params: {
+    keyword?: string;
+    active?: boolean;
+    status?: 'running' | 'soon' | 'ended' | 'paused';
+    discountKind?: 'percent' | 'amount';
+    voucherType?: 'PUBLIC' | 'ASSIGNED';
+    page?: number;
+    size?: number;
+    sort?: string;
+  }): Observable<Page<VoucherResponse>> {
+    return this.api.get<Page<VoucherResponse>>(`${this.apiUrl}/page`, {
+      keyword: params.keyword,
+      active: params.active,
+      status: params.status,
+      discountKind: params.discountKind,
+      voucherType: params.voucherType,
+      page: params.page ?? 0,
+      size: params.size ?? 20,
+      sort: params.sort ?? 'createdAt,desc',
+    });
+  }
+
+  /** Số liệu toàn bảng cho dải thẻ KPI (trang chỉ còn 1 trang dữ liệu). */
+  getVoucherSummary(): Observable<VoucherSummary> {
+    return this.api.get<VoucherSummary>(`${this.apiUrl}/summary`);
   }
 
   getVoucherById(id: string): Observable<VoucherResponse> {

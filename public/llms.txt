@@ -1,0 +1,33 @@
+# LaptopShop
+
+> Cửa hàng laptop chính hãng tại Việt Nam. Bán laptop gaming, văn phòng, đồ hoạ
+> từ Asus, Dell, HP, Lenovo, MSI, Acer, Apple; giao hàng toàn quốc, bảo hành
+> 12–24 tháng, hỗ trợ trả góp.
+
+Trang khách hàng dùng tiếng Việt. Khu vực quản trị (`/admin`) yêu cầu đăng nhập
+và không dành cho khách truy cập.
+
+## Trang chính
+
+- [Trang chủ](https://laptopshop-7yl2.onrender.com/): banner khuyến mại, flash sale, sản phẩm mới và bán chạy, danh mục theo nhu cầu.
+- [Danh sách sản phẩm](https://laptopshop-7yl2.onrender.com/products): lọc theo từ khoá, danh mục, hãng, khoảng giá; sắp xếp theo mới nhất / bán chạy / giá.
+- [Giỏ hàng](https://laptopshop-7yl2.onrender.com/cart): xem và sửa số lượng trước khi thanh toán.
+- [Thanh toán](https://laptopshop-7yl2.onrender.com/checkout): thông tin giao hàng 2 cấp (Tỉnh/Thành phố → Phường/Xã) và chọn phương thức thanh toán.
+- [Đăng nhập](https://laptopshop-7yl2.onrender.com/login): đăng nhập, đăng ký, quên mật khẩu.
+
+## Tài khoản khách hàng
+
+- [Đơn hàng của tôi](https://laptopshop-7yl2.onrender.com/orders): danh sách đơn và trạng thái giao vận.
+- [Hồ sơ cá nhân](https://laptopshop-7yl2.onrender.com/profile): cập nhật thông tin và đổi mật khẩu.
+- [Ví voucher](https://laptopshop-7yl2.onrender.com/voucher-wallet): voucher đã nhận và còn hiệu lực.
+
+## Thông tin
+
+- [Chính sách bảo hành](https://laptopshop-7yl2.onrender.com/warranty): điều kiện và thời hạn bảo hành.
+- [Hướng dẫn mua hàng](https://laptopshop-7yl2.onrender.com/guide): các bước đặt hàng và thanh toán.
+
+## Ghi chú
+
+- Giá hiển thị bằng đồng Việt Nam (₫), đã gồm thuế.
+- Phí vận chuyển miễn phí cho đơn từ 2.000.000 ₫.
+- Khu vực `/admin` là công cụ nội bộ, nội dung ở đó không phản ánh thông tin bán hàng.

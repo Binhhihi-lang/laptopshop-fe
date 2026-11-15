@@ -97,7 +97,7 @@ export class CardComponent {
           <mat-icon class="w-5 h-5 text-primary shrink-0">{{ icon() }}</mat-icon>
         }
         <div class="min-w-0">
-          <h3 class="text-title font-semibold text-slate-900 dark:text-white">{{ title() }}</h3>
+          <h2 class="text-title font-semibold text-slate-900 dark:text-white">{{ title() }}</h2>
           @if (subtitle()) {
             <p class="text-body-sm text-slate-500 dark:text-slate-400 mt-1">{{ subtitle() }}</p>
           }

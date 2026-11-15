@@ -47,7 +47,8 @@
 }
 
 .seg-btn.on {
-  background: var(--color-primary);
+  /* primary-600 #3b82f6 với chữ trắng chỉ đạt 3.67:1 → dùng shade 700. */
+  background: var(--color-primary-hover);
   color: #fff;
 }
 
@@ -61,12 +62,13 @@
   font-size: 0.75rem;
   font-weight: 600;
   background: var(--color-danger-light);
-  color: var(--color-danger);
+  /* danger (#ef4444) trên nền danger-light chỉ 3.08:1 → dùng shade 700. */
+  color: #b91c1c;
 }
 
 .rev-change.up {
   background: var(--color-success-light);
-  color: var(--color-success);
+  color: #15803d;
 }
 
 .rev-change.neutral {
@@ -272,7 +274,8 @@
   gap: 0.25rem;
   font-size: 0.875rem;
   font-weight: 500;
-  color: var(--color-primary);
+  /* primary-500 trên nền trắng chỉ 3.67:1 → shade 700 đạt 4.5:1. */
+  color: #1d4ed8;
 }
 
 .link-more:hover {

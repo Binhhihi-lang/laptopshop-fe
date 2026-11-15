@@ -119,7 +119,8 @@ export class PromotionDetailComponent implements OnInit {
       this.excludeNames.set([]);
       return;
     }
-    this.productService.getProducts().subscribe({
+    // Tra đúng các id cần hiện tên — trước đây tải toàn bộ sản phẩm chỉ để map id→tên.
+    this.productService.getProductsByIds(ids).subscribe({
       next: (products) => {
         const map = new Map((products ?? []).map((p) => [p.id, p]));
         this.excludeNames.set(

@@ -2,9 +2,11 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiService } from './api.service';
 import { API_ENDPOINTS } from '@core/utils/constants';
+import { Page } from '@core/models/page.model';
 import {
   FlashSaleCreationRequest,
   FlashSaleResponse,
+  FlashSaleSummary,
 } from '@core/models/flash-sale.model';
 
 /**
@@ -21,6 +23,26 @@ export class FlashSaleService {
 
   getFlashSales(): Observable<FlashSaleResponse[]> {
     return this.api.get<FlashSaleResponse[]>(this.adminUrl);
+  }
+
+  /**
+   * Danh sách quản trị có phân trang (BE lọc/sắp xếp ở DB). Dùng cho bảng
+   * thay vì tải toàn bộ phiên khi shop có nhiều đợt flash sale.
+   */
+  getFlashSalePage(params: {
+    keyword?: string;
+    active?: boolean;
+    state?: 'running' | 'upcoming' | 'ended';
+    page: number;
+    size: number;
+    sort?: string;
+  }): Observable<Page<FlashSaleResponse>> {
+    return this.api.getPage<FlashSaleResponse>(`${this.adminUrl}/page`, params);
+  }
+
+  /** Số liệu KPI toàn hệ thống — không phụ thuộc trang đang xem. */
+  getSummary(): Observable<FlashSaleSummary> {
+    return this.api.get<FlashSaleSummary>(`${this.adminUrl}/summary`);
   }
 
   getFlashSaleById(id: string): Observable<FlashSaleResponse> {

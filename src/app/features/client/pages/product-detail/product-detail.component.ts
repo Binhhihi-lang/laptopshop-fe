@@ -6,6 +6,7 @@ import { ClientProductService } from '@core/services/client-product.service';
 import { ClientCartService } from '@core/services/client-cart.service';
 import { ClientAuthService } from '@core/services/client-auth.service';
 import { ProductResponse } from '@core/models/product.model';
+import { cloudinarySrcset } from '@shared/utils/cloudinary-srcset';
 import { NotificationService } from '@core/services/notification.service';
 import {
   BadgeComponent,
@@ -40,6 +41,8 @@ import {
   styleUrl: './product-detail.component.css',
 })
 export class ProductDetailComponent implements OnInit {
+  /** Sinh srcset Cloudinary cho ảnh chính (LCP của trang chi tiết). */
+  readonly cloudinarySrcset = cloudinarySrcset;
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly productService = inject(ClientProductService);

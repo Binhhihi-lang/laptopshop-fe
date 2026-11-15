@@ -1,10 +1,10 @@
 <div class="flash-sales-container min-h-screen bg-slate-50 dark:bg-slate-950">
   <!-- Page Header -->
-  <div class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-16 z-[90]">
+  <div class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
     <div class="max-w-screen-2xl mx-auto px-4 md:px-6 lg:px-8 py-4">
       <app-page-header
         title="Quản lý Flash Sale"
-        [subtitle]="'Phiên giá sốc theo khung giờ (' + filteredFlashSales().length + '/' + flashSales().length + ')'"
+        [subtitle]="'Phiên giá sốc theo khung giờ (' + totalElements() + ' phiên)'"
         [hasActions]="true"
       >
         <app-button
@@ -25,7 +25,7 @@
         icon="bolt"
         iconClass="bg-warning-100 dark:bg-warning-900/40 text-warning-600 dark:text-warning-400"
         label="Phiên hôm nay"
-        [value]="flashSales().length + ''"
+        [value]="summary().total + ''"
         unit="phiên"
         [meter]="sessionsPercent()"
         meterClass="bg-warning-500"
@@ -171,7 +171,7 @@
         />
       } @else {
         <app-table
-          [data]="filteredFlashSales()"
+          [data]="visibleSales()"
           [columns]="columns()"
           [loading]="isLoading()"
           [loadingText]="'Đang tải phiên flash sale...'"
@@ -182,10 +182,15 @@
           [sortColumn]="sortColumn()"
           [sortDirection]="sortDirection()"
           (sortChange)="onSortChange($event)"
+          [paginated]="true"
+          [currentPage]="currentPage() + 1"
+          [pageSize]="pageSize"
+          [totalItems]="totalElements()"
+          (pageChange)="onPageChange($event)"
           [emptyIcon]="'bolt'"
-          [emptyTitle]="'Chưa có phiên flash sale nào'"
-          [emptyDescription]="'Tạo phiên đầu tiên để bắt đầu bán giá sốc'"
-          [emptyActionLabel]="'Tạo phiên flash sale'"
+          [emptyTitle]="hasActiveFilters() ? 'Không có phiên nào khớp bộ lọc' : 'Chưa có phiên flash sale nào'"
+          [emptyDescription]="hasActiveFilters() ? 'Thử đổi bộ lọc hoặc xoá bộ lọc để xem tất cả phiên.' : 'Tạo phiên đầu tiên để bắt đầu bán giá sốc'"
+          [emptyActionLabel]="hasActiveFilters() ? '' : 'Tạo phiên flash sale'"
           [emptyActionIcon]="'add'"
           (emptyActionClick)="createFlashSale()"
         >

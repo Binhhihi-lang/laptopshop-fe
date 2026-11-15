@@ -21,6 +21,52 @@ export class ProductService {
     return this.api.get<ProductResponse[]>(this.apiUrl);
   }
 
+  /**
+   * Danh sách cho trang quản trị — phân trang + lọc ở server.
+   * Trang sản phẩm trước đây tải toàn bộ (hàng chục nghìn dòng) rồi lọc ở
+   * client nên rất chậm; nay mỗi lần đổi lọc chỉ lấy đúng 1 trang.
+   */
+  getProductsPage(params: {
+    keyword?: string;
+    categoryId?: string;
+    active?: boolean;
+    stockStatus?: 'out' | 'low' | 'in';
+    page?: number;
+    size?: number;
+    sort?: string;
+  }): Observable<Page<ProductResponse>> {
+    return this.api.getPage<ProductResponse>(`${this.apiUrl}/page`, {
+      keyword: params.keyword,
+      categoryId: params.categoryId,
+      active: params.active,
+      stockStatus: params.stockStatus,
+      page: params.page ?? 0,
+      size: params.size ?? 20,
+      sort: params.sort,
+    });
+  }
+
+  /** Danh sách hãng duy nhất — thay cho việc tải cả danh sách sản phẩm. */
+  getBrands(): Observable<string[]> {
+    return this.api.get<string[]>(`${this.apiUrl}/brands`);
+  }
+
+  /**
+   * Tra nhiều sản phẩm theo id trong một request.
+   * ids lặp nhiều lần trên query string (`?ids=a&ids=b`) nên tự ghép URL —
+   * ApiService chỉ set một giá trị cho mỗi key.
+   */
+  getProductsByIds(ids: string[]): Observable<ProductResponse[]> {
+    if (!ids.length) {
+      return new Observable<ProductResponse[]>((subscriber) => {
+        subscriber.next([]);
+        subscriber.complete();
+      });
+    }
+    const query = ids.map((id) => `ids=${encodeURIComponent(id)}`).join('&');
+    return this.api.get<ProductResponse[]>(`${this.apiUrl}/by-ids?${query}`);
+  }
+
   getProductById(id: string): Observable<ProductResponse> {
     return this.api.get<ProductResponse>(`${this.apiUrl}/${id}`);
   }

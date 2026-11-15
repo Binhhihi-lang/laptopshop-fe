@@ -1,0 +1,14 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "overused-font",
+        "value": "inter",
+        "createdAt": "2026-11-15T10:39:45.167Z",
+        "reason": "DESIGN.md của dự án khai báo Inter là font display/body chính thức; đổi font nằm ngoài phạm vi sửa lỗi hiệu năng lần này"
+      }
+    ]
+  }
+}

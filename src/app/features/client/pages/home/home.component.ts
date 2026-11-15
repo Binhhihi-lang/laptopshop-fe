@@ -24,8 +24,7 @@ import {
  * - Carousel banner (admin cấu hình) hoặc hero mặc định khi chưa có banner.
  * - Strip flash sale + đếm ngược khi có phiên đang chạy.
  * - Trust strip 4 mục.
- * - Carousel thương hiệu (prev/next + kéo chuột).
- * - Danh mục nổi bật (nhu cầu sử dụng).
+ * - Carousel thương hiệu và danh mục (prev/next + kéo chuột).
  * - Sản phẩm mới (sort createdAt DESC) + Bán chạy (sort=sold,desc).
  */
 @Component({
@@ -52,7 +51,8 @@ export class HomeComponent implements OnInit {
   private readonly bannerService = inject(HomeBannerService);
   private readonly flashSaleService = inject(FlashSaleService);
 
-  private readonly brandTrack = viewChild<ElementRef<HTMLDivElement>>('brandTrack');
+  private readonly brandScroller = viewChild<ElementRef<HTMLDivElement>>('brandScroller');
+  private readonly categoryScroller = viewChild<ElementRef<HTMLDivElement>>('categoryScroller');
 
   // Bảng màu xoay vòng cho ô danh mục (khớp mockup).
   private static readonly CATEGORY_TINTS = [
@@ -129,7 +129,6 @@ export class HomeComponent implements OnInit {
 
   ngOnInit(): void {
     this.load();
-    this.loadBanners();
     this.loadFlashSale();
   }
 
@@ -138,12 +137,6 @@ export class HomeComponent implements OnInit {
    * ẩn khối tương ứng, home vẫn hiện đủ phần còn lại (R20 — không
    * forkJoin-blocking).
    */
-  private loadBanners(): void {
-    this.bannerService.getActiveBanners().subscribe({
-      next: (banners) => this.banners.set(banners),
-      error: () => this.banners.set([]),
-    });
-  }
 
   private loadFlashSale(): void {
     this.flashSaleService.getActive().subscribe({
@@ -178,11 +171,18 @@ export class HomeComponent implements OnInit {
         .getBrands()
         .toPromise()
         .catch(() => [] as string[]),
-    ]).then(([cats, news, bests, brandList]) => {
+      // Banner nằm trong cùng đợt chờ: nếu để API banner về sau, trang hiện hero
+      // mặc định rồi bị thay bằng carousel → layout shift (CLS đo được 0.48).
+      this.bannerService
+        .getActiveBanners()
+        .toPromise()
+        .catch(() => [] as HomeBannerResponse[]),
+    ]).then(([cats, news, bests, brandList, bannerList]) => {
       this.categories.set(cats ?? []);
       this.newProducts.set(news ?? []);
       this.bestSellers.set(bests ?? []);
       this.brands.set(brandList ?? []);
+      this.banners.set(bannerList ?? []);
       this.isLoading.set(false);
     });
   }
@@ -229,41 +229,48 @@ export class HomeComponent implements OnInit {
 
   /** Cuộn carousel thương hiệu theo hướng — 80% bề rộng khung nhìn như mockup. */
   scrollBrands(direction: -1 | 1): void {
-    const el = this.brandTrack()?.nativeElement;
-    if (!el) {
-      return;
-    }
-    el.scrollBy({ left: direction * el.clientWidth * 0.8, behavior: 'smooth' });
+    scrollTrack(this.brandScroller()?.nativeElement, direction);
+  }
+
+  /** Cuộn carousel danh mục theo hướng — cùng nhịp 80% như thương hiệu. */
+  scrollCategories(direction: -1 | 1): void {
+    scrollTrack(this.categoryScroller()?.nativeElement, direction);
   }
 
   // --- Kéo chuột để cuộn carousel ---
   private dragging = false;
   private dragStartX = 0;
   private dragStartScroll = 0;
+  private dragTrack: HTMLElement | null = null;
 
-  onDragStart(event: PointerEvent): void {
-    const el = this.brandTrack()?.nativeElement;
-    if (!el) {
+  onDragStart(event: PointerEvent, track: HTMLElement | null): void {
+    if (!track) {
       return;
     }
     this.dragging = true;
+    this.dragTrack = track;
     this.dragStartX = event.clientX;
-    this.dragStartScroll = el.scrollLeft;
-    el.setPointerCapture(event.pointerId);
+    this.dragStartScroll = track.scrollLeft;
+    track.setPointerCapture(event.pointerId);
   }
 
   onDragMove(event: PointerEvent): void {
-    if (!this.dragging) {
+    if (!this.dragging || !this.dragTrack) {
       return;
     }
-    const el = this.brandTrack()?.nativeElement;
-    if (!el) {
-      return;
-    }
-    el.scrollLeft = this.dragStartScroll - (event.clientX - this.dragStartX);
+    this.dragTrack.scrollLeft = this.dragStartScroll - (event.clientX - this.dragStartX);
   }
 
   onDragEnd(): void {
     this.dragging = false;
+    this.dragTrack = null;
   }
+}
+
+/** Cuộn ngang một track carousel — dùng chung cho thương hiệu và danh mục. */
+function scrollTrack(track: HTMLElement | undefined, direction: -1 | 1): void {
+  if (!track) {
+    return;
+  }
+  track.scrollBy({ left: direction * track.clientWidth * 0.8, behavior: 'smooth' });
 }

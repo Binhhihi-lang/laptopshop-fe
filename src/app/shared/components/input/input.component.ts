@@ -100,7 +100,7 @@ export type InputType =
       }
       @if (suffix()) {
         <span
-          class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
+          class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400 pointer-events-none"
           >{{ suffix() }}</span
         >
       }

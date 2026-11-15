@@ -7,7 +7,10 @@ import {
   inject,
   ViewChild,
   TemplateRef,
+  DestroyRef,
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Subject, debounceTime } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Router, RouterModule } from '@angular/router';
@@ -15,7 +18,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { NotificationService } from '@core/services/notification.service';
 import { PromotionService } from '@core/services/promotion.service';
 import { AuthService } from '@core/services/auth.service';
-import { PromotionResponse } from '@core/models/promotion.model';
+import { PromotionResponse, PromotionSummary } from '@core/models/promotion.model';
 import { TableComponent, Column, TableAction } from '@shared/components/table/table.component';
 import { CardComponent } from '@shared/components/card/card.component';
 import { BadgeComponent } from '@shared/components/badge/badge.component';
@@ -71,6 +74,28 @@ export class PromotionsComponent implements OnInit, AfterViewInit {
   isLoading = signal(false);
   permissionDenied = signal<boolean>(false);
   isBulkRunning = signal(false);
+
+  // Phân trang phía server: danh sách chỉ còn 1 trang dữ liệu trong bộ nhớ.
+  readonly pageSize = 20;
+  currentPage = signal(0);
+  totalPages = signal(0);
+  totalElements = signal(0);
+
+  /** Số liệu toàn bảng cho 4 thẻ KPI — trang không còn giữ toàn bộ chương trình. */
+  summary = signal<PromotionSummary | null>(null);
+
+  private readonly destroyRef = inject(DestroyRef);
+  /** Gõ tìm kiếm liên tục không nên bắn 1 request/ký tự. */
+  private readonly searchInput$ = new Subject<void>();
+
+  constructor() {
+    this.searchInput$
+      .pipe(debounceTime(300), takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        this.currentPage.set(0);
+        this.loadData();
+      });
+  }
 
   searchTerm = signal('');
   statusFilter = signal<'all' | 'active' | 'inactive'>('all');
@@ -163,96 +188,125 @@ export class PromotionsComponent implements OnInit, AfterViewInit {
   loadData(): void {
     this.isLoading.set(true);
     this.permissionDenied.set(false);
-    this.promotionService.getPromotions().subscribe({
-      next: (promotions) => {
-        this.promotions.set(promotions);
-        this.applyFilter();
-        this.isLoading.set(false);
-      },
-      error: (error) => {
-        if (error instanceof HttpErrorResponse && error.status === 403) {
-          this.permissionDenied.set(true);
-        } else {
-          this.notification.error(this.notification.extractError(error));
-        }
-        this.isLoading.set(false);
-      },
+    // UI dùng 'all' cho "không lọc"; API chỉ nhận giá trị thật.
+    const time = this.timeFilter();
+    const timeParam = time === 'all' ? undefined : time;
+    const dType = this.discountTypeFilter();
+    const discountParam = dType === 'all' ? undefined : dType;
+    const scope = this.scopeFilter();
+    const scopeParam = scope === 'all' ? undefined : scope;
+    this.promotionService
+      .getPromotionPage({
+        keyword: this.searchTerm().trim() || undefined,
+        active: this.activeParam(),
+        timeState: timeParam,
+        discountType: discountParam,
+        scopeType: scopeParam,
+        page: this.currentPage(),
+        size: this.pageSize,
+        sort: this.buildSortParam(),
+      })
+      .subscribe({
+        next: (page) => {
+          this.promotions.set(page.content);
+          this.totalElements.set(page.totalElements);
+          this.totalPages.set(page.totalPages);
+          this.currentPage.set(page.number);
+          // Server đã lọc; chỉ đồng bộ để template đọc chung một nguồn.
+          this.filteredPromotions.set(page.content);
+          this.isLoading.set(false);
+        },
+        error: (error) => {
+          if (error instanceof HttpErrorResponse && error.status === 403) {
+            this.permissionDenied.set(true);
+          } else {
+            this.notification.error(this.notification.extractError(error));
+          }
+          this.isLoading.set(false);
+        },
+      });
+    this.loadSummary();
+  }
+
+  /** Bộ lọc "Đang bật / Đã tắt" map thẳng sang cờ active của BE. */
+  private activeParam(): boolean | undefined {
+    const status = this.statusFilter();
+    if (status === 'active') {
+      return true;
+    }
+    if (status === 'inactive') {
+      return false;
+    }
+    return undefined;
+  }
+
+  /** KPI tính trên toàn bảng nên gọi riêng, không phụ thuộc trang hiện tại. */
+  private loadSummary(): void {
+    this.promotionService.getPromotionSummary().subscribe({
+      next: (summary) => this.summary.set(summary),
+      error: () => {},
     });
   }
 
-  applyFilter(): void {
-    let filtered = this.promotions();
+  /** Cột bảng -> field entity để BE sắp xếp; cột không map được dùng mặc định. */
+  private buildSortParam(): string {
+    const sortFieldMap: Record<string, string> = { name: 'name', period: 'startDate' };
+    const field = sortFieldMap[this.sortColumn()];
+    return field ? `${field},${this.sortDirection()}` : 'createdAt,desc';
+  }
 
-    const term = this.searchTerm().trim().toLowerCase();
-    if (term) {
-      filtered = filtered.filter(
-        (p) => p.name.toLowerCase().includes(term) || p.title?.toLowerCase().includes(term),
-      );
+  goToPage(page: number): void {
+    if (page < 0 || page >= this.totalPages() || page === this.currentPage()) {
+      return;
     }
+    this.currentPage.set(page);
+    this.loadData();
+  }
 
-    const status = this.statusFilter();
-    if (status !== 'all') {
-      filtered = filtered.filter((p) => (status === 'active' ? p.active : !p.active));
-    }
+  /** app-table phát số trang 1-based; goToPage nhận 0-based. */
+  onPageChange(page: number): void {
+    this.goToPage(page - 1);
+  }
 
-    const time = this.timeFilter();
-    if (time !== 'all') {
-      filtered = filtered.filter((p) => this.timeState(p) === time);
-    }
-
-    const dType = this.discountTypeFilter();
-    if (dType !== 'all') {
-      filtered = filtered.filter((p) => p.discountType === dType);
-    }
-
-    const scope = this.scopeFilter();
-    if (scope !== 'all') {
-      filtered = filtered.filter((p) => (p.scopeType ?? 'ALL') === scope);
-    }
-
-    const sortCol = this.sortColumn();
-    const sortDir = this.sortDirection();
-    if (sortCol) {
-      filtered = [...filtered].sort((a, b) => {
-        const aVal = sortCol === 'period' ? new Date(a.startDate).getTime() : (a as never)[sortCol];
-        const bVal = sortCol === 'period' ? new Date(b.startDate).getTime() : (b as never)[sortCol];
-        if (aVal === bVal) return 0;
-        const result = aVal > bVal ? 1 : -1;
-        return sortDir === 'asc' ? result : -result;
-      });
-    }
-
-    this.filteredPromotions.set(filtered);
+  /** Đổi bộ lọc → quay về trang đầu và nạp lại từ server. */
+  private reloadFromFirstPage(): void {
+    this.currentPage.set(0);
+    this.loadData();
   }
 
   onSearchChange(): void {
-    this.applyFilter();
+    this.searchInput$.next();
   }
 
   setStatusFilter(status: 'all' | 'active' | 'inactive'): void {
+    if (this.statusFilter() === status) {
+      return;
+    }
     this.statusFilter.set(status);
-    this.applyFilter();
+    this.currentPage.set(0);
+    this.loadData();
   }
 
   setTimeFilter(time: 'all' | 'running' | 'upcoming' | 'ended'): void {
     this.timeFilter.set(time);
-    this.applyFilter();
+    this.reloadFromFirstPage();
   }
 
   setDiscountTypeFilter(type: 'all' | PromotionDiscountType): void {
     this.discountTypeFilter.set(type);
-    this.applyFilter();
+    this.reloadFromFirstPage();
   }
 
   setScopeFilter(scope: 'all' | ScopeType): void {
     this.scopeFilter.set(scope);
-    this.applyFilter();
+    this.reloadFromFirstPage();
   }
 
   onSortChange(event: { column: string; direction: 'asc' | 'desc' }): void {
     this.sortColumn.set(event.column);
     this.sortDirection.set(event.direction);
-    this.applyFilter();
+    this.currentPage.set(0);
+    this.loadData();
   }
 
   onColumnsChange(columns: Column<PromotionResponse>[]): void {
@@ -271,7 +325,9 @@ export class PromotionsComponent implements OnInit, AfterViewInit {
     this.timeFilter.set('all');
     this.discountTypeFilter.set('all');
     this.scopeFilter.set('all');
-    this.applyFilter();
+    // Từ khóa + trạng thái lọc ở server nên phải tải lại trang đầu.
+    this.currentPage.set(0);
+    this.loadData();
   }
 
   hasActiveFilters(): boolean {
@@ -314,59 +370,49 @@ export class PromotionsComponent implements OnInit, AfterViewInit {
     return chips;
   });
 
-  // ===== KPI =====
-  runningCount = computed(() => this.promotions().filter((p) => this.timeState(p) === 'running').length);
+  // ===== KPI (tính trên toàn bảng qua /summary) =====
+
+  summaryTotal = computed(() => this.summary()?.total ?? 0);
+
+  runningCount = computed(() => this.summary()?.running ?? 0);
 
   /** Đếm theo công tắc `active`, KHÁC `runningCount` (đếm theo khung thời gian). */
-  inactiveCount = computed(() => this.promotions().filter((p) => !p.active).length);
+  inactiveCount = computed(() => this.summary()?.inactive ?? 0);
 
   /** Tổng lượt đã dùng / tổng ngân sách (bỏ chương trình không giới hạn). */
   budgetUsage = computed(() => {
-    const limited = this.promotions().filter((p) => p.usageLimit && p.usageLimit > 0);
-    const used = limited.reduce((s, p) => s + (p.usedCount ?? 0), 0);
-    const limit = limited.reduce((s, p) => s + (p.usageLimit ?? 0), 0);
+    const used = this.summary()?.budgetUsed ?? 0;
+    const limit = this.summary()?.budgetLimit ?? 0;
     return { used, limit, percent: limit > 0 ? Math.min(100, Math.round((used / limit) * 100)) : 0 };
   });
 
-  // ===== Thẻ thống kê (chân thẻ theo mockup) =====
-
   /** % chương trình đang còn công tắc bật. */
   activePercent = computed(() => {
-    const total = this.promotions().length;
+    const total = this.summaryTotal();
     if (total === 0) return 0;
     return Math.round(((total - this.inactiveCount()) / total) * 100);
   });
 
   /** % chương trình đã bị tắt. */
   inactivePercent = computed(() => {
-    const total = this.promotions().length;
+    const total = this.summaryTotal();
     return total > 0 ? Math.round((this.inactiveCount() / total) * 100) : 0;
   });
 
   /** Số loại phạm vi đang được dùng — chân thẻ "N loại phạm vi". */
-  scopeTypeCount = computed(
-    () => new Set(this.promotions().map((p) => p.scopeType ?? 'ALL')).size,
-  );
+  scopeTypeCount = computed(() => this.summary()?.scopeTypeCount ?? 0);
 
-  upcomingCount = computed(
-    () => this.promotions().filter((p) => this.timeState(p) === 'upcoming').length,
-  );
+  upcomingCount = computed(() => this.summary()?.upcoming ?? 0);
 
-  endedCount = computed(
-    () => this.promotions().filter((p) => this.timeState(p) === 'ended').length,
-  );
+  endedCount = computed(() => this.summary()?.ended ?? 0);
 
   runningPercent = computed(() => {
-    const total = this.promotions().length;
+    const total = this.summaryTotal();
     return total > 0 ? Math.round((this.runningCount() / total) * 100) : 0;
   });
 
   /** Số chương trình đã dùng hết ngân sách. */
-  hitCapCount = computed(
-    () =>
-      this.promotions().filter((p) => p.usageLimit && p.usageLimit > 0 && p.usedCount >= p.usageLimit)
-        .length,
-  );
+  hitCapCount = computed(() => this.summary()?.hitCap ?? 0);
 
   // ===== Bulk =====
   selectedCount = computed(() => this.selectedIds().length);

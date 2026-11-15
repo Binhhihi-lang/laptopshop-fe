@@ -1,6 +1,6 @@
 <div class="orders-container min-h-screen bg-slate-50 dark:bg-slate-950">
   <!-- Page Header -->
-  <div class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-16 z-[90]">
+  <div class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
     <div class="max-w-screen-2xl mx-auto px-4 md:px-6 lg:px-8 py-4">
       <app-page-header
         title="Quản lý đơn hàng"
@@ -18,7 +18,16 @@
         description="Tính năng xem đơn hàng đã bị thu hồi quyền bởi quản trị viên. Vui lòng liên hệ quản trị viên nếu bạn cần truy cập."
       />
     } @else {
-      <!-- Stats Cards — Hàng 1: 4 KPI chính (grid-kpi chuẩn DESIGN.md, thẻ click để lọc) -->
+      <!-- Stats Cards — Hàng 1: 4 KPI chính (grid-kpi chuẩn DESIGN.md, thẻ click để lọc).
+           Giữ chỗ cố định trong lúc chờ stats: nếu để trống rồi mới render thì
+           bảng bên dưới bị đẩy xuống (CLS 0.12). -->
+      @if (!stats()) {
+        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-4" aria-hidden="true">
+          @for (i of [1, 2, 3, 4]; track i) {
+            <div class="h-[130px] rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 animate-pulse"></div>
+          }
+        </div>
+      }
       @if (stats(); as stats) {
         <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-4">
           <app-stat-card

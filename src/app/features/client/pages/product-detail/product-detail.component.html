@@ -1,6 +1,9 @@
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
   @if (isLoading()) {
-    <app-loading text="Đang tải sản phẩm..."></app-loading>
+    <!-- Giữ chỗ bằng chiều cao khung xem trước để nội dung không nhảy (CLS). -->
+    <div class="min-h-[120vh]">
+      <app-loading text="Đang tải sản phẩm..."></app-loading>
+    </div>
   } @else if (!product()) {
     <app-empty-state
       icon="error"
@@ -29,8 +32,11 @@
           @if (product()?.image) {
             <img
               [src]="product()?.image"
+              [attr.srcset]="cloudinarySrcset(product()?.image)"
+              sizes="(min-width: 1024px) 50vw, 100vw"
               [alt]="product()?.name"
               class="w-full h-full object-cover"
+              fetchpriority="high"
             />
           } @else {
             <div class="w-full h-full flex items-center justify-center">
@@ -60,7 +66,7 @@
             <span class="text-2xl font-bold text-rose-600 dark:text-rose-400 tabular-nums">
               {{ formatPrice(product()!.flashPrice!) }}
             </span>
-            <span class="text-base text-slate-400 line-through tabular-nums">
+            <span class="text-base text-slate-500 line-through tabular-nums">
               {{ formatPrice(product()!.price) }}
             </span>
             <span

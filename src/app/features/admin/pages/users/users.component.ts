@@ -3,11 +3,11 @@ import {
   OnInit,
   signal,
   computed,
-  effect,
   inject,
   ViewChild,
   TemplateRef,
   AfterViewInit,
+  DestroyRef,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -21,7 +21,8 @@ import { UserResponse } from '@core/models/user.model';
 import { RoleResponse } from '@core/models/role.model';
 import { NotificationService } from '@core/services/notification.service';
 import { MatDialog } from '@angular/material/dialog';
-import { forkJoin, catchError, of } from 'rxjs';
+import { Subject, catchError, debounceTime, of } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ConfirmDialogComponent } from '@shared/confirm-dialog/confirm-dialog.component';
 
 // Shared components
@@ -74,6 +75,7 @@ export class UsersComponent implements OnInit, AfterViewInit {
   private readonly router = inject(Router);
   private readonly notification = inject(NotificationService);
   private readonly dialog = inject(MatDialog);
+  private readonly destroyRef = inject(DestroyRef);
 
   // Data signals
   users = signal<UserResponse[]>([]);
@@ -83,6 +85,15 @@ export class UsersComponent implements OnInit, AfterViewInit {
   isLoading = signal(false);
   isLoadingRoles = signal(false);
   permissionDenied = signal<boolean>(false);
+
+  // Phân trang phía server
+  readonly pageSize = 20;
+  currentPage = signal(0);
+  totalPages = signal(0);
+  totalElements = signal(0);
+
+  /** Gõ tìm kiếm phải debounce, nếu không mỗi ký tự là một request. */
+  private readonly searchInput$ = new Subject<string>();
 
   // Filter signals
   searchTerm = signal('');
@@ -120,8 +131,8 @@ export class UsersComponent implements OnInit, AfterViewInit {
     { value: 'inactive', label: 'Ngừng hoạt động' },
   ];
 
-  // Filtered users
-  filteredUsers = signal<UserResponse[]>([]);
+  // Người dùng của TRANG hiện tại do server trả về
+  // (trước đây tải toàn bộ danh sách rồi lọc ở client).
 
   // Table column templates
   @ViewChild('avatarColumn') avatarColumn!: TemplateRef<any>;
@@ -172,7 +183,11 @@ export class UsersComponent implements OnInit, AfterViewInit {
   selectedUsers = computed(() => this.users().filter((u) => this.selectedUserIds().includes(u.id)));
 
   ngOnInit() {
-    this.loadData();
+    this.searchInput$
+      .pipe(debounceTime(300), takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.reloadFromFirstPage());
+    this.loadRoles();
+    this.loadUsers();
     this.loadPresets();
   }
 
@@ -198,33 +213,116 @@ export class UsersComponent implements OnInit, AfterViewInit {
     );
   }
 
-  loadData() {
+  loadUsers() {
     this.isLoading.set(true);
-    this.isLoadingRoles.set(true);
     this.permissionDenied.set(false);
 
-    forkJoin({
-      users: this.userService.getUsers(),
-      // STAFF thiếu MANAGE_ROLES_PERMISSIONS → getRoles() sẽ 403.
-      // Bắt lỗi để danh sách user vẫn load được (chỉ thiếu bộ lọc vai trò).
-      roles: this.roleService.getRoles().pipe(catchError(() => of([] as RoleResponse[]))),
-    }).subscribe({
-      next: ({ users, roles }) => {
-        this.users.set(users);
-        this.roles.set(roles);
-        this.applyFilter();
-        this.isLoading.set(false);
-        this.isLoadingRoles.set(false);
-      },
-      error: (error) => {
-        console.error('Error loading data:', error);
-        if (error instanceof HttpErrorResponse && error.status === 403) {
-          this.permissionDenied.set(true);
-        }
-        this.isLoading.set(false);
-        this.isLoadingRoles.set(false);
-      },
-    });
+    this.userService
+      .getUserPage({
+        keyword: this.searchTerm(),
+        roleId: this.resolveRoleId(),
+        active: this.activeParam(),
+        page: this.currentPage(),
+        size: this.pageSize,
+        sort: this.sortParam(),
+      })
+      .subscribe({
+        next: (page) => {
+          this.users.set(page.content);
+          this.totalElements.set(page.totalElements);
+          this.totalPages.set(page.totalPages);
+          // Server tự kẹp trang khi bộ lọc làm giảm tổng số trang
+          if (page.number !== this.currentPage()) {
+            this.currentPage.set(page.number);
+          }
+          this.isLoading.set(false);
+        },
+        error: (error) => {
+          console.error('Error loading users:', error);
+          if (error instanceof HttpErrorResponse && error.status === 403) {
+            this.permissionDenied.set(true);
+          }
+          this.isLoading.set(false);
+        },
+      });
+  }
+
+  loadRoles() {
+    this.isLoadingRoles.set(true);
+    // STAFF thiếu MANAGE_ROLES_PERMISSIONS → getRoles() sẽ 403.
+    // Bắt lỗi để danh sách user vẫn load được (chỉ thiếu bộ lọc vai trò).
+    this.roleService
+      .getRoles()
+      .pipe(catchError(() => of([] as RoleResponse[])))
+      .subscribe({
+        next: (roles) => {
+          this.roles.set(roles ?? []);
+          this.isLoadingRoles.set(false);
+        },
+        error: () => {
+          this.roles.set([]);
+          this.isLoadingRoles.set(false);
+        },
+      });
+  }
+
+  /** Mọi thay đổi bộ lọc đều quay về trang đầu rồi tải lại. */
+  private reloadFromFirstPage(): void {
+    this.currentPage.set(0);
+    this.selectedUserIds.set([]);
+    this.loadUsers();
+  }
+
+  /**
+   * `roleFilter` giữ TÊN vai trò (preset dùng ADMIN/STAFF/USER), nhưng API lọc
+   * theo roleId. Dịch tên → id từ danh sách role đã tải.
+   */
+  private resolveRoleId(): string | undefined {
+    const name = this.roleFilter();
+    if (!name) {
+      return undefined;
+    }
+    const role = this.roles().find((r) => r.name === name || r.id === name);
+    return role?.id;
+  }
+
+  private activeParam(): boolean | undefined {
+    const status = this.statusFilter();
+    if (status === 'active') return true;
+    if (status === 'inactive') return false;
+    return undefined;
+  }
+
+  /** Tên cột trên bảng khác tên field entity ở vài chỗ — cần map trước khi gửi. */
+  private sortParam(): string | undefined {
+    const column = this.sortColumn();
+    if (!column) {
+      return undefined;
+    }
+    const field = column === 'lastLogin' ? 'lastLoginAt' : column;
+    return `${field},${this.sortDirection()}`;
+  }
+
+  onPrevPage(): void {
+    if (this.currentPage() === 0) return;
+    this.currentPage.update((p) => p - 1);
+    this.selectedUserIds.set([]);
+    this.loadUsers();
+  }
+
+  onNextPage(): void {
+    if (this.currentPage() >= this.totalPages() - 1) return;
+    this.currentPage.update((p) => p + 1);
+    this.selectedUserIds.set([]);
+    this.loadUsers();
+  }
+
+  /** app-table phát số trang 1-based; state nội bộ 0-based. */
+  onPageChange(page: number): void {
+    if (page - 1 === this.currentPage()) return;
+    this.currentPage.set(page - 1);
+    this.selectedUserIds.set([]);
+    this.loadUsers();
   }
 
   loadPresets(): void {
@@ -238,66 +336,18 @@ export class UsersComponent implements OnInit, AfterViewInit {
     }
   }
 
-  applyFilter() {
-    let filtered = this.users();
-
-    // Search by name, email, phone
-    const term = this.searchTerm().trim().toLowerCase();
-    if (term) {
-      filtered = filtered.filter(
-        (user) =>
-          (user.fullName || '').toLowerCase().includes(term) ||
-          (user.email || '').toLowerCase().includes(term) ||
-          (user.phone || '').toLowerCase().includes(term),
-      );
-    }
-
-    // Filter by role
-    const roleId = this.roleFilter();
-    if (roleId) {
-      filtered = filtered.filter((user) => {
-        const userRoleNames = user.roleNames || [];
-        return userRoleNames.includes(roleId);
-      });
-    }
-
-    // Filter by status
-    if (this.statusFilter() !== 'all') {
-      if (this.statusFilter() === 'active') {
-        filtered = filtered.filter((user) => user.active ?? true);
-      } else if (this.statusFilter() === 'inactive') {
-        filtered = filtered.filter((user) => !(user.active ?? true));
-      }
-    }
-
-    // Apply sorting
-    const sortCol = this.sortColumn();
-    const sortDir = this.sortDirection();
-    if (sortCol) {
-      filtered = [...filtered].sort((a, b) => {
-        const aVal = (a as any)[sortCol];
-        const bVal = (b as any)[sortCol];
-        if (aVal === bVal) return 0;
-        const result = aVal > bVal ? 1 : -1;
-        return sortDir === 'asc' ? result : -result;
-      });
-    }
-
-    this.filteredUsers.set(filtered);
-  }
-
   onSearchChange() {
-    this.applyFilter();
+    this.searchInput$.next(this.searchTerm());
   }
 
   onRoleChange() {
-    this.applyFilter();
+    this.reloadFromFirstPage();
   }
 
   setStatusFilter(status: 'all' | 'active' | 'inactive') {
     if (this.statusFilter() !== status) {
       this.statusFilter.set(status);
-      this.applyFilter();
+      this.reloadFromFirstPage();
     }
   }
 
@@ -305,7 +355,7 @@ export class UsersComponent implements OnInit, AfterViewInit {
     this.searchTerm.set('');
     this.roleFilter.set('');
     this.statusFilter.set('all');
-    this.applyFilter();
+    this.reloadFromFirstPage();
   }
 
   hasActiveFilters(): boolean {
@@ -325,7 +375,7 @@ export class UsersComponent implements OnInit, AfterViewInit {
   onSort(sortData: { column: string; direction: 'asc' | 'desc' }): void {
     this.sortColumn.set(sortData.column);
     this.sortDirection.set(sortData.direction);
-    this.applyFilter();
+    this.reloadFromFirstPage();
   }
 
   // Selection
@@ -382,7 +432,7 @@ export class UsersComponent implements OnInit, AfterViewInit {
       this.userService.bulkDeleteUsers(idsToDelete).subscribe({
         next: () => {
           this.notification.success('Xóa người dùng thành công');
-          this.loadData();
+          this.loadUsers();
           this.selectedUserIds.set([]);
           this.deletingUserId.set(null);
         },
@@ -411,7 +461,7 @@ export class UsersComponent implements OnInit, AfterViewInit {
     this.userService.bulkUpdateUserStatus(ids, active).subscribe({
       next: () => {
         this.notification.success(`${active ? 'Kích hoạt' : 'Khóa'} người dùng thành công`);
-        this.loadData();
+        this.loadUsers();
         this.selectedUserIds.set([]);
       },
       error: (error) => {
@@ -432,7 +482,7 @@ export class UsersComponent implements OnInit, AfterViewInit {
     this.searchTerm.set(preset['searchTerm']);
     this.roleFilter.set(preset['roleId']);
     this.statusFilter.set(preset['status']);
-    this.applyFilter();
+    this.reloadFromFirstPage();
   }
 
   saveCurrentPreset(): void {
@@ -480,7 +530,7 @@ export class UsersComponent implements OnInit, AfterViewInit {
         this.userService.deleteUser(user.id).subscribe({
           next: () => {
             this.notification.success('Xóa người dùng thành công');
-            this.loadData();
+            this.loadUsers();
             this.deletingUserId.set(null);
           },
           error: (error) => {
@@ -502,7 +552,7 @@ export class UsersComponent implements OnInit, AfterViewInit {
     this.userService.bulkUpdateUserStatus([user.id], newActive).subscribe({
       next: () => {
         this.notification.success(`${newActive ? 'Kích hoạt' : 'Khóa'} tài khoản thành công`);
-        this.loadData();
+        this.loadUsers();
       },
       error: (error) => {
         console.error('Error toggling user status:', error);

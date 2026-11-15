@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
@@ -24,8 +24,11 @@ import { ButtonComponent, FormFieldComponent, InputComponent } from '@shared/com
 export class LoginComponent {
   email = '';
   password = '';
-  loading = false;
-  errorMessage = '';
+  // loading/errorMessage là signal: callback lỗi HTTP chạy ngoài change detection
+  // nên nếu là biến thường thì view không vẽ lại (nút quay mãi, không hiện lỗi
+  // cho tới khi user chạm vào input).
+  readonly loading = signal(false);
+  readonly errorMessage = signal('');
   // Cờ touched để chỉ hiện lỗi sau khi user rời ô, không hiện ngay khi mở trang.
   emailTouched = false;
   passwordTouched = false;
@@ -50,17 +53,17 @@ export class LoginComponent {
     if (!this.email || !this.password) {
       this.emailTouched = true;
       this.passwordTouched = true;
-      this.errorMessage = 'Vui lòng nhập email và mật khẩu';
+      this.errorMessage.set('Vui lòng nhập email và mật khẩu');
       return;
     }
     if (!this.isEmailValid()) {
       this.emailTouched = true;
-      this.errorMessage = 'Email không hợp lệ';
+      this.errorMessage.set('Email không hợp lệ');
       return;
     }
 
-    this.loading = true;
-    this.errorMessage = '';
+    this.loading.set(true);
+    this.errorMessage.set('');
 
     this.authService.login(this.email, this.password).subscribe({
       next: () => {
@@ -68,8 +71,8 @@ export class LoginComponent {
         // token không có ROLE_ADMIN/ROLE_STAFF (vd CUSTOMER) bị dọn phiên ngay,
         // không đi tiếp vào dashboard.
         if (!this.authService.hasRole('ADMIN') && !this.authService.hasRole('STAFF')) {
-          this.loading = false;
-          this.errorMessage = 'Tài khoản này không có quyền truy cập trang quản trị';
+          this.loading.set(false);
+          this.errorMessage.set('Tài khoản này không có quyền truy cập trang quản trị');
           this.authService.clearTokens();
           this.authService.clearUserInfo();
           return;
@@ -79,13 +82,10 @@ export class LoginComponent {
         this.router.navigate(['/admin/dashboard']);
       },
       error: (error) => {
-        this.loading = false;
-        // Handle error
-        if (error.error && error.error.message) {
-          this.errorMessage = error.error.message;
-        } else {
-          this.errorMessage = 'Email hoặc mật khẩu không đúng';
-        }
+        this.loading.set(false);
+        this.errorMessage.set(
+          error?.error?.message || 'Email hoặc mật khẩu không đúng',
+        );
       },
     });
   }

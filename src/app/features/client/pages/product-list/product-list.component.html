@@ -64,7 +64,7 @@
             min="0"
           ></app-input>
         </app-form-field>
-        <div class="flex items-center gap-2 sm:col-span-2 lg:col-span-2 justify-end">
+        <div class="flex flex-wrap items-center gap-2 justify-end sm:col-span-2 lg:col-span-2">
           <app-button
             type="button"
             label="Đặt lại"
@@ -83,7 +83,10 @@
   </app-card>
 
   @if (isLoading()) {
-    <app-loading text="Đang tải sản phẩm..."></app-loading>
+    <!-- Giữ chỗ để lưới sản phẩm không đẩy footer khi dữ liệu về (CLS). -->
+    <div class="min-h-[120vh]">
+      <app-loading text="Đang tải sản phẩm..."></app-loading>
+    </div>
   } @else if (products().length === 0) {
     <app-empty-state
       icon="search_off"
@@ -95,9 +98,11 @@
       Tìm thấy <strong>{{ totalElements() }}</strong> sản phẩm
     </p>
 
+    <!-- h2 ẩn: trang chỉ có h1 rồi tới h3 của product-card → heading-order bị nhảy cấp -->
+    <h2 class="sr-only">Danh sách sản phẩm</h2>
     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
       @for (p of products(); track p.id) {
-        <app-product-card [product]="p" />
+        <app-product-card class="min-w-0" [product]="p" />
       }
     </div>
 
@@ -105,7 +110,7 @@
       [page]="currentPage()"
       [totalPages]="totalPages()"
       (pageChange)="onPageChange($event)"
-      class="block mt-8"
+      class="block mt-8 max-w-full"
     />
   }
 </div>

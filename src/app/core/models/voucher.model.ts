@@ -102,3 +102,20 @@ export interface VoucherHolderResponse {
   expiresAt: string | null;
   usedAt: string | null;
 }
+
+/**
+ * Số liệu tổng hợp cho dải thẻ KPI — GET /admin/vouchers/summary.
+ * Trang danh sách nay phân trang ở server nên không còn giữ toàn bộ voucher
+ * trong bộ nhớ để đếm; các con số này do BE tính trên toàn bảng.
+ */
+export interface VoucherSummary {
+  total: number;
+  running: number;
+  soon: number;
+  ended: number;
+  paused: number;
+  usedTotal: number;
+  limitTotal: number;
+  publicCount: number;
+  assignedCount: number;
+}
