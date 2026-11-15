@@ -56,7 +56,13 @@ export interface SelectOption {
           <option [value]="" disabled [selected]="!_value()">{{ placeholder() }}</option>
         }
         @for (option of options(); track option.value) {
-          <option [value]="option.value" [disabled]="option.disabled">{{ option.label }}</option>
+          <option
+            [value]="option.value"
+            [disabled]="option.disabled"
+            [selected]="option.value === _value()"
+          >
+            {{ option.label }}
+          </option>
         }
       </select>
       <mat-icon

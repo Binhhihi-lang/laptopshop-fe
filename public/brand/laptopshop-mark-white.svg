@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" role="img" aria-label="LaptopShop">
+  <title>LaptopShop</title>
+  <defs>
+    <mask id="ls-cut" maskContentUnits="userSpaceOnUse">
+      <g transform="rotate(-5 24 24)">
+        <path fill="#ffffff" d="M14 5H33.5L43 14.5V36Q43 43 36 43H12Q5 43 5 36V12Q5 5 12 5Z"/>
+        <circle cx="13.5" cy="13" r="2.3" fill="#000000"/>
+        <rect x="12.5" y="21" width="23" height="11" rx="2.5" fill="#000000"/>
+        <rect x="9.5" y="35" width="29" height="3.4" rx="1.7" fill="#000000"/>
+      </g>
+    </mask>
+  </defs>
+  <rect width="48" height="48" fill="#ffffff" mask="url(#ls-cut)"/>
+</svg>

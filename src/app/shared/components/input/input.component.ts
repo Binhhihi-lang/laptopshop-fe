@@ -54,7 +54,7 @@ export type InputType =
         ></textarea>
       } @else {
         <input
-          [type]="type()"
+          [type]="displayType()"
           [id]="id()"
           [name]="name()"
           [placeholder]="placeholder()"
@@ -230,6 +230,12 @@ export class InputComponent implements ControlValueAccessor {
 
   // Computed
   hasError = computed(() => !!this.error());
+  /**
+   * Type thực tế của <input>. Phải tách khỏi input `type` của parent: nút
+   * con mắt chỉ đổi signal showPassword, nếu template bind thẳng `type()` thì
+   * bấm không có tác dụng.
+   */
+  displayType = computed(() => (this.showPassword() ? 'text' : this.type()));
   errorId = computed(() => `${this.id()}-error`);
   hintId = computed(() => `${this.id()}-hint`);
 

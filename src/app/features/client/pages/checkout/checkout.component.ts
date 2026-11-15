@@ -411,6 +411,13 @@ export class CheckoutComponent implements OnInit {
       next: (order) => {
         this.isSubmitting.set(false);
         this.cartService.setCount(0);
+        if (this.paymentMethod === 'PAYOS') {
+          // payOS nhúng iframe ngay trong trang kết quả — không mở tab mới.
+          this.router.navigate(['/payment-result'], {
+            queryParams: { orderCode: order.orderCode, method: 'payos' },
+          });
+          return;
+        }
         if (this.paymentMethod === 'VNPAY') {
           // Đơn đã tạo + trừ tồn kho; tab VNPay lo phần thanh toán, tab hiện
           // tại giữ lại để khách xem đơn.

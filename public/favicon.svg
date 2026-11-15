@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" role="img" aria-label="LaptopShop">
+  <title>LaptopShop</title>
+  <defs>
+    <linearGradient id="ls-fav" x1="6" y1="5" x2="42" y2="43" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#3b82f6"/>
+      <stop offset="1" stop-color="#1d4ed8"/>
+    </linearGradient>
+  </defs>
+  <rect width="48" height="48" rx="11" fill="#ffffff"/>
+  <g transform="translate(4 4) scale(0.83)">
+    <g transform="rotate(-5 24 24)">
+      <path fill="url(#ls-fav)" d="M14 5H33.5L43 14.5V36Q43 43 36 43H12Q5 43 5 36V12Q5 5 12 5Z"/>
+      <circle cx="13.5" cy="13" r="2.3" fill="#ffffff"/>
+      <rect x="12.5" y="21" width="23" height="11" rx="2.5" fill="#ffffff"/>
+      <rect x="9.5" y="35" width="29" height="3.4" rx="1.7" fill="#ffffff"/>
+    </g>
+  </g>
+</svg>

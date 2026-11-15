@@ -39,7 +39,7 @@ const STATUS_VARIANT: Record<OrderStatus, BadgeVariant> = {
           order().orderDate | date: 'dd/MM/yyyy'
         }}</span>
         <app-badge [label]="statusLabel()" [variant]="statusVariant()" />
-        @if (order().paymentMethod === 'VNPAY') {
+        @if (order().paymentMethod === 'VNPAY' || order().paymentMethod === 'PAYOS') {
           <app-badge [label]="payStatusLabel()" [variant]="payStatusVariant()" />
         }
       </div>
@@ -90,9 +90,13 @@ export class OrderCardComponent {
   statusLabel = computed(() => STATUS_LABEL[this.order().status]);
   statusVariant = computed(() => STATUS_VARIANT[this.order().status]);
   paymentLabel = computed(() =>
-    this.order().paymentMethod === 'COD' ? 'Thanh toán khi nhận hàng (COD)' : 'VNPay',
+    this.order().paymentMethod === 'COD'
+      ? 'Thanh toán khi nhận hàng (COD)'
+      : this.order().paymentMethod === 'PAYOS'
+        ? 'Chuyển khoản VietQR (payOS)'
+        : 'VNPay',
   );
-  /** Đơn VNPay hiện thêm trạng thái trả tiền để khách biết còn nợ hay không. */
+  /** Đơn trả trước hiện thêm trạng thái trả tiền để khách biết còn nợ hay không. */
   payStatusLabel = computed(() => PAYMENT_STATUS_LABEL[this.order().paymentStatus]);
   payStatusVariant = computed(() => PAYMENT_STATUS_VARIANT[this.order().paymentStatus]);
 

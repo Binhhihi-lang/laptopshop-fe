@@ -1,7 +1,7 @@
 /** DTOs đơn hàng storefront — khớp dto/response/Client + dto/request/Client ở BE. */
 
 export type OrderStatus = 'PENDING' | 'CONFIRMED' | 'SHIPPING' | 'COMPLETED' | 'CANCELLED';
-export type PaymentMethod = 'COD' | 'VNPAY';
+export type PaymentMethod = 'COD' | 'VNPAY' | 'PAYOS';
 export type PaymentStatus = 'PENDING' | 'PAID' | 'FAILED' | 'REFUNDED';
 
 /** Nhãn tiếng Việt + màu badge cho từng trạng thái — dùng chung admin + client. */
@@ -267,4 +267,31 @@ export interface VnpayCreateRequest {
 export interface VnpayCreateResponse {
   paymentUrl: string;
   orderCode: string;
+}
+
+// ===== payOS (khớp dto/request/Client/PayosCreateRequest + response ở BE) =====
+
+/** Body POST /api/v1/client/payments/payos/create — tạo link thanh toán. */
+export interface PayosCreateRequest {
+  orderCode: string;
+}
+
+/**
+ * Kết quả tạo link payOS. FE đổi "/web/" trong checkoutUrl thành "/embedded/"
+ * để nhúng iframe (giống plugin WooCommerce chính thức của payOS).
+ */
+export interface PayosCreateResponse {
+  orderCode: string;
+  checkoutUrl: string;
+  qrCode?: string;
+  paymentLinkId: string;
+  amount: number;
+  bin?: string;
+  accountName?: string;
+  accountNumber?: string;
+}
+
+/** Kết quả đồng bộ trạng thái từ payOS — dùng khi webhook chưa tới. */
+export interface PayosSyncResponse {
+  paid: boolean;
 }

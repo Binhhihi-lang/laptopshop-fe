@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable, tap, catchError, throwError, BehaviorSubject } from 'rxjs';
+import { Observable, tap, catchError, throwError, BehaviorSubject, map } from 'rxjs';
 import { ApiService } from './api.service';
 import { JwtHelper } from '@core/utils/jwt.helper';
 import {
@@ -106,11 +106,12 @@ export class ClientAuthService {
     }
   }
 
-  // Đăng ký tài khoản customer mới. Tự động login luôn nếu BE trả token.
-  register(req: ClientRegisterRequest): Observable<ClientLoginResponse> {
+  // BE chỉ tạo tài khoản và trả UserResponse (không có token), nên component
+  // phải gọi login ngay sau đó để vào thẳng trang chủ ở trạng thái đã đăng nhập.
+  register(req: ClientRegisterRequest): Observable<void> {
     return this.api
-      .post<ClientLoginResponse, ClientRegisterRequest>('/client/auth/register', req)
-      .pipe(tap((res) => this.handleLoginSuccess(res)));
+      .post<unknown, ClientRegisterRequest>('/client/auth/register', req)
+      .pipe(map(() => undefined));
   }
 
   login(req: ClientLoginRequest): Observable<ClientLoginResponse> {

@@ -163,7 +163,7 @@
             <div class="flex justify-between gap-3">
               <dt class="text-slate-500 shrink-0">Thanh toán</dt>
               <dd class="text-right">
-                {{ order()!.paymentMethod === 'COD' ? 'Thanh toán khi nhận hàng (COD)' : 'VNPay' }}
+                {{ order()!.paymentMethod === 'COD' ? 'Thanh toán khi nhận hàng (COD)' : order()!.paymentMethod === 'PAYOS' ? 'Chuyển khoản VietQR (payOS)' : 'VNPay' }}
               </dd>
             </div>
           </dl>

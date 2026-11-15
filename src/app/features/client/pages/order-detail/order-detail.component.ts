@@ -87,6 +87,13 @@ export class OrderDetailComponent implements OnInit {
     if (!order?.canRetryPayment) {
       return;
     }
+    if (order.paymentMethod === 'PAYOS') {
+      // payOS nhúng iframe trong trang kết quả, không redirect sang cổng.
+      this.router.navigate(['/payment-result'], {
+        queryParams: { orderCode: order.orderCode, method: 'payos' },
+      });
+      return;
+    }
     const tab = window.open('about:blank', '_blank');
     this.isRetrying.set(true);
     this.orderService.createVnpayPayment({ orderCode: order.orderCode }).subscribe({

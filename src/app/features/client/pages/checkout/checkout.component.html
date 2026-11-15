@@ -107,6 +107,18 @@
               <span class="w-9 h-9 rounded-lg flex items-center justify-center bg-blue-50 text-blue-500">💳</span>
             </label>
 
+            <label class="flex items-center gap-3 p-3 rounded-lg border-2 cursor-pointer transition-colors"
+              [class]="paymentMethod === 'PAYOS'
+                ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
+                : 'border-slate-200 dark:border-slate-700'">
+              <input type="radio" name="pay" value="PAYOS" [(ngModel)]="paymentMethod" class="w-4 h-4" />
+              <span class="flex-1">
+                <b class="block text-sm">Chuyển khoản VietQR (payOS)</b>
+                <span class="text-xs text-slate-500">Quét mã QR bằng app ngân hàng, tiền về thẳng tài khoản shop</span>
+              </span>
+              <span class="w-9 h-9 rounded-lg flex items-center justify-center bg-emerald-50 text-emerald-600">🏦</span>
+            </label>
+
             <button type="button" (click)="selectComingSoon('Momo')"
               class="w-full flex items-center gap-3 p-3 rounded-lg border-2 border-slate-200 dark:border-slate-700 opacity-60 text-left">
               <span class="w-4 h-4 rounded-full border-2 border-slate-300"></span>
@@ -115,16 +127,6 @@
                 <span class="text-xs text-slate-500">Sắp ra mắt</span>
               </span>
               <span class="w-9 h-9 rounded-lg flex items-center justify-center bg-rose-50 text-rose-500">📱</span>
-            </button>
-
-            <button type="button" (click)="selectComingSoon('Chuyển khoản ngân hàng')"
-              class="w-full flex items-center gap-3 p-3 rounded-lg border-2 border-slate-200 dark:border-slate-700 opacity-60 text-left">
-              <span class="w-4 h-4 rounded-full border-2 border-slate-300"></span>
-              <span class="flex-1">
-                <b class="block text-sm">Chuyển khoản ngân hàng</b>
-                <span class="text-xs text-slate-500">Sắp ra mắt</span>
-              </span>
-              <span class="w-9 h-9 rounded-lg flex items-center justify-center bg-teal-50 text-teal-500">🏦</span>
             </button>
           </div>
         </section>

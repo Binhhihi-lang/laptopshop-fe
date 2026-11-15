@@ -283,7 +283,7 @@
               <div class="flex justify-between">
                 <dt class="text-slate-500 dark:text-slate-400">Phương thức</dt>
                 <dd class="font-medium text-slate-900 dark:text-white">
-                  {{ order.paymentMethod === 'COD' ? 'Thanh toán khi nhận hàng (COD)' : 'VNPay' }}
+                  {{ order.paymentMethod === 'COD' ? 'Thanh toán khi nhận hàng (COD)' : order.paymentMethod === 'PAYOS' ? 'Chuyển khoản VietQR (payOS)' : 'VNPay' }}
                 </dd>
               </div>
               @if (order.paymentTxnRef) {

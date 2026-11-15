@@ -10,6 +10,9 @@ import {
   ValidateVoucherRequest,
   VnpayCreateRequest,
   VnpayCreateResponse,
+  PayosCreateRequest,
+  PayosCreateResponse,
+  PayosSyncResponse,
 } from '@core/models/order.model';
 
 /** Đơn hàng storefront — khớp ClientOrderController + ClientVoucherController ở BE. */
@@ -40,6 +43,22 @@ export class ClientOrderService {
   createVnpayPayment(req: VnpayCreateRequest): Observable<VnpayCreateResponse> {
     return this.api.post<VnpayCreateResponse, VnpayCreateRequest>(
       '/client/payments/vnpay/create',
+      req,
+    );
+  }
+
+  /** Tạo link thanh toán payOS cho đơn đã tạo — khớp PayosController ở BE. */
+  createPayosPayment(req: PayosCreateRequest): Observable<PayosCreateResponse> {
+    return this.api.post<PayosCreateResponse, PayosCreateRequest>(
+      '/client/payments/payos/create',
+      req,
+    );
+  }
+
+  /** Hỏi lại payOS xem tiền đã về chưa — dùng khi webhook chưa tới. */
+  syncPayosPayment(req: PayosCreateRequest): Observable<PayosSyncResponse> {
+    return this.api.post<PayosSyncResponse, PayosCreateRequest>(
+      '/client/payments/payos/sync',
       req,
     );
   }
