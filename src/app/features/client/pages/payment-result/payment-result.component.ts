@@ -248,7 +248,10 @@ export class PaymentResultComponent implements OnInit, OnDestroy {
     // dùng khóa riêng shopOrder để không bị ghi đè.
     this.orderCode.set(params.get('shopOrder') ?? params.get('orderCode') ?? '');
     this.paymentMethod.set(params.get('method') ?? '');
-    this.status.set(params.get('status') === 'success' ? 'success' : 'failed');
+    // BE redirect về dùng status=success/failed; payOS gọi thẳng FE thì trả
+    // status=PAID — nhận cả hai để không hiện nhầm màn thất bại.
+    const rawStatus = (params.get('status') ?? '').toUpperCase();
+    this.status.set(rawStatus === 'SUCCESS' || rawStatus === 'PAID' ? 'success' : 'failed');
     this.code.set(params.get('code') ?? '');
 
     const statusParam = params.get('status');
@@ -260,7 +263,7 @@ export class PaymentResultComponent implements OnInit, OnDestroy {
         return;
       }
       // payOS redirect về sau khi thanh toán: xác nhận lại với BE.
-      if (statusParam.toUpperCase() === 'PAID' && this.orderCode()) {
+      if ((rawStatus === 'SUCCESS' || rawStatus === 'PAID') && this.orderCode()) {
         this.syncPayos();
       }
     }
