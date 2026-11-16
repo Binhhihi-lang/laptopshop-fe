@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
@@ -49,6 +49,18 @@ import { MatIconModule } from '@angular/material/icon';
         }
       </p>
 
+      @if (isAwaitingVnpay() && vnpayRemaining() !== null) {
+        @if (vnpayExpired()) {
+          <p class="text-sm font-semibold text-red-600 dark:text-red-400 mb-8">
+            Đã hết 30 phút giữ đơn cho lần thanh toán này — mở chi tiết đơn để thanh toán lại.
+          </p>
+        } @else {
+          <p class="text-sm font-semibold text-slate-600 dark:text-slate-300 mb-8">
+            Hạn thanh toán: còn <span class="font-mono">{{ vnpayCountdown() }}</span>
+          </p>
+        }
+      }
+
       <div class="flex flex-wrap gap-3 justify-center">
         <a
           [routerLink]="['/orders', orderId()]"
@@ -71,7 +83,7 @@ import { MatIconModule } from '@angular/material/icon';
     `,
   ],
 })
-export class OrderSuccessComponent implements OnInit {
+export class OrderSuccessComponent implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
 
   readonly orderCode = signal('');
@@ -79,10 +91,59 @@ export class OrderSuccessComponent implements OnInit {
   /** Đơn VNPay: tiền chưa chắc đã trả, tab thanh toán đang mở ở nơi khác. */
   readonly isAwaitingVnpay = signal(false);
 
+  /** Hạn 30 phút BE trả về cho lần thanh toán này (epoch ms, 0 = không có). */
+  private readonly deadline = signal(0);
+  private readonly now = signal(Date.now());
+  private tickTimer: ReturnType<typeof setInterval> | null = null;
+
+  readonly vnpayRemaining = computed(() => {
+    const deadline = this.deadline();
+    if (!deadline) {
+      return null;
+    }
+    return Math.max(0, Math.round((deadline - this.now()) / 1000));
+  });
+
+  readonly vnpayExpired = computed(() => this.vnpayRemaining() === 0);
+
+  readonly vnpayCountdown = computed(() => {
+    const seconds = this.vnpayRemaining();
+    if (seconds === null) {
+      return '';
+    }
+    return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
+  });
+
   ngOnInit(): void {
     const params = this.route.snapshot.queryParamMap;
     this.orderCode.set(params.get('code') ?? '');
     this.orderId.set(params.get('id') ?? '');
     this.isAwaitingVnpay.set(params.get('pending') === 'vnpay');
+    const exp = params.get('exp');
+    if (exp) {
+      this.deadline.set(new Date(exp).getTime());
+      this.startTicking();
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.stopTicking();
+  }
+
+  private startTicking(): void {
+    this.stopTicking();
+    this.tickTimer = setInterval(() => {
+      this.now.set(Date.now());
+      if (this.vnpayExpired()) {
+        this.stopTicking();
+      }
+    }, 1000);
+  }
+
+  private stopTicking(): void {
+    if (this.tickTimer) {
+      clearInterval(this.tickTimer);
+      this.tickTimer = null;
+    }
   }
 }

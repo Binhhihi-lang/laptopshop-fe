@@ -428,7 +428,12 @@ export class CheckoutComponent implements OnInit {
                 vnpayTab.opener = null;
                 vnpayTab.location.href = res.paymentUrl;
                 this.router.navigate(['/order-success'], {
-                  queryParams: { code: order.orderCode, id: order.id, pending: 'vnpay' },
+                  queryParams: {
+                    code: order.orderCode,
+                    id: order.id,
+                    pending: 'vnpay',
+                    exp: res.expiresAt,
+                  },
                 });
               } else {
                 // Popup bị chặn → đành sang VNPay ngay tại tab hiện tại.

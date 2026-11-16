@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import * as QRCode from 'qrcode';
@@ -150,6 +150,17 @@ const BANK_NAMES: Record<string, string> = {
               <p class="text-[11px] text-amber-600 dark:text-amber-400">
                 Giữ nguyên số tiền và nội dung để đơn được xác nhận tự động.
               </p>
+              @if (payosRemaining() !== null) {
+                @if (payosExpired()) {
+                  <p class="text-[11px] font-semibold text-red-600 dark:text-red-400">
+                    Đã hết 30 phút giữ mã — vui lòng tạo mã thanh toán mới.
+                  </p>
+                } @else {
+                  <p class="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                    Hạn thanh toán: còn <span class="font-mono">{{ payosCountdown() }}</span>
+                  </p>
+                }
+              }
             </div>
           </div>
 
@@ -162,6 +173,16 @@ const BANK_NAMES: Record<string, string> = {
             >
               Tôi đã chuyển khoản — kiểm tra lại
             </button>
+            @if (payosExpired()) {
+              <button
+                type="button"
+                (click)="loadPayos()"
+                [disabled]="isRetrying()"
+                class="px-5 py-2.5 rounded-lg bg-primary-600 text-white font-semibold hover:bg-primary-700 disabled:opacity-60"
+              >
+                Tạo mã thanh toán mới
+              </button>
+            }
             @if (payosHostedUrl()) {
               <a
                 [href]="payosHostedUrl()"
@@ -240,7 +261,30 @@ export class PaymentResultComponent implements OnInit, OnDestroy {
   readonly payosError = signal('');
 
   private pollTimer: ReturnType<typeof setInterval> | null = null;
+  private tickTimer: ReturnType<typeof setInterval> | null = null;
   private syncing = false;
+
+  /** Mốc hết hạn (epoch ms) BE trả về — 0 là không đếm ngược. */
+  private readonly payosDeadline = signal(0);
+  private readonly now = signal(Date.now());
+
+  readonly payosRemaining = computed(() => {
+    const deadline = this.payosDeadline();
+    if (!deadline) {
+      return null;
+    }
+    return Math.max(0, Math.round((deadline - this.now()) / 1000));
+  });
+
+  readonly payosExpired = computed(() => this.payosRemaining() === 0);
+
+  readonly payosCountdown = computed(() => {
+    const seconds = this.payosRemaining();
+    if (seconds === null) {
+      return '';
+    }
+    return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
+  });
 
   ngOnInit(): void {
     const params = this.route.snapshot.queryParamMap;
@@ -271,6 +315,7 @@ export class PaymentResultComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.stopPolling();
+    this.stopTicking();
   }
 
   /** Tạo (hoặc dùng lại) link payOS rồi dựng khung QR gọn. */
@@ -293,6 +338,12 @@ export class PaymentResultComponent implements OnInit, OnDestroy {
           `${(res.amount ?? 0).toLocaleString('vi-VN')} vnđ`,
         );
         this.payosAmountRaw.set(String(res.amount ?? 0));
+        // Hạn 30 phút của lần thanh toán này — đếm ngược ngay trên khung QR.
+        this.payosDeadline.set(res.expiresAt ? new Date(res.expiresAt).getTime() : 0);
+        if (this.payosDeadline()) {
+          this.now.set(Date.now());
+          this.startTicking();
+        }
 
         if (!res.qrCode) {
           this.payosError.set('Không nhận được mã QR từ payOS.');
@@ -359,6 +410,25 @@ export class PaymentResultComponent implements OnInit, OnDestroy {
     if (this.pollTimer) {
       clearInterval(this.pollTimer);
       this.pollTimer = null;
+    }
+  }
+
+  /** Cập nhật đồng hồ đếm ngược mỗi giây; hết hạn thì ngừng hỏi payOS. */
+  private startTicking(): void {
+    this.stopTicking();
+    this.tickTimer = setInterval(() => {
+      this.now.set(Date.now());
+      if (this.payosExpired()) {
+        this.stopPolling();
+        this.stopTicking();
+      }
+    }, 1000);
+  }
+
+  private stopTicking(): void {
+    if (this.tickTimer) {
+      clearInterval(this.tickTimer);
+      this.tickTimer = null;
     }
   }
 

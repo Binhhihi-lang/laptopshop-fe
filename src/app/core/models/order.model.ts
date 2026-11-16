@@ -267,6 +267,8 @@ export interface VnpayCreateRequest {
 export interface VnpayCreateResponse {
   paymentUrl: string;
   orderCode: string;
+  /** Hạn hoàn tất thanh toán của lần thử (ISO) — FE đếm ngược. */
+  expiresAt?: string;
 }
 
 // ===== payOS (khớp dto/request/Client/PayosCreateRequest + response ở BE) =====
@@ -289,6 +291,8 @@ export interface PayosCreateResponse {
   bin?: string;
   accountName?: string;
   accountNumber?: string;
+  /** Hạn hoàn tất thanh toán của lần thử (ISO) — FE đếm ngược. */
+  expiresAt?: string;
 }
 
 /** Kết quả đồng bộ trạng thái từ payOS — dùng khi webhook chưa tới. */
