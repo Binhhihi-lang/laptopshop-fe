@@ -52,6 +52,11 @@
   color: #fff;
 }
 
+/* Dark: primary-hover #60a5fa + chữ trắng chỉ 2.5:1 → nền shade 700. */
+:host-context(.dark) .seg-btn.on {
+  background: #1d4ed8;
+}
+
 /* ---------- Thẻ doanh thu ---------- */
 .rev-change {
   display: inline-flex;
@@ -71,9 +76,18 @@
   color: #15803d;
 }
 
+/* Dark: nền #7f1d1d/#14532d nên chữ shade 700 vô hình → dùng shade 300 (~5.2–6.5:1). */
+:host-context(.dark) .rev-change {
+  color: #fca5a5;
+}
+
+:host-context(.dark) .rev-change.up {
+  color: #86efac;
+}
+
 .rev-change.neutral {
   background: var(--color-bg-tertiary);
-  color: var(--color-text-tertiary);
+  color: var(--color-text-secondary);
 }
 
 .rev-total {
@@ -186,17 +200,18 @@
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   background: var(--color-bg-tertiary);
-  color: var(--color-text-tertiary);
+  color: var(--color-text-secondary);
 }
 
 .rank.top1 {
   background: linear-gradient(135deg, #f59e0b, #d97706);
-  color: #fff;
+  /* Chữ trắng trên amber chỉ ~2.1:1 → chữ nâu đậm đạt 4.7–7:1. */
+  color: #451a03;
 }
 
 .rank.top2 {
   background: var(--color-bg-active);
-  color: var(--color-text-secondary);
+  color: var(--color-text-primary);
 }
 
 .rank.top3 {
@@ -280,6 +295,15 @@
 
 .link-more:hover {
   color: var(--color-primary-hover);
+}
+
+/* Dark: shade 700 trên nền tối chỉ 2.2:1 → dùng blue-300 (~8:1). */
+:host-context(.dark) .link-more {
+  color: #93c5fd;
+}
+
+:host-context(.dark) .link-more:hover {
+  color: #bfdbfe;
 }
 
 /* ---------- Trạng thái trống trong khối ---------- */
@@ -375,7 +399,7 @@
   font-family: 'JetBrains Mono', 'Fira Code', monospace;
   font-size: 0.8125rem;
   font-weight: 600;
-  color: var(--color-primary);
+  color: #1d4ed8;
   background: var(--color-primary-light);
   border: 1px solid var(--color-border-primary);
   white-space: nowrap;
@@ -383,8 +407,9 @@
   text-overflow: ellipsis;
 }
 
+/* Dark: nền primary-light #1e3a8a + chữ blue-300 đạt ~5.7:1. */
 :host-context(.dark) .voucher-chip {
-  background: color-mix(in srgb, var(--color-primary) 18%, transparent);
+  color: #93c5fd;
 }
 
 /* Tôn trọng prefers-reduced-motion */

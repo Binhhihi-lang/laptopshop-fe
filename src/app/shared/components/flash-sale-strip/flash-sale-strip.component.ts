@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { FlashSaleItemResponse, FlashSaleResponse } from '@core/models/flash-sale.model';
+import { cloudinarySrcset } from '@shared/utils/cloudinary-srcset';
 
 /**
  * Dải flash sale trên trang chủ (§0.5): banner gradient rose→amber + tên phiên +
@@ -75,8 +76,13 @@ import { FlashSaleItemResponse, FlashSaleResponse } from '@core/models/flash-sal
                     @if (item.productImage) {
                       <img
                         [src]="item.productImage"
+                        [attr.srcset]="cloudinarySrcset(item.productImage)"
+                        sizes="(min-width: 1024px) 20vw, (min-width: 640px) 33vw, 50vw"
                         [alt]="item.productName"
+                        width="480"
+                        height="480"
                         loading="lazy"
+                        decoding="async"
                         class="w-full h-full object-cover"
                         [class.grayscale]="item.remainingStock <= 0"
                         [class.opacity-70]="item.remainingStock <= 0"
@@ -251,4 +257,7 @@ export class FlashSaleStripComponent {
       maximumFractionDigits: 0,
     }).format(value);
   }
+
+  /** Srcset Cloudinary cho thumbnail flash — máy yếu không phải tải ảnh gốc. */
+  readonly cloudinarySrcset = cloudinarySrcset;
 }

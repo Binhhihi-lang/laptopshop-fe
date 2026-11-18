@@ -6,7 +6,7 @@
   }
 
   <div class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
-    <div class="max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-4">
+    <div class="max-w-6xl mx-auto py-4">
       <app-page-header [title]="pageTitle()" [subtitle]="pageSubtitle()" [hasActions]="true">
         <app-button
           variant="ghost"
@@ -22,7 +22,7 @@
   <form
     [formGroup]="bannerForm"
     (ngSubmit)="onSubmit()"
-    class="banner-form max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-8"
+    class="banner-form max-w-6xl mx-auto py-8"
   >
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
       <!-- ===== Cột trái: form ===== -->

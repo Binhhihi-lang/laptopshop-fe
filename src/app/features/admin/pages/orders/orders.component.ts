@@ -36,7 +36,6 @@ import { InputComponent } from '@shared/components/input/input.component';
 import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
 import { SelectComponent, SelectOption } from '@shared/components/select/select.component';
 import { StatCardComponent } from '@shared/components/stat-card/stat-card.component';
-import { PaginationComponent } from '@shared/components/pagination/pagination.component';
 import { PageHeaderComponent, BulkToolbarComponent, BulkToolbarButton } from '@shared/components';
 
 const ORDER_STATUSES: OrderStatus[] = [
@@ -65,7 +64,6 @@ const PAYMENT_STATUSES = ['PENDING', 'PAID', 'FAILED', 'REFUNDED'] as const;
     SelectComponent,
     EmptyStateComponent,
     StatCardComponent,
-    PaginationComponent,
     PageHeaderComponent,
     BulkToolbarComponent,
   ],
@@ -336,6 +334,11 @@ export class OrdersComponent implements OnInit, AfterViewInit {
       this.page.set(p);
       this.loadData();
     }
+  }
+
+  /** app-table phát trang 1-based; component dùng 0-based. */
+  onTablePage(page1Based: number): void {
+    this.goPage(page1Based - 1);
   }
 
   // Template không hỗ trợ `as` union → tách ra computed

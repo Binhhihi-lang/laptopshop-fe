@@ -18,7 +18,7 @@ import {
   ProductCardComponent,
   SelectComponent,
   SelectOption,
-} from '@shared/components';
+} from '@shared/components/client-components';
 
 const PAGE_SIZE = 12;
 

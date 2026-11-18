@@ -361,7 +361,7 @@ export class TableComponent<T = any> {
     Array.from({ length: Math.min(this.pageSize(), 20) }, (_, i) => i),
   );
 
-  /** Dãy số trang rút gọn — dùng chung logic với app-pagination. */
+  /** Dãy số trang rút gọn: đầu/cuối + lân cận trang hiện tại, tối đa 11 ô. */
   pageSlots = computed<PageSlot[]>(() =>
     buildPageSlots(this.totalPages(), this.currentPage() - 1),
   );

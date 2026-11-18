@@ -14,11 +14,11 @@ import {
   ButtonComponent,
   CardComponent,
   EmptyStateComponent,
-  LoadingComponent,
   PriceComponent,
   ProductCardComponent,
+  ProductDetailSkeletonComponent,
   QtyStepperComponent,
-} from '@shared/components';
+} from '@shared/components/client-components';
 
 @Component({
   selector: 'app-product-detail',
@@ -32,9 +32,9 @@ import {
     ButtonComponent,
     CardComponent,
     EmptyStateComponent,
-    LoadingComponent,
     PriceComponent,
     ProductCardComponent,
+    ProductDetailSkeletonComponent,
     QtyStepperComponent,
   ],
   templateUrl: './product-detail.component.html',

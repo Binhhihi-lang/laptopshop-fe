@@ -16,8 +16,9 @@ import {
   FlashSaleStripComponent,
   HomeBannerCarouselComponent,
   LoadingComponent,
+  LoadingGateComponent,
   ProductCardComponent,
-} from '@shared/components';
+} from '@shared/components/client-components';
 
 /**
  * Trang chủ storefront:
@@ -39,6 +40,7 @@ import {
     FlashSaleStripComponent,
     HomeBannerCarouselComponent,
     LoadingComponent,
+    LoadingGateComponent,
     ProductCardComponent,
   ],
   templateUrl: './home.component.html',
@@ -220,10 +222,16 @@ export class HomeComponent implements OnInit {
   }
 
   goCategory(cat: CategoryResponse): void {
+    if (this.clickSuppressed()) {
+      return;
+    }
     this.router.navigate(['/products'], { queryParams: { categoryId: cat.id } });
   }
 
   goBrand(brand: string): void {
+    if (this.clickSuppressed()) {
+      return;
+    }
     this.router.navigate(['/products'], { queryParams: { factory: brand } });
   }
 
@@ -242,28 +250,50 @@ export class HomeComponent implements OnInit {
   private dragStartX = 0;
   private dragStartScroll = 0;
   private dragTrack: HTMLElement | null = null;
+  private dragMoved = false;
+  /** Chặn click ngay sau khi kéo — tránh vừa cuộn vừa mở trang. */
+  private suppressClickUntil = 0;
 
   onDragStart(event: PointerEvent, track: HTMLElement | null): void {
     if (!track) {
       return;
     }
     this.dragging = true;
+    this.dragMoved = false;
     this.dragTrack = track;
     this.dragStartX = event.clientX;
     this.dragStartScroll = track.scrollLeft;
-    track.setPointerCapture(event.pointerId);
   }
 
   onDragMove(event: PointerEvent): void {
     if (!this.dragging || !this.dragTrack) {
       return;
     }
-    this.dragTrack.scrollLeft = this.dragStartScroll - (event.clientX - this.dragStartX);
+    const dx = event.clientX - this.dragStartX;
+    // Chỉ coi là kéo khi vượt ngưỡng; dưới ngưỡng vẫn là click bình thường.
+    if (!this.dragMoved && Math.abs(dx) > 6) {
+      this.dragMoved = true;
+      // Capture SAU khi đã xác định là kéo: capture ngay từ pointerdown sẽ
+      // chuyển hết click về track và nút con không bao giờ nhận được click.
+      this.dragTrack.setPointerCapture(event.pointerId);
+    }
+    if (this.dragMoved) {
+      this.dragTrack.scrollLeft = this.dragStartScroll - dx;
+    }
   }
 
   onDragEnd(): void {
+    if (this.dragMoved) {
+      this.suppressClickUntil = Date.now() + 250;
+    }
     this.dragging = false;
+    this.dragMoved = false;
     this.dragTrack = null;
+  }
+
+  /** True khi vừa kéo xong — chặn click để không điều hướng ngoài ý muốn. */
+  private clickSuppressed(): boolean {
+    return Date.now() < this.suppressClickUntil;
   }
 }
 

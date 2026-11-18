@@ -101,8 +101,8 @@
     <!-- h2 ẩn: trang chỉ có h1 rồi tới h3 của product-card → heading-order bị nhảy cấp -->
     <h2 class="sr-only">Danh sách sản phẩm</h2>
     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-      @for (p of products(); track p.id) {
-        <app-product-card class="min-w-0" [product]="p" />
+      @for (p of products(); track p.id; let i = $index) {
+        <app-product-card class="min-w-0" [product]="p" [priority]="i < 4" />
       }
     </div>
 

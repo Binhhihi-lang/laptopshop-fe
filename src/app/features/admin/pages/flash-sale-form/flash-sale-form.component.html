@@ -7,7 +7,7 @@
 
   <!-- Header -->
   <div class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
-    <div class="max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-4">
+    <div class="max-w-6xl mx-auto py-4">
       <app-page-header [title]="pageTitle()" [subtitle]="pageSubtitle()" [hasActions]="true">
         <app-button
           variant="ghost"
@@ -23,7 +23,7 @@
   <form
     [formGroup]="flashSaleForm"
     (ngSubmit)="onSubmit()"
-    class="flash-sale-form max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-8 space-y-6"
+    class="flash-sale-form max-w-6xl mx-auto py-8 space-y-6"
   >
     <!-- ===== Thông tin phiên ===== -->
     <section class="form-section" aria-labelledby="info-heading">
@@ -101,7 +101,7 @@
     <!-- ===== Sản phẩm trong phiên ===== -->
     <section class="form-section" aria-labelledby="items-heading">
       <app-card [padding]="'default'" [variant]="'default'">
-        <div class="flex items-center justify-between gap-3 mb-4">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
           <div class="flex items-center gap-2">
             <mat-icon class="text-primary-600 dark:text-primary-400">inventory_2</mat-icon>
             <h3 id="items-heading" class="text-lg font-medium text-slate-900 dark:text-white">
@@ -117,8 +117,148 @@
           />
         </div>
 
-        <div formArrayName="items" class="overflow-visible">
-          <table class="w-full text-sm">
+        <div formArrayName="items">
+          <!-- Mobile: mỗi sản phẩm một card dọc (bảng 7 cột rộng ~932px không vừa) -->
+          <div class="md:hidden space-y-3">
+            @for (group of items.controls; track $index; let i = $index) {
+              <div
+                [formGroupName]="i"
+                class="rounded-xl border border-slate-200 dark:border-slate-700 p-3 space-y-3"
+              >
+                <div class="flex items-center justify-between gap-2">
+                  <span class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                    Sản phẩm {{ i + 1 }}
+                  </span>
+                  <div class="flex items-center gap-2">
+                    @if (discountPercent(i); as pct) {
+                      @if (pct > 0) {
+                        <span class="px-2 py-0.5 rounded-md text-xs font-bold text-white bg-rose-600">
+                          −{{ pct }}%
+                        </span>
+                      }
+                    }
+                    <button
+                      type="button"
+                      class="w-9 h-9 rounded-lg grid place-items-center text-danger-600 hover:bg-danger-50 dark:hover:bg-danger-950/40"
+                      [attr.aria-label]="'Xóa sản phẩm ' + (i + 1)"
+                      (click)="removeItem(i)"
+                      [disabled]="isSubmitting()"
+                    >
+                      <mat-icon class="!w-4 !h-4 !text-[18px] !leading-none">delete</mat-icon>
+                    </button>
+                  </div>
+                </div>
+
+                <app-product-picker
+                  formControlName="productId"
+                  [placeholder]="'Tìm sản phẩm ' + (i + 1) + '…'"
+                  [ariaLabel]="'Chọn sản phẩm ' + (i + 1)"
+                  [disabled]="isSubmitting()"
+                  [initialLabel]="itemLabelAt(i)"
+                  (selectionChange)="onProductPicked(i, $event)"
+                />
+                @if (itemError(i, 'productId'); as err) {
+                  <p class="mt-1 text-xs text-danger-600 dark:text-danger-400 font-medium">{{ err }}</p>
+                }
+
+                <div class="grid grid-cols-2 gap-3">
+                  <div>
+                    <label
+                      [attr.for]="'item-price-m-' + i"
+                      class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1"
+                      >Giá flash (₫)</label
+                    >
+                    <app-input
+                      id="item-price-m-{{ i }}"
+                      name="flashPrice"
+                      type="number"
+                      formControlName="flashPrice"
+                      placeholder="VD: 15000000"
+                      [min]="'1'"
+                      [step]="'1'"
+                      [ariaLabel]="'Giá flash sản phẩm ' + (i + 1)"
+                    />
+                    @if (itemError(i, 'flashPrice'); as err) {
+                      <p class="mt-1 text-xs text-danger-600 dark:text-danger-400 font-medium">{{ err }}</p>
+                    }
+                    @if (isPriceInvalid(i)) {
+                      <p class="mt-1 text-xs text-danger-600 dark:text-danger-400 font-medium">
+                        Phải thấp hơn giá thường
+                      </p>
+                    }
+                  </div>
+
+                  <div>
+                    <label
+                      [attr.for]="'item-stock-m-' + i"
+                      class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1"
+                      >Suất còn lại</label
+                    >
+                    <app-input
+                      id="item-stock-m-{{ i }}"
+                      name="flashStock"
+                      type="number"
+                      formControlName="flashStock"
+                      placeholder="VD: 10"
+                      [min]="'0'"
+                      [step]="'1'"
+                      [ariaLabel]="'Số lượng phiên sản phẩm ' + (i + 1)"
+                    />
+                    @if (soldAt(i); as sold) {
+                      <p class="mt-1 text-[11px] text-slate-400">Đã bán {{ sold }} suất</p>
+                    }
+                    @if (itemError(i, 'flashStock'); as err) {
+                      <p class="mt-1 text-xs text-danger-600 dark:text-danger-400 font-medium">{{ err }}</p>
+                    }
+                  </div>
+
+                  <div>
+                    <label
+                      [attr.for]="'item-limit-m-' + i"
+                      class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1"
+                      >Tối đa/khách <span class="text-danger-500">*</span></label
+                    >
+                    <app-input
+                      id="item-limit-m-{{ i }}"
+                      name="perUserLimit"
+                      type="number"
+                      formControlName="perUserLimit"
+                      placeholder="VD: 1"
+                      [min]="'1'"
+                      [step]="'1'"
+                      [ariaLabel]="'Số máy tối đa mỗi khách, sản phẩm ' + (i + 1)"
+                    />
+                    @if (itemError(i, 'perUserLimit'); as err) {
+                      <p class="mt-1 text-xs text-danger-600 dark:text-danger-400 font-medium">{{ err }}</p>
+                    }
+                    @if (isLimitExceedsStock(i)) {
+                      <p class="mt-1 text-xs text-danger-600 dark:text-danger-400 font-medium">
+                        Không được vượt suất còn lại
+                      </p>
+                    }
+                  </div>
+
+                  <div>
+                    <span class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1"
+                      >Giá thường</span
+                    >
+                    <p class="text-sm text-slate-500 dark:text-slate-400 tabular-nums">
+                      {{ formatPrice(regularPriceAt(i)) }}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            }
+
+            <p class="text-sm text-slate-600 dark:text-slate-300 font-medium">
+              {{ items.length }} sản phẩm · Tổng suất còn lại:
+              <span class="tabular-nums">{{ totalStock() }} suất</span>
+            </p>
+          </div>
+
+          <!-- md trở lên: bảng đầy đủ, cuộn ngang khi hẹp -->
+          <div class="hidden md:block overflow-x-auto">
+          <table class="w-full min-w-[900px] text-sm">
             <thead>
               <tr class="text-left text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">
                 <th class="py-2.5 pr-3 font-medium min-w-[240px]">Sản phẩm</th>
@@ -243,6 +383,7 @@
               </tr>
             </tfoot>
           </table>
+          </div>
         </div>
       </app-card>
     </section>

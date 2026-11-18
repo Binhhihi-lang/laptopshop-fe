@@ -1,9 +1,7 @@
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
   @if (isLoading()) {
-    <!-- Giữ chỗ bằng chiều cao khung xem trước để nội dung không nhảy (CLS). -->
-    <div class="min-h-[120vh]">
-      <app-loading text="Đang tải sản phẩm..."></app-loading>
-    </div>
+    <!-- Khung xương giữ đúng bố cục thật: dữ liệu về không nhảy layout (CLS). -->
+    <app-product-detail-skeleton />
   } @else if (!product()) {
     <app-empty-state
       icon="error"

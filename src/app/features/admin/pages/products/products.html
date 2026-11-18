@@ -1,7 +1,7 @@
 <div class="products-container min-h-screen bg-slate-50 dark:bg-slate-950">
   <!-- Page Header -->
   <div class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
-    <div class="max-w-screen-2xl mx-auto px-4 md:px-6 lg:px-8 py-4">
+    <div class="max-w-7xl mx-auto py-4">
       <app-page-header
         title="Quản lý sản phẩm"
         [subtitle]="'Tìm kiếm, lọc và quản lý danh sách sản phẩm (' + totalElements() + ')'"
@@ -18,7 +18,7 @@
   </div>
 
   <!-- Filter Bar -->
-  <div class="max-w-screen-2xl mx-auto px-4 md:px-6 lg:px-8 py-4">
+  <div class="max-w-7xl mx-auto py-4">
     <app-card [padding]="'sm'" [compact]="true">
       <div class="filter-row flex flex-wrap gap-4 items-end">
         <!-- Search -->
@@ -123,7 +123,7 @@
       description="Tính năng xem sản phẩm đã bị thu hồi quyền bởi quản trị viên. Vui lòng liên hệ quản trị viên nếu bạn cần truy cập."
     />
   } @else {
-  <div class="max-w-screen-2xl mx-auto px-4 md:px-6 lg:px-8 pb-8">
+  <div class="max-w-7xl mx-auto pb-8">
     <app-card [padding]="'none'">
       <app-table
         [data]="products()"
@@ -175,7 +175,8 @@
 
         <!-- Price Column Template -->
         <ng-template #priceColumn let-product>
-          <span class="font-medium tabular-nums text-slate-900 dark:text-white">{{ getProductPrice(product) }}</span>
+          <!-- nowrap: cột 130px hẹp hơn chuỗi "32.990.000 ₫" nên ký tự ₫ bị đẩy xuống dòng. -->
+          <span class="font-medium tabular-nums whitespace-nowrap text-slate-900 dark:text-white">{{ getProductPrice(product) }}</span>
         </ng-template>
 
         <!-- Quantity Column Template with Badge -->

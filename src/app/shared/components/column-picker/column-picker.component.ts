@@ -18,19 +18,21 @@ import { Column } from '../table/table.component';
   imports: [CommonModule, MatIconModule, ButtonComponent],
   template: `
     <div #container class="relative">
-      <app-button
-        variant="ghost"
-        icon="view_column"
-        [label]="label()"
-        (click)="toggle()"
-        [attr.aria-expanded]="open()"
-        ariaLabel="Chọn cột hiển thị"
-        class="hidden sm:inline-flex"
-      />
+      <!-- Bọc div vì :host của app-button đè utility display → không tự ẩn ở mobile được -->
+      <div class="hidden sm:block">
+        <app-button
+          variant="ghost"
+          icon="view_column"
+          [label]="label()"
+          (click)="toggle()"
+          [attr.aria-expanded]="open()"
+          ariaLabel="Chọn cột hiển thị"
+        />
+      </div>
       <button
         type="button"
         (click)="toggle()"
-        class="flex items-center gap-2 px-3 py-1.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors sm:hidden"
+        class="flex items-center justify-center w-11 h-11 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors sm:hidden"
         aria-label="Chọn cột hiển thị"
         [attr.aria-expanded]="open()"
       >

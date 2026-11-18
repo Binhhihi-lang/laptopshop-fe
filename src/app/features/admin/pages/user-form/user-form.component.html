@@ -9,7 +9,7 @@
 
   <!-- Page Header -->
   <div class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
-    <div class="max-w-3xl mx-auto px-4 py-4">
+    <div class="max-w-3xl mx-auto py-4">
       <app-page-header
         [title]="pageTitle()"
         [subtitle]="pageSubtitle()"
@@ -27,7 +27,7 @@
   </div>
 
   <!-- Form Container -->
-  <form [formGroup]="userForm" (ngSubmit)="onSubmit()" class="max-w-2xl mx-auto px-4 py-8 space-y-6" novalidate>
+  <form [formGroup]="userForm" (ngSubmit)="onSubmit()" class="max-w-2xl mx-auto py-8 space-y-6" novalidate>
       <!-- Avatar Section -->
       <section class="form-section" aria-labelledby="user-avatar-heading">
         <app-card>

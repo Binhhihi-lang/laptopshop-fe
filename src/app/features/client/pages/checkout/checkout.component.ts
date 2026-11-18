@@ -25,7 +25,7 @@ import {
   PromoOverlayComponent,
   SelectComponent,
   SelectOption,
-} from '@shared/components';
+} from '@shared/components/client-components';
 
 @Component({
   selector: 'app-checkout',

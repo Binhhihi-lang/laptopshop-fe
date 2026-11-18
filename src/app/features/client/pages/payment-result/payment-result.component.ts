@@ -4,7 +4,7 @@ import { ActivatedRoute, RouterModule } from '@angular/router';
 import * as QRCode from 'qrcode';
 import { ClientOrderService } from '@core/services/client-order.service';
 import { NotificationService } from '@core/services/notification.service';
-import { ButtonComponent } from '@shared/components';
+import { ButtonComponent } from '@shared/components/client-components';
 
 /** Tên ngân hàng theo BIN — payOS trả `bin` trong dữ liệu link. */
 const BANK_NAMES: Record<string, string> = {

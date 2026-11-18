@@ -10,7 +10,7 @@ import {
   FormFieldComponent,
   InputComponent,
   PageHeaderComponent,
-} from '@shared/components';
+} from '@shared/components/client-components';
 
 /**
  * Đổi mật khẩu khi đã đăng nhập. Yêu cầu nhập mật khẩu cũ + mới. BE tự

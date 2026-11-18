@@ -29,7 +29,7 @@ import { cloudinarySrcset } from '@shared/utils/cloudinary-srcset';
   imports: [CommonModule, RouterLink, MatIconModule],
   template: `
     <section
-      class="relative overflow-hidden bg-slate-900"
+      class="relative overflow-hidden bg-slate-900 group"
       (mouseenter)="pause()"
       (mouseleave)="resume()"
       (focusin)="pause()"
@@ -50,7 +50,9 @@ import { cloudinarySrcset } from '@shared/utils/cloudinary-srcset';
             [attr.aria-hidden]="i !== currentIndex()"
             [attr.tabindex]="i === currentIndex() ? 0 : -1"
           >
-            <div class="relative aspect-[16/6] sm:aspect-[16/5] lg:aspect-[16/4.5] w-full">
+            <!-- Mobile cao hơn hẳn để không bị bóp (ảnh + chữ + CTA cần chỗ);
+                 từ sm giữ dải ngang 16/5, lg 16/4.5. -->
+            <div class="relative w-full min-h-[300px] sm:min-h-0 sm:aspect-[16/5] lg:aspect-[16/4.5]">
               @if (banner.image) {
                 <img
                   [src]="banner.image"
@@ -67,7 +69,9 @@ import { cloudinarySrcset } from '@shared/utils/cloudinary-srcset';
               <div
                 class="absolute inset-0 bg-gradient-to-r from-slate-950/85 via-slate-950/55 to-transparent"
               ></div>
-              <div class="absolute inset-0 flex items-center">
+              <!-- Mobile: nội dung nằm trong luồng để khung cao đủ chứa (không cắt
+                   CTA); từ sm phủ tuyệt đối lên ảnh nền như cũ. -->
+              <div class="relative flex items-center pt-8 pb-12 sm:absolute sm:inset-0 sm:py-0">
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
                   <div class="max-w-[52ch]">
                     @if (banner.kicker) {
@@ -100,10 +104,12 @@ import { cloudinarySrcset } from '@shared/utils/cloudinary-srcset';
       </div>
 
       @if (banners().length > 1) {
-        <!-- Prev / Next -->
+        <!-- Prev / Next: mobile ẩn hẳn (đã có vuốt + dots, và mũi tên sẽ đè lên
+             CTA ở khung hẹp). Từ md trở lên mới hiện, và chỉ hiện khi trỏ vào
+             banner hoặc khi focus bằng bàn phím. -->
         <button
           type="button"
-          class="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/85 hover:bg-white text-slate-900 grid place-items-center shadow-md"
+          class="hidden md:grid absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/85 hover:bg-white text-slate-900 place-items-center shadow-md transition-opacity duration-200 opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
           aria-label="Banner trước"
           (click)="prev(); $event.preventDefault()"
         >
@@ -111,7 +117,7 @@ import { cloudinarySrcset } from '@shared/utils/cloudinary-srcset';
         </button>
         <button
           type="button"
-          class="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/85 hover:bg-white text-slate-900 grid place-items-center shadow-md"
+          class="hidden md:grid absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/85 hover:bg-white text-slate-900 place-items-center shadow-md transition-opacity duration-200 opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
           aria-label="Banner sau"
           (click)="next(); $event.preventDefault()"
         >

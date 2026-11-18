@@ -17,7 +17,7 @@ import {
   LoadingComponent,
   OrderSummaryComponent,
   PromoOverlayComponent,
-} from '@shared/components';
+} from '@shared/components/client-components';
 
 @Component({
   selector: 'app-cart',

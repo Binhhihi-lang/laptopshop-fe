@@ -7,8 +7,8 @@
       bg-[radial-gradient(70%_50%_at_80%_5%,rgba(59,130,246,0.35),transparent_60%),linear-gradient(160deg,#0f172a_0%,#1e293b_55%,#0f172a_100%)]"
   >
     <div class="inline-flex items-center gap-2.5 font-extrabold text-lg">
-      <span class="w-9 h-9 rounded-[10px] bg-primary-600 grid place-items-center">
-        <mat-icon class="!w-5 !h-5 !text-xl">admin_panel_settings</mat-icon>
+      <span class="w-9 h-9 rounded-[10px] bg-primary-600 grid place-items-center shrink-0">
+        <mat-icon class="!w-5 !h-5 !text-[20px] !leading-none">admin_panel_settings</mat-icon>
       </span>
       LaptopShop Admin
     </div>
@@ -36,7 +36,11 @@
   <main class="flex items-center justify-center px-4 py-10 bg-slate-50 dark:bg-slate-950">
     <div class="w-full max-w-[400px]">
       <div class="lg:hidden inline-flex items-center gap-2 mb-6">
-        <mat-icon class="!w-7 !h-7 !text-3xl text-primary-600">admin_panel_settings</mat-icon>
+        <!-- mat-icon cần ép cả w/h/text/leading, nếu không icon 24px mặc định
+             tràn khỏi dòng và bị phần tử cha cắt mất nửa dưới. -->
+        <mat-icon class="!w-7 !h-7 !text-[28px] !leading-none text-primary-600 shrink-0"
+          >admin_panel_settings</mat-icon
+        >
         <span class="text-lg font-bold text-slate-900 dark:text-white">LaptopShop Admin</span>
       </div>
 
@@ -99,6 +103,7 @@
             label="Đăng nhập"
             variant="primary"
             size="lg"
+            [fullWidth]="true"
             class="w-full"
             [loading]="loading()"
             [disabled]="loading()"

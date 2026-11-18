@@ -13,7 +13,7 @@ import { Router, RouterModule } from '@angular/router';
 import { ClientAuthService } from '@core/services/client-auth.service';
 import { ClientCartService } from '@core/services/client-cart.service';
 import { NotificationService } from '@core/services/notification.service';
-import { ButtonComponent, FormFieldComponent, InputComponent } from '@shared/components';
+import { ButtonComponent, FormFieldComponent, InputComponent } from '@shared/components/client-components';
 
 /** Xác nhận mật khẩu phải khớp — kiểm tra ở FE, BE không nhận trường này. */
 function passwordMatchValidator(group: AbstractControl): ValidationErrors | null {

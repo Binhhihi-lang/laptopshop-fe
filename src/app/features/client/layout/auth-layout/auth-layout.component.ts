@@ -7,8 +7,8 @@ import { MatIconModule } from '@angular/material/icon';
  * mật khẩu / đặt lại mật khẩu) — split-screen, KHÔNG dùng header + footer của
  * `ClientLayoutComponent`.
  *
- * Trái: brand panel gradient (ẩn dưới lg). Phải: card form bọc `<router-outlet>`
- * nên các trang con chỉ render nội dung form, không tự bọc card.
+ * Trái: brand panel ảnh laptop thật + lớp phủ tối (ẩn dưới lg). Phải: card form
+ * bọc `<router-outlet>` nên các trang con chỉ render nội dung form.
  */
 @Component({
   selector: 'app-auth-layout',
@@ -16,44 +16,47 @@ import { MatIconModule } from '@angular/material/icon';
   imports: [RouterModule, RouterOutlet, MatIconModule],
   template: `
     <div class="min-h-screen grid lg:grid-cols-2">
-      <!-- Brand panel: chỉ hiện từ lg -->
-      <aside
-        class="hidden lg:flex flex-col justify-center gap-5 p-14 text-white relative overflow-hidden
-          bg-[radial-gradient(80%_60%_at_85%_10%,rgba(255,255,255,0.16),transparent_60%),radial-gradient(60%_50%_at_10%_90%,rgba(34,211,238,0.25),transparent_60%),linear-gradient(150deg,#1d4ed8_0%,#4f46e5_48%,#7c3aed_100%)]"
-      >
-        <a routerLink="/" class="inline-flex items-center gap-2.5 font-extrabold text-lg">
-          <span class="w-9 h-9 rounded-[10px] bg-white/15 backdrop-blur-sm grid place-items-center">
-            <mat-icon class="!w-5 !h-5 !text-xl">laptop_chromebook</mat-icon>
-          </span>
-          LaptopShop
-        </a>
+      <!-- Brand panel: ảnh thật + overlay tối để chữ trắng đạt tương phản AA -->
+      <aside class="hidden lg:block relative overflow-hidden">
+        <img
+          src="https://res.cloudinary.com/dbtbj5s8w/image/upload/w_1200,q_auto:eco,f_auto/v1789435492/product/onte7itapxpccpkuf769.webp"
+          alt=""
+          aria-hidden="true"
+          class="absolute inset-0 w-full h-full object-cover"
+        />
+        <!-- Lớp tối 2 chiều: đảm bảo chữ trắng ≥ 4.5:1 ở mọi vùng ảnh -->
+        <div
+          class="absolute inset-0 bg-[linear-gradient(155deg,rgba(15,23,42,0.88)_0%,rgba(30,41,59,0.7)_45%,rgba(15,23,42,0.92)_100%)]"
+        ></div>
 
-        <h2 class="text-3xl font-extrabold tracking-tight leading-tight">
-          Mua sắm laptop<br />dễ dàng hơn bao giờ hết
-        </h2>
-        <p class="text-base text-white/85 max-w-[42ch]">
-          Đăng nhập để theo dõi đơn hàng, lưu giỏ hàng và nhận ưu đãi riêng cho thành viên.
-        </p>
+        <div class="relative h-full flex flex-col justify-center gap-5 p-14 text-white">
+          <a routerLink="/" class="inline-flex items-center gap-2.5 font-extrabold text-lg">
+            <span class="w-9 h-9 rounded-[10px] bg-white/15 backdrop-blur-sm grid place-items-center">
+              <mat-icon class="!w-5 !h-5 !text-xl">laptop_chromebook</mat-icon>
+            </span>
+            LaptopShop
+          </a>
 
-        <ul class="flex flex-col gap-2.5 text-sm text-white/90">
-          @for (perk of perks; track perk) {
-            <li class="flex items-center gap-2.5">
-              <span
-                class="w-[22px] h-[22px] rounded-full bg-white/20 grid place-items-center shrink-0"
-              >
-                <mat-icon class="!w-3 !h-3 !text-xs">check</mat-icon>
-              </span>
-              {{ perk }}
-            </li>
-          }
-        </ul>
+          <h2 class="text-3xl font-extrabold tracking-tight leading-tight">
+            Mua sắm laptop<br />dễ dàng hơn bao giờ hết
+          </h2>
+          <p class="text-base text-white/85 max-w-[42ch]">
+            Đăng nhập để theo dõi đơn hàng, lưu giỏ hàng và nhận ưu đãi riêng cho thành viên.
+          </p>
 
-        <svg viewBox="0 0 240 160" aria-hidden="true" class="max-w-[330px] mt-2.5">
-          <rect x="40" y="20" width="160" height="100" rx="9" fill="rgba(255,255,255,.14)" />
-          <rect x="44" y="27" width="152" height="11" rx="5.5" fill="rgba(255,255,255,.25)" />
-          <rect x="36" y="120" width="168" height="9" rx="4.5" fill="rgba(255,255,255,.18)" />
-          <path d="M64 129 h112 l-7 13 h-98 z" fill="rgba(255,255,255,.12)" />
-        </svg>
+          <ul class="flex flex-col gap-2.5 text-sm text-white/90">
+            @for (perk of perks; track perk) {
+              <li class="flex items-center gap-2.5">
+                <span
+                  class="w-[22px] h-[22px] rounded-full bg-white/20 grid place-items-center shrink-0"
+                >
+                  <mat-icon class="!w-3 !h-3 !text-xs">check</mat-icon>
+                </span>
+                {{ perk }}
+              </li>
+            }
+          </ul>
+        </div>
       </aside>
 
       <!-- Panel form: <main> để mọi trang auth có landmark chính. -->

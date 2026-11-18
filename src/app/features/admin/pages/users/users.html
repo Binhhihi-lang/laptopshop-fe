@@ -2,7 +2,7 @@
 <div class="users-container min-h-screen bg-slate-50 dark:bg-slate-950">
   <!-- Page Header -->
   <div class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
-    <div class="max-w-screen-2xl mx-auto px-4 md:px-6 lg:px-8 py-4">
+    <div class="max-w-7xl mx-auto py-4">
       <app-page-header
         title="Quản lý người dùng"
         [subtitle]="'Tìm kiếm, lọc và quản lý tài khoản người dùng (' + totalElements() + ' tài khoản)'"
@@ -19,11 +19,11 @@
   </div>
 
   <!-- Filter Bar -->
-  <div class="max-w-screen-2xl mx-auto px-4 md:px-6 lg:px-8 py-4">
+  <div class="max-w-7xl mx-auto py-4">
     <app-card [padding]="'sm'" [compact]="true">
-      <div class="filter-row flex flex-wrap gap-4 items-end">
+      <div class="filter-row flex flex-col sm:flex-row sm:flex-wrap gap-3 sm:gap-4 sm:items-end">
         <!-- Search -->
-        <div class="relative flex-1 min-w-[250px] max-w-[400px]">
+        <div class="relative w-full sm:flex-1 sm:min-w-[250px] sm:max-w-[400px]">
           <app-input
             id="user-search"
             name="search"
@@ -38,6 +38,7 @@
         <!-- Role Filter -->
         @if (!isLoadingRoles()) {
           <app-select
+            class="block w-full sm:w-[200px]"
             id="role-filter"
             name="role"
             [options]="roleOptions()"
@@ -49,10 +50,10 @@
           />
         }
 
-        <!-- Status Filter -->
-        <div class="status-filter-group flex items-center gap-2">
-          <span class="filter-label text-sm text-slate-600 dark:text-slate-400 font-medium">Trạng thái:</span>
-          <div class="flex gap-1 bg-slate-100 dark:bg-slate-800 rounded-lg p-1">
+        <!-- Status Filter: cho phép xuống dòng thay vì cuộn ngang -->
+        <div class="status-filter-group flex items-center gap-2 flex-wrap w-full sm:w-auto">
+          <span class="filter-label text-sm text-slate-600 dark:text-slate-400 font-medium shrink-0">Trạng thái:</span>
+          <div class="flex flex-wrap gap-1 bg-slate-100 dark:bg-slate-800 rounded-lg p-1">
             <button
               type="button"
               (click)="setStatusFilter('all')"
@@ -116,7 +117,7 @@
   />
 
   <!-- Users Table -->
-  <div class="max-w-screen-2xl mx-auto px-4 md:px-6 lg:px-8 pb-8">
+  <div class="max-w-7xl mx-auto pb-8">
     <app-card [padding]="'none'">
       @if (permissionDenied()) {
         <app-empty-state

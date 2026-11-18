@@ -50,6 +50,12 @@ export type ButtonSize = 'sm' | 'default' | 'lg' | 'icon';
       :host {
         display: inline-flex;
       }
+      /* Component style nạp sau Tailwind nên :host đè utility display/width; cho w-full/block thắng lại */
+      :host(.w-full),
+      :host(.block) {
+        display: flex;
+        width: 100%;
+      }
     `,
   ],
 })
@@ -63,6 +69,8 @@ export class ButtonComponent {
   loading = input<boolean>(false);
   icon = input<string>('');
   iconOnly = input<boolean>(false);
+  /** Giãn nút 100% bề ngang (CTA form, sidebar tóm tắt đơn). */
+  fullWidth = input<boolean>(false);
   ariaLabel = input<string>('');
 
   // Computed classes based on DESIGN.md tokens
@@ -89,7 +97,9 @@ export class ButtonComponent {
       icon: 'p-2',
     };
 
-    return `${base} ${variantClasses[this.variant()]} ${sizeClasses[this.size()]}${this.iconOnly() ? ' w-10 h-10' : ''} rounded-lg`;
+    // w-full phải đặt trên <button> bên trong; class trên host không truyền xuống nút
+    const width = this.fullWidth() ? ' w-full' : '';
+    return `${base} ${variantClasses[this.variant()]} ${sizeClasses[this.size()]}${this.iconOnly() ? ' w-10 h-10' : ''}${width} rounded-lg`;
   });
 
   onClick(event: MouseEvent): void {

@@ -9,7 +9,7 @@
 
   <!-- Page Header -->
   <div class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
-    <div class="max-w-3xl mx-auto px-4 py-4">
+    <div class="max-w-3xl mx-auto py-4">
       <app-page-header
         title="Hồ sơ cá nhân"
         subtitle="Xem và cập nhật thông tin tài khoản của bạn"
@@ -27,7 +27,7 @@
   </div>
 
   <!-- Form Container -->
-  <form [formGroup]="profileForm" (ngSubmit)="onSubmit()" class="max-w-2xl mx-auto px-4 py-8 space-y-6" novalidate>
+  <form [formGroup]="profileForm" (ngSubmit)="onSubmit()" class="max-w-2xl mx-auto py-8 space-y-6" novalidate>
     <!-- Avatar Section -->
     <section class="form-section" aria-labelledby="profile-avatar-heading">
       <app-card>
@@ -206,7 +206,7 @@
     <!-- Thiết bị đang đăng nhập -->
     <section class="form-section" aria-labelledby="profile-devices-heading">
       <app-card>
-        <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between gap-4">
+        <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex flex-wrap items-center justify-between gap-4">
           <h2 id="profile-devices-heading" class="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
             <mat-icon class="w-5 h-5 text-primary">devices</mat-icon>
             Thiết bị đang đăng nhập
@@ -233,7 +233,7 @@
             </p>
           } @else {
             @if (otherDeviceCount > 0) {
-              <div class="flex items-center justify-between gap-3 mb-3">
+              <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
                 <button
                   type="button"
                   class="text-sm font-medium text-primary-600 hover:underline"

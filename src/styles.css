@@ -96,7 +96,10 @@ html {
   font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  scroll-behavior: smooth;
+  /* KHÔNG đặt scroll-behavior: smooth ở đây. Nó áp cho cả cuộn do router gây ra
+     (scrollPositionRestoration: 'top'), nên mở trang chi tiết từ cuối danh sách
+     sẽ cuộn ngược từ từ lên đầu thay vì đứng ở đầu trang ngay. Chỉ bật smooth ở
+     nơi thật sự cần (nút phân trang, anchor trong trang). */
 }
 
 body {

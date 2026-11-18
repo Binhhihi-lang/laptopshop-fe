@@ -4,7 +4,9 @@
   <p>{{ data.message }}</p>
 </mat-dialog-content>
 
+<!-- Dùng app-button thay cho mat-button: mat-button lấy font Roboto của theme
+     Material nên chữ trong popup lệch hẳn font Inter của phần còn lại. -->
 <mat-dialog-actions align="end">
-  <button mat-button (click)="onCancel()">Hủy</button>
-  <button mat-flat-button color="warn" (click)="onConfirm()">Xác nhận</button>
+  <app-button variant="secondary" label="Hủy" (click)="onCancel()" />
+  <app-button variant="danger" label="Xác nhận" (click)="onConfirm()" />
 </mat-dialog-actions>

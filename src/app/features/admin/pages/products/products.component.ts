@@ -104,7 +104,7 @@ export class ProductsComponent implements OnInit, AfterViewInit {
     { key: 'image', label: 'Ảnh', visible: true, width: '60px', align: 'center' },
     { key: 'code', label: 'Mã SKU', visible: true, width: '120px', align: 'left' },
     { key: 'name', label: 'Tên sản phẩm', visible: true, sortable: true },
-    { key: 'price', label: 'Giá', visible: true, width: '130px', align: 'right', sortable: true },
+    { key: 'price', label: 'Giá', visible: true, width: '150px', align: 'right', sortable: true },
     { key: 'quantity', label: 'Tồn kho', visible: true, width: '140px', align: 'left' },
     {
       key: 'sold',

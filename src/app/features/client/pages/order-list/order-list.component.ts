@@ -10,7 +10,7 @@ import {
   LoadingComponent,
   OrderCardComponent,
   PaginationComponent,
-} from '@shared/components';
+} from '@shared/components/client-components';
 
 @Component({
   selector: 'app-order-list',

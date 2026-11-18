@@ -6,25 +6,39 @@
     class="sticky top-0 z-30 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shadow-sm"
   >
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex items-center justify-between h-16 gap-4">
+      <!-- Mobile siết gap + cho nhóm trái co lại để không tràn ngang ở 360px -->
+      <div class="flex items-center justify-between h-16 gap-2 sm:gap-4">
         <!-- Logo + mobile menu -->
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-1.5 sm:gap-3 min-w-0">
           <button
+            #menuToggle
             type="button"
-            class="md:hidden p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
+            class="md:hidden shrink-0 -ml-2 p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
             (click)="toggleMobileMenu()"
-            aria-label="Mở menu"
+            [attr.aria-expanded]="mobileMenuOpen()"
+            aria-controls="mobile-nav-drawer"
+            [attr.aria-label]="mobileMenuOpen() ? 'Đóng menu điều hướng' : 'Mở menu điều hướng'"
           >
             <mat-icon>{{ mobileMenuOpen() ? 'close' : 'menu' }}</mat-icon>
           </button>
-          <a routerLink="/" class="flex items-center gap-2">
-            <img src="/brand/laptopshop-mark.svg" alt="" width="36" height="36" class="w-9 h-9" />
-            <span class="text-lg font-bold text-slate-900 dark:text-white">LaptopShop</span>
+          <a routerLink="/" class="flex items-center gap-2 min-w-0">
+            <img
+              src="/brand/laptopshop-mark.svg"
+              alt=""
+              width="36"
+              height="36"
+              class="w-8 h-8 sm:w-9 sm:h-9 shrink-0"
+            />
+            <!-- nowrap để không xuống dòng đè icon; cực hẹp thì cắt đuôi thay vì tràn -->
+            <span
+              class="min-w-0 truncate whitespace-nowrap text-base sm:text-lg font-bold text-slate-900 dark:text-white"
+              >LaptopShop</span
+            >
           </a>
         </div>
 
         <!-- Search bar -->
-        <form class="flex-1 max-w-xl hidden sm:block" (ngSubmit)="onSearch()">
+        <form class="flex-1 min-w-0 max-w-xl hidden sm:block" (ngSubmit)="onSearch()">
           <div class="relative">
             <mat-icon class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"
               >search</mat-icon
@@ -40,26 +54,31 @@
         </form>
 
         <!-- Right actions -->
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-1 sm:gap-2 shrink-0">
+          <!-- Theme ẩn dưới sm, chuyển vào drawer mobile -->
           <button
             type="button"
-            class="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
+            class="hidden sm:grid place-items-center w-10 h-10 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
             (click)="toggleTheme()"
             [attr.aria-label]="theme.isDark() ? 'Chuyển giao diện sáng' : 'Chuyển giao diện tối'"
           >
-            <mat-icon>{{ theme.isDark() ? 'light_mode' : 'dark_mode' }}</mat-icon>
+            <mat-icon class="!w-6 !h-6 !text-[24px] !leading-none">{{
+              theme.isDark() ? 'light_mode' : 'dark_mode'
+            }}</mat-icon>
           </button>
 
           <button
             type="button"
-            class="relative p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
+            class="relative grid place-items-center w-11 h-11 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
             (click)="goToCart()"
             aria-label="Giỏ hàng"
           >
-            <mat-icon>shopping_cart</mat-icon>
+            <!-- grid + place-items-center: icon 24px nằm chính giữa nền 44px.
+                 Trước đây dùng p-2 nên icon lệch xuống do line-height của mat-icon. -->
+            <mat-icon class="!w-6 !h-6 !text-[24px] !leading-none">shopping_cart</mat-icon>
             @if (cartCount() > 0) {
               <span
-                class="absolute -top-1 -right-1 bg-rose-500 text-white text-[10px] rounded-full px-1.5 min-w-[18px] h-[18px] flex items-center justify-center"
+                class="absolute top-0.5 right-0.5 bg-rose-500 text-white text-[10px] font-semibold rounded-full min-w-[17px] h-[17px] grid place-items-center leading-none px-1"
               >
                 {{ cartCount() }}
               </span>
@@ -76,6 +95,7 @@
                 class="flex items-center gap-2.5 p-1 pr-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800"
                 (click)="toggleUserMenu()"
                 [attr.aria-expanded]="userMenuOpen()"
+                [attr.aria-label]="'Tài khoản của ' + (userInfo()?.fullName || 'bạn')"
                 aria-haspopup="true"
               >
                 <div
@@ -90,7 +110,8 @@
                 <!-- mat-icon mặc định font-size 24px + line-height 1.5: chỉ ép w/h thì
                      glyph 24px bị nhét vào hộp 16px nên tràn ra và lệch xuống — phải ép
                      cả font-size lẫn line-height cho khớp hộp. -->
-                <mat-icon class="!w-4 !h-4 !text-base !leading-none shrink-0 text-slate-500"
+                <mat-icon
+                  class="hidden sm:inline !w-4 !h-4 !text-base !leading-none shrink-0 text-slate-500"
                   >expand_more</mat-icon
                 >
               </button>
@@ -144,13 +165,13 @@
           } @else {
             <a
               routerLink="/login"
-              class="hidden sm:inline text-sm font-medium text-slate-700 dark:text-slate-300 hover:text-primary-600 px-3 py-2"
+              class="hidden md:inline text-sm font-medium text-slate-700 dark:text-slate-300 hover:text-primary-600 px-3 py-2"
             >
               Đăng nhập
             </a>
             <a
               routerLink="/register"
-              class="inline-flex items-center px-3 py-1.5 rounded-lg bg-primary-600 text-white text-sm font-medium hover:bg-primary-700"
+              class="hidden sm:inline-flex items-center px-3 py-1.5 rounded-lg bg-primary-600 text-white text-sm font-medium hover:bg-primary-700"
             >
               Đăng ký
             </a>
@@ -159,6 +180,193 @@
       </div>
     </div>
   </header>
+
+  <!-- Drawer điều hướng mobile: overlay + panel từ trái, đóng bằng overlay/Esc/chọn link -->
+  @if (mobileMenuOpen()) {
+    <div class="fixed inset-0 z-50 md:hidden">
+      <div
+        class="absolute inset-0 bg-slate-950/50 animate-fade-in"
+        (click)="closeMobileMenu()"
+        aria-hidden="true"
+      ></div>
+      <aside
+        #mobileDrawer
+        id="mobile-nav-drawer"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Menu điều hướng"
+        tabindex="-1"
+        class="absolute inset-y-0 left-0 flex w-80 max-w-[85vw] flex-col bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 shadow-lg outline-none animate-fade-in"
+      >
+        <div
+          class="flex h-16 shrink-0 items-center justify-between gap-3 px-4 border-b border-slate-200 dark:border-slate-800"
+        >
+          <a routerLink="/" (click)="closeMobileMenu()" class="flex items-center gap-2 min-w-0">
+            <img
+              src="/brand/laptopshop-mark.svg"
+              alt=""
+              width="32"
+              height="32"
+              class="w-8 h-8 shrink-0"
+            />
+            <span class="min-w-0 truncate whitespace-nowrap text-lg font-bold">LaptopShop</span>
+          </a>
+          <button
+            type="button"
+            class="shrink-0 p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
+            (click)="closeMobileMenu()"
+            aria-label="Đóng menu"
+          >
+            <mat-icon>close</mat-icon>
+          </button>
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-4 space-y-5">
+          <form class="relative" (ngSubmit)="onSearch()">
+            <mat-icon
+              class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"
+              >search</mat-icon
+            >
+            <input
+              type="search"
+              [value]="searchKeyword()"
+              (input)="searchKeyword.set($any($event.target).value)"
+              placeholder="Tìm kiếm laptop, theo hãng, cấu hình..."
+              aria-label="Tìm kiếm sản phẩm"
+              class="w-full pl-10 pr-4 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 border border-transparent focus:border-primary-500 focus:bg-white dark:focus:bg-slate-900 focus:outline-none text-sm"
+            />
+          </form>
+
+          <nav aria-label="Danh mục điều hướng" class="space-y-1">
+            <a
+              routerLink="/products"
+              (click)="closeMobileMenu(false)"
+              class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+            >
+              <mat-icon class="!w-5 !h-5 !text-[20px] !leading-none text-slate-500 dark:text-slate-400"
+                >laptop_mac</mat-icon
+              >
+              Sản phẩm
+            </a>
+            <a
+              routerLink="/flash-sale"
+              (click)="closeMobileMenu(false)"
+              class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+            >
+              <mat-icon class="!w-5 !h-5 !text-[20px] !leading-none text-slate-500 dark:text-slate-400"
+                >bolt</mat-icon
+              >
+              Flash sale
+            </a>
+            <a
+              routerLink="/vouchers"
+              (click)="closeMobileMenu(false)"
+              class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+            >
+              <mat-icon class="!w-5 !h-5 !text-[20px] !leading-none text-slate-500 dark:text-slate-400"
+                >confirmation_number</mat-icon
+              >
+              Ví voucher
+            </a>
+            <a
+              routerLink="/orders"
+              (click)="closeMobileMenu(false)"
+              class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+            >
+              <mat-icon class="!w-5 !h-5 !text-[20px] !leading-none text-slate-500 dark:text-slate-400"
+                >receipt_long</mat-icon
+              >
+              Đơn hàng
+            </a>
+          </nav>
+
+          <div class="border-t border-slate-200 dark:border-slate-800 pt-4 space-y-2">
+            @if (isAuthenticated()) {
+              <div class="flex items-center gap-3 px-1 pb-1">
+                <div
+                  class="w-10 h-10 shrink-0 rounded-full bg-gradient-to-br from-primary-600 to-violet-600 dark:from-primary-500 dark:to-violet-400 text-white flex items-center justify-center text-sm font-semibold"
+                >
+                  {{ getInitials(userInfo()?.fullName) }}
+                </div>
+                <div class="min-w-0">
+                  <p class="truncate text-sm font-medium">
+                    {{ userInfo()?.fullName || 'Tài khoản' }}
+                  </p>
+                  @if (userInfo()?.email) {
+                    <p class="truncate text-xs text-slate-500">{{ userInfo()?.email }}</p>
+                  }
+                </div>
+              </div>
+              <a
+                routerLink="/profile"
+                (click)="closeMobileMenu(false)"
+                class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+              >
+                <mat-icon class="!w-5 !h-5 !text-[20px] !leading-none text-slate-500 dark:text-slate-400"
+                  >person</mat-icon
+                >
+                Hồ sơ cá nhân
+              </a>
+              <a
+                routerLink="/vouchers"
+                (click)="closeMobileMenu(false)"
+                class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+              >
+                <mat-icon class="!w-5 !h-5 !text-[20px] !leading-none text-slate-500 dark:text-slate-400"
+                  >confirmation_number</mat-icon
+                >
+                Ví voucher
+              </a>
+              <button
+                type="button"
+                class="w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-danger-600 hover:bg-danger-50 dark:hover:bg-danger-900/20"
+                (click)="closeMobileMenu(false); logout()"
+              >
+                <mat-icon class="!w-5 !h-5 !text-[20px] !leading-none">logout</mat-icon>
+                Đăng xuất
+              </button>
+            } @else {
+              <a
+                routerLink="/login"
+                (click)="closeMobileMenu(false)"
+                class="flex w-full items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+              >
+                Đăng nhập
+              </a>
+              <a
+                routerLink="/register"
+                (click)="closeMobileMenu(false)"
+                class="flex w-full items-center justify-center rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-primary-700"
+              >
+                Đăng ký
+              </a>
+            }
+          </div>
+
+          <!-- Theme toggle: nút ở header ẩn dưới sm nên đưa vào drawer -->
+          <div class="border-t border-slate-200 dark:border-slate-800 pt-4">
+            <button
+              type="button"
+              class="w-full flex items-center justify-between gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+              (click)="toggleTheme()"
+              [attr.aria-label]="theme.isDark() ? 'Chuyển giao diện sáng' : 'Chuyển giao diện tối'"
+            >
+              <span class="flex items-center gap-3">
+                <mat-icon
+                  class="!w-5 !h-5 !text-[20px] !leading-none text-slate-500 dark:text-slate-400"
+                  >{{ theme.isDark() ? 'light_mode' : 'dark_mode' }}</mat-icon
+                >
+                {{ theme.isDark() ? 'Giao diện sáng' : 'Giao diện tối' }}
+              </span>
+              <span class="shrink-0 text-xs text-slate-500">
+                {{ theme.isDark() ? 'Đang bật' : 'Đang tắt' }}
+              </span>
+            </button>
+          </div>
+        </div>
+      </aside>
+    </div>
+  }
 
   <!-- Main content -->
   <main class="flex-1">

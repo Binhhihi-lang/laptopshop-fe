@@ -1,11 +1,23 @@
 <div class="bg-white dark:bg-slate-950">
+  <!-- Popup chờ: chỉ hiện ở lần tải đầu, khi backend Render còn đang khởi động.
+       Tự đóng khi dữ liệu về (isLoading=false) hoặc quá 45s. -->
+  @if (isLoading()) {
+    <app-loading-gate #gate />
+  }
+
   <!-- Khi có banner, carousel chỉ có h2 (tiêu đề slide) nên trang thiếu h1 —
        heading-order của Lighthouse báo lỗi. h1 ẩn giữ đúng cấu trúc ngữ nghĩa. -->
   @if (banners().length > 0) {
     <h1 class="sr-only">LaptopShop — Laptop chính hãng, giá tốt mỗi ngày</h1>
   }
   <!-- Banner carousel do admin cấu hình; chưa có banner nào thì rơi về hero mặc định -->
-  @if (banners().length > 0) {
+  @if (isLoading()) {
+    <!-- Khung xương hero: giữ đúng chiều cao carousel để banner về không nhảy
+         layout, và không để lộ khung trống mất thẩm mỹ khi chờ API. -->
+    <div class="relative overflow-hidden bg-slate-200 dark:bg-slate-800 animate-pulse">
+      <div class="w-full min-h-[224px] sm:min-h-[300px] lg:min-h-[360px]"></div>
+    </div>
+  } @else if (banners().length > 0) {
     <app-home-banner-carousel [banners]="banners()" />
   } @else {
     <!-- Hero mặc định (giữ nguyên khi DB chưa có banner) -->
@@ -210,8 +222,8 @@
         ></app-empty-state>
       } @else {
         <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-          @for (p of newProducts(); track p.id) {
-            <app-product-card [product]="p" />
+          @for (p of newProducts(); track p.id; let i = $index) {
+            <app-product-card [product]="p" [priority]="i < 4" />
           }
         </div>
       }

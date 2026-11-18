@@ -1,6 +1,6 @@
 <div class="home-banners-container min-h-screen bg-slate-50 dark:bg-slate-950">
   <div class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
-    <div class="max-w-screen-2xl mx-auto px-4 md:px-6 lg:px-8 py-4">
+    <div class="max-w-7xl mx-auto py-4">
       <app-page-header
         title="Banner trang chủ"
         subtitle="Carousel đầu trang chủ — tối đa 5 slide, tự chạy 6 giây, hiển thị theo thứ tự sắp xếp."
@@ -11,7 +11,7 @@
     </div>
   </div>
 
-  <div class="max-w-screen-2xl mx-auto px-4 md:px-6 lg:px-8 py-6 space-y-6">
+  <div class="max-w-7xl mx-auto py-6 space-y-6">
     @if (permissionDenied()) {
       <app-card [padding]="'none'">
         <app-empty-state

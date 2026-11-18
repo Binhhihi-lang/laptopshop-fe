@@ -8,7 +8,7 @@ import {
   BreadcrumbComponent,
   EmptyStateComponent,
   LoadingComponent,
-} from '@shared/components';
+} from '@shared/components/client-components';
 
 /**
  * Trang `/flash-sale` — phiên đang chạy + tab phiên sắp diễn ra (D31).

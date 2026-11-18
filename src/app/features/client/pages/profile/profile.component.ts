@@ -24,7 +24,7 @@ import {
   PageHeaderComponent,
   SelectComponent,
   SelectOption,
-} from '@shared/components';
+} from '@shared/components/client-components';
 
 /**
  * Hồ sơ cá nhân storefront. Yêu cầu `clientAuthGuard` (đã đăng nhập).

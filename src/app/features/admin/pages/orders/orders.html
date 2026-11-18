@@ -1,7 +1,7 @@
 <div class="orders-container min-h-screen bg-slate-50 dark:bg-slate-950">
   <!-- Page Header -->
   <div class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
-    <div class="max-w-screen-2xl mx-auto px-4 md:px-6 lg:px-8 py-4">
+    <div class="max-w-7xl mx-auto py-4">
       <app-page-header
         title="Quản lý đơn hàng"
         [subtitle]="'Tìm kiếm, lọc và xử lý đơn hàng'"
@@ -9,7 +9,7 @@
     </div>
   </div>
 
-  <div class="max-w-screen-2xl mx-auto px-4 md:px-6 lg:px-8 py-4">
+  <div class="max-w-7xl mx-auto py-4">
     @if (permissionDenied()) {
       <app-empty-state
         variant="permission"
@@ -247,6 +247,11 @@
             [sortColumn]="sortColumn()"
             [sortDirection]="sortDirection()"
             (sortChange)="onSort($event)"
+            [paginated]="true"
+            [currentPage]="page() + 1"
+            [pageSize]="pageSize"
+            [totalItems]="totalElements()"
+            (pageChange)="onTablePage($event)"
             [emptyIcon]="'receipt_long'"
             [emptyTitle]="'Không tìm thấy đơn hàng'"
             [emptyDescription]="'Thử thay đổi bộ lọc hoặc khoảng ngày'"
@@ -298,15 +303,6 @@
             </ng-template>
           </app-table>
         </app-card>
-
-        <!-- Pagination -->
-        <div class="mt-4">
-          <app-pagination
-            [page]="page()"
-            [totalPages]="totalPages()"
-            (pageChange)="goPage($event)"
-          />
-        </div>
       </div>
     }
   </div>

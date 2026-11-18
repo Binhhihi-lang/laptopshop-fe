@@ -11,7 +11,7 @@ import {
   EmptyStateComponent,
   LoadingComponent,
   VoucherCardComponent,
-} from '@shared/components';
+} from '@shared/components/client-components';
 
 type WalletTab = 'AVAILABLE' | 'USED' | 'EXPIRED' | 'CLAIM';
 

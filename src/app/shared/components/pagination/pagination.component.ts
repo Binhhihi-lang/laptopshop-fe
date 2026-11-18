@@ -4,7 +4,7 @@ import { buildPageSlots, type PageSlot } from '@shared/utils/page-window';
 /**
  * Phân trang: ‹ số ›. Ẩn khi ≤ 1 trang. page 0-based.
  *
- * Ẩn tối đa 7 ô (kể cả dấu …) — trước đây sinh 1 nút/trang nên shop 50.000
+ * Ẩn tối đa 11 ô (kể cả dấu …) — trước đây sinh 1 nút/trang nên shop 50.000
  * sản phẩm (4167 trang) làm tràn ngang và treo UI.
  */
 @Component({
@@ -83,10 +83,7 @@ export class PaginationComponent {
   totalPages = input.required<number>();
   pageChange = output<number>();
 
-  /**
-   * Dãy ô hiển thị: luôn có trang đầu, trang cuối và lân cận trang hiện tại.
-   * Vùng giữa bị lược thay bằng một dấu "…".
-   */
+  /** Dãy ô hiển thị: đầu/cuối + lân cận trang hiện tại, tối đa 11 ô. */
   slots = computed<PageSlot[]>(() => buildPageSlots(this.totalPages(), this.page()));
 
   go(p: PageSlot): void {

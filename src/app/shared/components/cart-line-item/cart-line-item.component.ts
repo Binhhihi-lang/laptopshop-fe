@@ -4,6 +4,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { PriceComponent } from '../price/price.component';
 import { QtyStepperComponent } from '../qty-stepper/qty-stepper.component';
 import { CartItem } from '@core/models/cart.model';
+import { cloudinarySrcset } from '@shared/utils/cloudinary-srcset';
 
 /** 1 dòng sản phẩm trong giỏ: ảnh + tên + stepper + thành tiền + xóa. */
 @Component({
@@ -12,9 +13,11 @@ import { CartItem } from '@core/models/cart.model';
   imports: [CommonModule, MatIconModule, PriceComponent, QtyStepperComponent],
   template: `
     <!-- items-center: cột phải luôn cân giữa theo chiều cao cột trái, tên dài
-         2 dòng không còn làm thành tiền/stepper lệch nhau -->
+         2 dòng không còn làm thành tiền/stepper lệch nhau.
+         Mobile: 2 tầng (ảnh 72px + tên, rồi hàng giá/stepper/xóa chiếm cả 2 cột)
+         để tên sản phẩm không bị bóp còn ~100px ở màn 390px. -->
     <article
-      class="grid grid-cols-[88px_1fr_auto] gap-4 items-center p-3.5 rounded-xl border bg-white dark:bg-slate-900"
+      class="grid grid-cols-[72px_1fr] sm:grid-cols-[88px_1fr_auto] gap-3 sm:gap-4 items-center p-3 sm:p-3.5 rounded-xl border bg-white dark:bg-slate-900"
       [class]="
         isFlash()
           ? 'border-rose-300 dark:border-rose-900/60 ring-1 ring-rose-200 dark:ring-rose-900/40'
@@ -24,8 +27,14 @@ import { CartItem } from '@core/models/cart.model';
       <div class="relative">
         <img
           [src]="item().productImage"
+          [attr.srcset]="cloudinarySrcset(item().productImage)"
+          sizes="(min-width: 640px) 88px, 72px"
           [alt]="item().productName"
-          class="w-[88px] h-[88px] rounded-lg object-cover bg-slate-100 dark:bg-slate-800"
+          width="88"
+          height="88"
+          loading="lazy"
+          decoding="async"
+          class="w-[72px] h-[72px] sm:w-[88px] sm:h-[88px] rounded-lg object-cover bg-slate-100 dark:bg-slate-800"
         />
         @if (isFlash()) {
           <span
@@ -82,7 +91,9 @@ import { CartItem } from '@core/models/cart.model';
         </div>
       </div>
 
-      <div class="flex flex-col items-end gap-2.5">
+      <div
+        class="col-span-2 sm:col-span-1 flex flex-row flex-wrap items-center justify-between gap-2 sm:flex-col sm:items-end sm:gap-2.5"
+      >
         <span class="font-mono font-bold tabular-nums text-slate-800 dark:text-slate-100">
           {{ format(item().lineTotal) }}
         </span>
@@ -92,11 +103,12 @@ import { CartItem } from '@core/models/cart.model';
             [max]="maxQty()"
             (changeValue)="onQtyChange($event)"
           />
-          <!-- 36px cho cân với stepper 34px; mat-icon mặc định 24px + line-height 1.5 nên
-               phải ép cả font-size lẫn line-height, chỉ ép w/h là glyph bị lệch trong nút. -->
+          <!-- 44px trên mobile (vùng chạm), 36px từ sm cho cân với stepper 32px;
+               mat-icon mặc định 24px + line-height 1.5 nên phải ép cả font-size lẫn
+               line-height, chỉ ép w/h là glyph bị lệch trong nút. -->
           <button
             type="button"
-            class="w-9 h-9 shrink-0 rounded-lg grid place-items-center text-slate-400 hover:bg-rose-50 hover:text-rose-500 dark:hover:bg-rose-900/20 transition-colors"
+            class="w-11 h-11 sm:w-9 sm:h-9 shrink-0 rounded-lg grid place-items-center text-slate-400 hover:bg-rose-50 hover:text-rose-500 dark:hover:bg-rose-900/20 transition-colors"
             (click)="remove.emit()"
             aria-label="Xóa sản phẩm khỏi giỏ"
           >
@@ -174,4 +186,7 @@ export class CartLineItemComponent {
       maximumFractionDigits: 0,
     }).format(value);
   }
+
+  /** Srcset Cloudinary cho thumbnail 88px — tránh tải ảnh gốc cả trăm KB. */
+  readonly cloudinarySrcset = cloudinarySrcset;
 }

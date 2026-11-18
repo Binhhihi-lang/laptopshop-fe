@@ -2,7 +2,7 @@
 <div class="relative notifications-container">
   <button
     (click)="toggle()"
-    class="relative p-2 rounded-lg text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+    class="relative w-11 h-11 inline-flex items-center justify-center rounded-lg text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
     [attr.aria-label]="
       unreadCount() > 0 ? 'Thông báo, ' + unreadCount() + ' chưa đọc' : 'Thông báo'
     "
@@ -20,7 +20,7 @@
 
   @if (showNotifications()) {
     <div
-      class="absolute right-0 mt-2 w-80 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 overflow-hidden z-[200] animate-in fade-in-0 zoom-in-95 duration-150">
+      class="absolute right-0 mt-2 w-80 max-w-[calc(100vw_-_32px)] bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 overflow-hidden z-[200] animate-in fade-in-0 zoom-in-95 duration-150">
       <!-- Header -->
       <div
         class="px-4 py-3 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">

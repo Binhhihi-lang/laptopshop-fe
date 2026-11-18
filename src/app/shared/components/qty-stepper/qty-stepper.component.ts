@@ -10,7 +10,7 @@ import { Component, input, output } from '@angular/core';
     >
       <button
         type="button"
-        class="w-8 h-8 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-40"
+        class="w-11 h-11 sm:w-8 sm:h-8 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-40"
         [disabled]="value() <= min()"
         (click)="change(-1)"
         [attr.aria-label]="'Giảm số lượng'"
@@ -20,7 +20,7 @@ import { Component, input, output } from '@angular/core';
       <span class="w-10 text-center font-medium tabular-nums">{{ value() }}</span>
       <button
         type="button"
-        class="w-8 h-8 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-40"
+        class="w-11 h-11 sm:w-8 sm:h-8 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-40"
         [disabled]="value() >= max()"
         (click)="change(1)"
         [attr.aria-label]="'Tăng số lượng'"

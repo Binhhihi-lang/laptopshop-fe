@@ -1,7 +1,7 @@
 <div class="detail-container min-h-screen bg-slate-50 dark:bg-slate-950">
   @if (isLoading()) {
     <!-- Skeleton loading -->
-    <div class="max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-8" aria-hidden="true">
+    <div class="max-w-6xl mx-auto py-8" aria-hidden="true">
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Image Panel -->
         <div class="lg:col-span-1">
@@ -52,7 +52,7 @@
       backAriaLabel="Quay về danh sách sản phẩm"
       (backClick)="goBack()"
     />
-    <div class="max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-8">
+    <div class="max-w-6xl mx-auto py-8">
       <app-empty-state
         variant="permission"
         icon="lock"
@@ -115,7 +115,7 @@
     </app-detail-header>
 
     <!-- Main Content -->
-    <div class="max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-8">
+    <div class="max-w-6xl mx-auto py-8">
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Image Panel -->
         <div class="lg:col-span-1">

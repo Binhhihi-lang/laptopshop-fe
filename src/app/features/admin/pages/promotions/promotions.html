@@ -1,7 +1,7 @@
 <div class="promotions-container min-h-screen bg-slate-50 dark:bg-slate-950">
   <!-- Page Header -->
   <div class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
-    <div class="max-w-screen-2xl mx-auto px-4 md:px-6 lg:px-8 py-4">
+    <div class="max-w-7xl mx-auto py-4">
       <app-page-header
         title="Khuyến mại"
         subtitle="Chương trình giảm giá tự động áp theo từng sản phẩm khi khớp điều kiện — khách không cần chọn."
@@ -18,7 +18,7 @@
   </div>
 
   <!-- KPI -->
-  <div class="max-w-screen-2xl mx-auto px-4 md:px-6 lg:px-8 pt-4">
+  <div class="max-w-7xl mx-auto pt-4">
     <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
       <app-stat-card
         icon="percent"
@@ -62,7 +62,7 @@
   </div>
 
   <!-- Filter Bar -->
-  <div class="max-w-screen-2xl mx-auto px-4 md:px-6 lg:px-8 py-4">
+  <div class="max-w-7xl mx-auto py-4">
     <app-card [padding]="'sm'" [compact]="true">
       <div class="filter-row flex flex-wrap gap-4 items-end">
         <div class="relative flex-1 min-w-[250px] max-w-[400px]">
@@ -232,7 +232,7 @@
   />
 
   <!-- Promotions Table -->
-  <div class="max-w-screen-2xl mx-auto px-4 md:px-6 lg:px-8 pb-8">
+  <div class="max-w-7xl mx-auto pb-8">
     <app-card [padding]="'none'">
       @if (permissionDenied()) {
         <app-empty-state

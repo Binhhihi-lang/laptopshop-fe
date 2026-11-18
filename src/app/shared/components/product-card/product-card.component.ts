@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { PriceComponent } from '../price/price.component';
 import { PromoBadgeComponent } from '../promo-badge/promo-badge.component';
 import { ProductResponse } from '@core/models/product.model';
+import { cloudinarySrcset } from '@shared/utils/cloudinary-srcset';
 
 /** Card sản phẩm — đơn vị lặp nhiều nhất storefront, CẤM copy markup. */
 @Component({
@@ -17,11 +18,18 @@ import { ProductResponse } from '@core/models/product.model';
     >
       <div class="relative aspect-square overflow-hidden bg-slate-100 dark:bg-slate-800">
         @if (product().image) {
+          <!-- priority bật eager + fetchpriority=high cho card đầu màn hình (LCP) -->
           <img
             [src]="product().image"
+            [attr.srcset]="cloudinarySrcset(product().image)"
+            sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
             [alt]="product().name"
+            width="600"
+            height="600"
+            [attr.loading]="priority() ? 'eager' : 'lazy'"
+            [attr.fetchpriority]="priority() ? 'high' : null"
+            decoding="async"
             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-150"
-            loading="lazy"
           />
         } @else {
           <div class="w-full h-full flex items-center justify-center text-slate-400">
@@ -100,6 +108,11 @@ import { ProductResponse } from '@core/models/product.model';
 export class ProductCardComponent {
   product = input.required<ProductResponse>();
   showSoldCount = input<boolean>(false);
+  /** Card nằm trong màn hình đầu → tải ảnh eager để không trễ LCP. */
+  priority = input<boolean>(false);
+
+  /** Sinh srcset Cloudinary; host khác trả null nên `src` gốc vẫn là fallback. */
+  readonly cloudinarySrcset = cloudinarySrcset;
 
   isSoldOut = computed(() => (this.product().quantity ?? 0) <= 0);
 

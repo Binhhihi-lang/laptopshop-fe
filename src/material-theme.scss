@@ -1,0 +1,37 @@
+// Theme Material tối giản (chỉ system tokens) thay cho prebuilt indigo-pink (110 KB).
+// Component dùng fallback --mat-sys-* nên menu/dialog/checkbox/snackbar vẫn có màu.
+@use '@angular/material' as mat;
+
+// Font PHẢI khớp DESIGN.md (Inter). Để mặc định "Roboto" thì mọi component
+// Material (snackbar, dialog, menu, tooltip) hiện sai phông so với phần còn lại.
+$laptopshop-font: "'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif";
+
+html {
+  @include mat.theme(
+    (
+      color: (
+        primary: mat.$azure-palette,
+        tertiary: mat.$blue-palette,
+      ),
+      typography: $laptopshop-font,
+      density: 0,
+    )
+  );
+}
+
+// Material đặt font qua biến --mat-sys-body-* trên html; ép lại lần nữa để chắc
+// chắn không rơi về Roboto do theme nội bộ của từng component.
+:root {
+  --mat-sys-body-large-font: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --mat-sys-body-medium-font: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --mat-sys-body-small-font: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --mat-sys-label-large-font: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --mat-sys-label-medium-font: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --mat-sys-label-small-font: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --mat-sys-title-large-font: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --mat-sys-title-medium-font: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --mat-sys-title-small-font: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --mat-sys-headline-large-font: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --mat-sys-headline-medium-font: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --mat-sys-headline-small-font: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}

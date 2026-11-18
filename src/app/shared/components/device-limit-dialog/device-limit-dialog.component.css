@@ -2,7 +2,9 @@
 .dialog-container {
   display: flex;
   flex-direction: column;
-  min-width: 420px;
+  /* Không đặt min-width cứng: 420px từng làm tràn viewport < 420px */
+  min-width: 0;
+  width: 100%;
   max-width: 500px;
   background: var(--color-bg-secondary);
   border-radius: var(--radius-xl);
@@ -161,6 +163,7 @@
   display: flex;
   justify-content: flex-end;
   align-items: center;
+  flex-wrap: wrap;
   gap: 0.75rem;
   padding: 1rem 1.5rem;
   border-top: 1px solid var(--color-border-primary);
@@ -170,6 +173,7 @@
 /* Buttons - design system style */
 .btn-secondary,
 .btn-primary {
+  min-height: 2.75rem; /* vùng chạm ≥ 44px */
   padding: 0.625rem 1.25rem;
   font-size: 0.875rem;
   font-weight: 500;
@@ -212,4 +216,26 @@
 /* Dark mode adjustments */
 .dark .device-item:hover:not(.device-item--disabled) {
   box-shadow: var(--shadow-md);
+}
+
+/* Mobile: giảm padding + chia đều 2 nút để không tràn ở màn 320–375px */
+@media (max-width: 480px) {
+  .dialog-header {
+    padding: 1.25rem 1rem 0.75rem;
+  }
+
+  .dialog-content {
+    padding: 1rem;
+  }
+
+  .dialog-actions {
+    padding: 0.875rem 1rem;
+  }
+
+  .btn-secondary,
+  .btn-primary {
+    flex: 1;
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
 }

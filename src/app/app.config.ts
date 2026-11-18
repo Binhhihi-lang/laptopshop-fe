@@ -1,5 +1,5 @@
 import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
-import { provideRouter } from '@angular/router';
+import { provideRouter, withInMemoryScrolling } from '@angular/router';
 import { HTTP_INTERCEPTORS, provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 
 import { routes } from './app.routes';
@@ -10,7 +10,17 @@ import { GlobalErrorInterceptor } from '@core/interceptors/global-error.intercep
 export const appConfig: ApplicationConfig = {
   providers: [
     provideZoneChangeDetection(),
-    provideRouter(routes),
+    // Thiếu 2 tuỳ chọn này thì Angular GIỮ NGUYÊN vị trí cuộn của trang trước:
+    // bấm card sản phẩm ở cuối trang chủ sẽ mở trang chi tiết ngay giữa nội dung.
+    // - scrollPositionRestoration 'top': mở trang mới luôn từ đầu.
+    // - anchorScrolling: cho phép nhảy tới #id khi URL có fragment.
+    provideRouter(
+      routes,
+      withInMemoryScrolling({
+        scrollPositionRestoration: 'top',
+        anchorScrolling: 'enabled',
+      }),
+    ),
     // gắn header Authorization: Bearer vào mỗi request dùng interceptor gán JWT
     provideHttpClient(withInterceptorsFromDi()),
     // Client đứng TRƯỚC JwtInterceptor để gắn token storefront và tự refresh khi 401.

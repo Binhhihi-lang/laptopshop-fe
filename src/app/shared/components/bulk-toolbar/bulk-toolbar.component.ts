@@ -1,6 +1,7 @@
-import { Component, input, output } from '@angular/core';
+import { Component, input, output, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
+import { MatMenuModule } from '@angular/material/menu';
 import { ButtonComponent, ButtonVariant } from '../button/button.component';
 
 export interface BulkToolbarButton {
@@ -14,20 +15,59 @@ export interface BulkToolbarButton {
 @Component({
   selector: 'app-bulk-toolbar',
   standalone: true,
-  imports: [CommonModule, MatIconModule, ButtonComponent],
+  imports: [CommonModule, MatIconModule, MatMenuModule, ButtonComponent],
   template: `
     @if (count() > 0) {
       <div
-        class="bg-primary/10 dark:bg-primary/20 border-b border-primary/30 px-4 md:px-6 lg:px-8 py-3 sticky top-[72px] z-[85] animate-slide-down"
+        class="bg-primary/10 dark:bg-primary/20 border-b border-primary/30 py-3 sticky top-16 z-[85] animate-slide-down"
       >
-        <div
-          class="max-w-screen-2xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
-        >
-          <div class="flex items-center gap-3 text-sm font-medium text-primary">
-            <mat-icon class="w-5 h-5">check_circle</mat-icon>
-            <span>{{ count() }} {{ itemLabel() }} đã chọn</span>
+        <div class="max-w-7xl mx-auto flex items-center justify-between gap-3">
+          <div class="flex items-center gap-2 sm:gap-3 text-sm font-medium text-primary min-w-0">
+            <mat-icon class="!w-5 !h-5 shrink-0">check_circle</mat-icon>
+            <span class="truncate">{{ count() }} {{ itemLabel() }} đã chọn</span>
           </div>
-          <div class="flex items-center gap-2 flex-wrap">
+
+          <!-- Mobile: 1 hàng — nút chính + menu cho phần còn lại -->
+          <div class="flex items-center gap-1 sm:hidden shrink-0">
+            @if (primaryButton(); as main) {
+              <app-button
+                [variant]="main.variant"
+                [icon]="main.icon"
+                size="icon"
+                [iconOnly]="true"
+                [ariaLabel]="main.label"
+                [disabled]="main.disabled ?? false"
+                (click)="main.handler()"
+              />
+            }
+            <button
+              type="button"
+              class="p-2 rounded-lg text-primary hover:bg-primary/10"
+              [matMenuTriggerFor]="moreMenu"
+              aria-label="Thao tác khác"
+            >
+              <mat-icon class="!w-6 !h-6 !text-2xl !leading-none">more_vert</mat-icon>
+            </button>
+            <mat-menu #moreMenu="matMenu">
+              @for (button of secondaryButtons(); track button.label) {
+                <button
+                  mat-menu-item
+                  [disabled]="button.disabled ?? false"
+                  (click)="button.handler()"
+                >
+                  <mat-icon>{{ button.icon }}</mat-icon>
+                  <span>{{ button.label }}</span>
+                </button>
+              }
+              <button mat-menu-item (click)="clear.emit()">
+                <mat-icon>close</mat-icon>
+                <span>Bỏ chọn</span>
+              </button>
+            </mat-menu>
+          </div>
+
+          <!-- Tablet/desktop: hiện đủ nút -->
+          <div class="hidden sm:flex items-center gap-2 flex-wrap justify-end">
             @for (button of buttons(); track button.label) {
               <app-button
                 [variant]="button.variant"
@@ -65,4 +105,8 @@ export class BulkToolbarComponent {
 
   // Outputs
   clear = output<void>();
+
+  /** Nút chính hiện trên mobile; phần còn lại gom vào menu. */
+  primaryButton = computed<BulkToolbarButton | null>(() => this.buttons()[0] ?? null);
+  secondaryButtons = computed<BulkToolbarButton[]>(() => this.buttons().slice(1));
 }

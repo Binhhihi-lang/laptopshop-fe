@@ -133,7 +133,7 @@
       </div>
 
       <!-- Tóm tắt -->
-      <aside class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-5">
+      <aside class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-5 lg:sticky lg:top-24">
         <h2 class="font-semibold mb-4">Tóm tắt đơn hàng</h2>
 
         <!-- G8/D17: cùng luồng chọn ưu đãi với trang giỏ -->
@@ -178,6 +178,7 @@
           label="Đặt hàng"
           variant="primary"
           class="block mt-5"
+          [fullWidth]="true"
           [loading]="isSubmitting()"
           (click)="submit()"
         />

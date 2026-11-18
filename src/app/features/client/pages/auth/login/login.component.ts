@@ -9,7 +9,7 @@ import { ClientCartService } from '@core/services/client-cart.service';
 import { DeviceLimitDialogService } from '@core/services/device-limit-dialog.service';
 import { NotificationService } from '@core/services/notification.service';
 import { DeviceLimitPayload } from '@core/models/device.model';
-import { ButtonComponent, FormFieldComponent, InputComponent } from '@shared/components';
+import { ButtonComponent, FormFieldComponent, InputComponent } from '@shared/components/client-components';
 
 /**
  * Trang đăng nhập storefront. Guest only — `clientGuestGuard` chặn customer
